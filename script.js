@@ -1,7 +1,10 @@
 const urlParams = new URLSearchParams(window.location.search);
+const apiKeyFromUrl = urlParams.get('api_key');
+console.log("Debug: API Key from URL:", apiKeyFromUrl ? "Present (Starts with " + apiKeyFromUrl.substring(0, 5) + "...)" : "Not found");
+
 const CONFIG = {
-    GOOGLE_API_KEY: urlParams.get('api_key') || "",
-    VERSION: "1.1.8"
+    GOOGLE_API_KEY: apiKeyFromUrl || "",
+    VERSION: "1.1.9"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
