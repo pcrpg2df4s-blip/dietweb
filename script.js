@@ -1,6 +1,6 @@
 const CONFIG = {
     GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
-    VERSION: "1.1.4"
+    VERSION: "1.1.5"
 };
 
 console.log("App Version:", CONFIG.VERSION);
@@ -50,8 +50,11 @@ function loadSavedData() {
         
         // Если уже есть рассчитанные цели, идем сразу на главный экран
         if (currentMacros.totalCalories > 0) {
-            initHomeScreenFromSaved();
-            nextStep(12);
+            // Ждем инициализации DOM элементов
+            setTimeout(() => {
+                initHomeScreenFromSaved();
+                nextStep(12);
+            }, 100);
         }
     }
 }
@@ -376,7 +379,7 @@ async function finishAnalysis(imageData) {
             throw new Error("API Key is missing in CONFIG");
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
