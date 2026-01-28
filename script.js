@@ -300,7 +300,7 @@ async function finishAnalysis(imageData) {
     2. Оцени размер порции визуально.
     3. Рассчитай примерное содержание: калории (ккал), белки (г), жиры (г), углеводы (г).
     
-    Верни ответ СТРОГО в формате JSON без лишнего текста:
+    Верни ответ СТРОГО в формате JSON без лишнего текста и без markdown-разметки:
     {"name": "Точное название блюда", "calories": 450, "protein": 25, "carbs": 5, "fats": 35}`;
     
     try {
@@ -313,19 +313,28 @@ async function finishAnalysis(imageData) {
         });
 
         const data = await response.json();
+        console.log("Gemini Raw Data:", data);
+
+        if (data.error) {
+            throw new Error(`API Error: ${data.error.message}`);
+        }
         
-        if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-            throw new Error("Invalid API response");
+        if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
+            if (data.promptFeedback && data.promptFeedback.blockReason) {
+                throw new Error(`Blocked: ${data.promptFeedback.blockReason}`);
+            }
+            throw new Error("Empty or blocked response");
         }
 
-        const text = data.candidates[0].content.parts[0].text;
-        const result = JSON.parse(text.replace(/```json|```/g, '').trim());
+        let text = data.candidates[0].content.parts[0].text;
+        // Очистка от возможной markdown разметки
+        text = text.replace(/```json|```/g, '').trim();
         
+        const result = JSON.parse(text);
         addFoodToHome(result, imageData);
     } catch (err) {
-        console.error("AI Analysis error:", err);
-        // В случае ошибки показываем уведомление и не добавляем рыбу по умолчанию
-        tg.showAlert("Ошибка при анализе фото. Попробуйте еще раз.");
+        console.error("AI Analysis error details:", err);
+        tg.showAlert(`Ошибка анализа: ${err.message}`);
         nextStep(12); // Возвращаемся на главный экран
     }
 }
