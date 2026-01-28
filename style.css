@@ -658,14 +658,19 @@ cursor: pointer;
 
 /* Camera Step */
 .camera-step {
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: #000;
-z-index: 2000;
-overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 2000;
+    overflow: hidden;
+    display: none;
+}
+
+.camera-step.active {
+    display: block;
 }
 
 #camera-video {
@@ -760,10 +765,14 @@ color: #fff;
 .analysis-step {
     background: #f8f8f8;
     height: 100vh;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
+}
+
+.analysis-step.active {
+    display: flex;
 }
 
 .analysis-container {

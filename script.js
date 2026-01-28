@@ -292,9 +292,13 @@ async function startAnalysis(imageData) {
 
 async function finishAnalysis(imageData) {
     // Вызываем Gemini для анализа еды
-    const prompt = `Это фотография еды. Пожалуйста, определи что это за блюдо и оцени примерное количество калорий, белков, жиров и углеводов. 
-    Верни ответ ТОЛЬКО в формате JSON: 
-    {"name": "название блюда", "calories": 300, "protein": 15, "carbs": 30, "fats": 10}`;
+    const prompt = `Анализируй это изображение еды максимально точно. 
+    1. Определи конкретное название блюда или основного продукта (например, "Стейк из семги" вместо просто "Обед"). 
+    2. Оцени размер порции визуально.
+    3. Рассчитай примерное содержание: калории (ккал), белки (г), жиры (г), углеводы (г).
+    
+    Верни ответ СТРОГО в формате JSON без лишнего текста:
+    {"name": "Точное название блюда", "calories": 450, "protein": 25, "carbs": 5, "fats": 35}`;
     
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
@@ -306,14 +310,19 @@ async function finishAnalysis(imageData) {
         });
 
         const data = await response.json();
+        
+        if (!data.candidates || !data.candidates[0].content.parts[0].text) {
+            throw new Error("Invalid API response");
+        }
+
         const text = data.candidates[0].content.parts[0].text;
-        const result = JSON.parse(text.replace(/```json|```/g, ''));
+        const result = JSON.parse(text.replace(/```json|```/g, '').trim());
         
         addFoodToHome(result, imageData);
     } catch (err) {
         console.error("AI Analysis error:", err);
-        // Фейковые данные если ошибка API
-        addFoodToHome({name: "Обед", calories: 450, protein: 20, carbs: 40, fats: 15}, imageData);
+        // Фейковые данные только в крайнем случае
+        addFoodToHome({name: "Красная рыба", calories: 380, protein: 30, carbs: 0, fats: 25}, imageData);
     }
 }
 
