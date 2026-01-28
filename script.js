@@ -1,6 +1,6 @@
 const CONFIG = {
     GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
-    VERSION: "1.1.6"
+    VERSION: "1.1.7"
 };
 
 console.log("App Version:", CONFIG.VERSION);
@@ -199,7 +199,7 @@ function startLoadingAnimation() {
 }
 
 async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
     
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
@@ -381,7 +381,7 @@ async function finishAnalysis(imageData) {
         }
 
         console.log("Fetching from Gemini 2.0...");
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
