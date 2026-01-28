@@ -213,6 +213,60 @@ function showResults() {
     nextStep(11);
 }
 
+function goToHome() {
+    // Обновляем данные на главной странице
+    document.getElementById('home-calories-left').innerText = document.getElementById('res-calories').innerText;
+    document.getElementById('home-protein-left').innerText = document.getElementById('res-protein').innerText.replace('г', '');
+    document.getElementById('home-carbs-left').innerText = document.getElementById('res-carbs').innerText.replace('г', '');
+    document.getElementById('home-fats-left').innerText = document.getElementById('res-fats').innerText.replace('г', '');
+
+    // Обновляем кольца на главной (пока 0% прогресса, так как ничего не съедено)
+    setHomeProgress('home-ring-calories', 0, 282.7); // 2 * PI * 45
+    setHomeProgress('home-ring-protein', 0, 100);
+    setHomeProgress('home-ring-carbs', 0, 100);
+    setHomeProgress('home-ring-fats', 0, 100);
+
+    // Обновляем даты календаря
+    updateCalendarDates();
+
+    nextStep(12);
+}
+
+function setHomeProgress(id, percent, circumference) {
+    const circle = document.getElementById(id);
+    if (!circle) return;
+    const offset = circumference - (percent / 100 * circumference);
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = offset;
+}
+
+function updateCalendarDates() {
+    const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday...
+    
+    // Находим понедельник текущей недели
+    const monday = new Date(now);
+    const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
+    monday.setDate(now.getDate() + diff);
+
+    const dayElements = document.querySelectorAll('.calendar-day');
+    dayElements.forEach((el, index) => {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + index);
+        
+        const dayNum = date.getDate();
+        el.querySelector('.day-number').innerText = dayNum;
+        
+        // Подсвечиваем сегодняшний день
+        if (date.toDateString() === now.toDateString()) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+}
+
 function setProgress(id, percent) {
     const circle = document.getElementById(id);
     const radius = circle.r.baseVal.value;
