@@ -1,6 +1,6 @@
 const CONFIG = {
     GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
-    VERSION: "1.1.3"
+    VERSION: "1.1.4"
 };
 
 console.log("App Version:", CONFIG.VERSION);
@@ -17,6 +17,79 @@ let userData = {
     accomplish: '',
     birthdate: ''
 };
+
+let currentMacros = {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+    totalCalories: 2000,
+    totalProtein: 150,
+    totalCarbs: 250,
+    totalFats: 70,
+    foodHistory: []
+};
+
+// Инициализация при загрузке
+window.addEventListener('DOMContentLoaded', () => {
+    loadSavedData();
+});
+
+function saveAllData() {
+    localStorage.setItem('dietApp_userData', JSON.stringify(userData));
+    localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
+}
+
+function loadSavedData() {
+    const savedUser = localStorage.getItem('dietApp_userData');
+    const savedMacros = localStorage.getItem('dietApp_macros');
+
+    if (savedUser && savedMacros) {
+        userData = JSON.parse(savedUser);
+        currentMacros = JSON.parse(savedMacros);
+        
+        // Если уже есть рассчитанные цели, идем сразу на главный экран
+        if (currentMacros.totalCalories > 0) {
+            initHomeScreenFromSaved();
+            nextStep(12);
+        }
+    }
+}
+
+function initHomeScreenFromSaved() {
+    // Обновляем UI из сохраненных данных
+    const caloriesLeft = Math.max(0, currentMacros.totalCalories - currentMacros.calories);
+    const proteinLeft = Math.max(0, currentMacros.totalProtein - currentMacros.protein);
+    const carbsLeft = Math.max(0, currentMacros.totalCarbs - currentMacros.carbs);
+    const fatsLeft = Math.max(0, currentMacros.totalFats - currentMacros.fats);
+
+    document.getElementById('home-calories-left').innerText = caloriesLeft;
+    document.getElementById('home-protein-eaten').innerText = proteinLeft;
+    document.getElementById('home-carbs-eaten').innerText = carbsLeft;
+    document.getElementById('home-fats-eaten').innerText = fatsLeft;
+
+    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
+    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
+    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
+    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
+
+    // Восстанавливаем историю еды
+    const foodList = document.getElementById('food-list');
+    foodList.innerHTML = '';
+    
+    if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
+        currentMacros.foodHistory.forEach(itemHtml => {
+            const div = document.createElement('div');
+            div.className = 'food-item';
+            div.innerHTML = itemHtml;
+            foodList.appendChild(div);
+        });
+    } else {
+        foodList.innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
+    }
+
+    updateCalendarDates();
+}
 
 const tg = window.Telegram.WebApp;
 tg.expand();
@@ -220,17 +293,6 @@ function showResults() {
 }
 
 let videoStream = null;
-let currentMacros = {
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fats: 0,
-    totalCalories: 2000,
-    totalProtein: 150,
-    totalCarbs: 250,
-    totalFats: 70
-};
-
 async function openCamera() {
     const video = document.getElementById('camera-video');
     try {
@@ -378,9 +440,7 @@ function addFoodToHome(food, image) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    const item = document.createElement('div');
-    item.className = 'food-item';
-    item.innerHTML = `
+    const itemContent = `
         <img src="${image}" class="food-img">
         <div class="food-details">
             <div class="food-header">
@@ -395,7 +455,16 @@ function addFoodToHome(food, image) {
             </div>
         </div>
     `;
+    
+    const item = document.createElement('div');
+    item.className = 'food-item';
+    item.innerHTML = itemContent;
     foodList.prepend(item);
+
+    // Сохраняем в историю
+    if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
+    currentMacros.foodHistory.unshift(itemContent);
+    saveAllData();
 
     nextStep(12);
 }
@@ -412,6 +481,7 @@ function goToHome() {
     currentMacros.protein = 0;
     currentMacros.carbs = 0;
     currentMacros.fats = 0;
+    currentMacros.foodHistory = [];
 
     // В UI отображаем остаток (равен полной цели)
     document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
@@ -430,6 +500,7 @@ function goToHome() {
     // Очищаем список еды
     document.getElementById('food-list').innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
 
+    saveAllData();
     updateCalendarDates();
     nextStep(12);
 }
