@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Калькулятор Калорий</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        
+        <div id="step-1" class="step active">
+            <h1>Ваш пол</h1>
+            <p class="subtitle">Это необходимо для составления персонального плана.</p>
+            
+            <div class="options-vertical">
+                <button class="option-btn" onclick="selectGender('male')">Мужской</button>
+                <button class="option-btn" onclick="selectGender('female')">Женский</button>
+            </div>
+        </div>
+
+        <div id="step-2" class="step">
+            <div class="header-back" onclick="prevStep(1)">←</div>
+            <h1>Сколько у вас тренировок в неделю?</h1>
+            
+            <div class="options-vertical">
+                <div class="card" onclick="selectActivity(1.2)">
+                    <div class="icon">⦿</div>
+                    <div class="text">
+                        <h3>0-2</h3>
+                        <p>Тренируюсь редко</p>
+                    </div>
+                </div>
+                <div class="card" onclick="selectActivity(1.55)">
+                    <div class="icon">∴</div>
+                    <div class="text">
+                        <h3>3-5</h3>
+                        <p>Несколько тренировок</p>
+                    </div>
+                </div>
+                <div class="card" onclick="selectActivity(1.725)">
+                    <div class="icon">⁙</div>
+                    <div class="text">
+                        <h3>6+</h3>
+                        <p>Активный спортсмен</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-3" class="step">
+            <div class="header-back" onclick="prevStep(2)">←</div>
+            <h1>Долгосрочные результаты</h1>
+            
+            <div class="graph-container">
+                <div class="graph-placeholder">
+                    <svg viewBox="0 0 300 180" style="width: 100%; height: auto;">
+                        <!-- Grid Lines -->
+                        <line x1="30" y1="50" x2="270" y2="50" stroke="#eee" stroke-dasharray="4" />
+                        <line x1="30" y1="130" x2="270" y2="130" stroke="#eee" stroke-dasharray="4" />
+                        
+                        <!-- Red Line Area (Traditional Diet) -->
+                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20 L270,50 L30,50 Z" fill="rgba(255, 77, 77, 0.1)" />
+                        <!-- Black Line Area (App) -->
+                        <path d="M30,50 C100,50 200,130 270,130 L270,150 L30,150 L30,50 Z" fill="rgba(0, 0, 0, 0.05)" />
+                        
+                        <!-- Red Line -->
+                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20" fill="none" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" />
+                        <!-- Black Line -->
+                        <path d="M30,50 C100,50 200,130 270,130" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                        
+                        <!-- Points -->
+                        <circle cx="30" cy="50" r="5" fill="#fff" stroke="#000" stroke-width="2" />
+                        <circle cx="270" cy="130" r="5" fill="#fff" stroke="#000" stroke-width="2" />
+                        
+                        <!-- Labels -->
+                        <text x="30" y="30" fill="#000" font-size="14" font-weight="bold">Ваш вес</text>
+                        
+                        <text x="210" y="70" fill="#666" font-size="10">Обычная диета</text>
+                        <text x="50" y="115" fill="#000" font-size="10" font-weight="bold">★ Наше приложение</text>
+                        
+                        <text x="30" y="170" fill="#999" font-size="10">Месяц 1</text>
+                        <text x="240" y="170" fill="#999" font-size="10">Месяц 6</text>
+                    </svg>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #555; line-height: 1.4;">
+                    <b>80% пользователей</b> сохраняют результат даже через полгода
+                </p>
+            </div>
+
+            <button class="main-btn" onclick="nextStep(4)">Далее</button>
+        </div>
+
+        <div id="step-4" class="step">
+            <div class="header-back" onclick="prevStep(3)">←</div>
+            <h1>Рост и вес</h1>
+            <p class="subtitle">Введите свои данные для расчета</p>
+
+            <div class="inputs-container">
+                <div class="input-group">
+                    <label>Рост (см)</label>
+                    <input type="number" id="height" value="175" placeholder="175">
+                </div>
+                <div class="input-group">
+                    <label>Вес (кг)</label>
+                    <input type="number" id="weight" value="75" placeholder="75">
+                </div>
+            </div>
+
+            <button class="main-btn" onclick="nextStep(5)">Далее</button>
+        </div>
+
+        <!-- New Steps based on images -->
+        <div id="step-5" class="step">
+            <div class="header-back" onclick="prevStep(4)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 50%;"></div></div>
+            <h1>Когда вы родились?</h1>
+            <p class="subtitle">Это поможет нам откалибровать ваш персональный план.</p>
+            
+            <div class="date-picker-container">
+                <input type="date" id="birthdate" class="date-input" value="2005-01-01">
+            </div>
+
+            <button class="main-btn" onclick="saveBorn()">Далее</button>
+        </div>
+
+        <div id="step-6" class="step">
+            <div class="header-back" onclick="prevStep(5)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 60%;"></div></div>
+            <h1>Какая ваша цель?</h1>
+            <p class="subtitle">Это поможет нам составить план потребления калорий.</p>
+            
+            <div class="options-vertical">
+                <button class="option-btn" onclick="selectGoal('lose')">Похудеть</button>
+                <button class="option-btn" onclick="selectGoal('maintain')">Поддержать вес</button>
+                <button class="option-btn" onclick="selectGoal('gain')">Набрать вес</button>
+            </div>
+        </div>
+
+        <div id="step-7" class="step">
+            <div class="header-back" onclick="prevStep(6)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 70%;"></div></div>
+            <h1>Что мешает вам достичь цели?</h1>
+            
+            <div class="options-vertical">
+                <div class="card" onclick="selectStopper('consistency')">
+                    <div class="icon">📊</div>
+                    <div class="text">
+                        <h3>Недостаток дисциплины</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectStopper('eating_habits')">
+                    <div class="icon">🍔</div>
+                    <div class="text">
+                        <h3>Нездоровые привычки в еде</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectStopper('support')">
+                    <div class="icon">🤝</div>
+                    <div class="text">
+                        <h3>Отсутствие поддержки</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectStopper('schedule')">
+                    <div class="icon">📅</div>
+                    <div class="text">
+                        <h3>Плотный график</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectStopper('inspiration')">
+                    <div class="icon">💡</div>
+                    <div class="text">
+                        <h3>Нет идей для блюд</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-8" class="step">
+            <div class="header-back" onclick="prevStep(7)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 80%;"></div></div>
+            <h1>Вы придерживаетесь диеты?</h1>
+            
+            <div class="options-vertical">
+                <div class="card" onclick="selectDiet('classic')">
+                    <div class="icon">🍗</div>
+                    <div class="text">
+                        <h3>Классическая</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectDiet('pescatarian')">
+                    <div class="icon">🐟</div>
+                    <div class="text">
+                        <h3>Пескетарианство</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectDiet('vegetarian')">
+                    <div class="icon">🥦</div>
+                    <div class="text">
+                        <h3>Вегетарианство</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectDiet('vegan')">
+                    <div class="icon">🌱</div>
+                    <div class="text">
+                        <h3>Веганство</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-9" class="step">
+            <div class="header-back" onclick="prevStep(8)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 90%;"></div></div>
+            <h1>Чего бы вы хотели достичь?</h1>
+            
+            <div class="options-vertical">
+                <div class="card" onclick="selectAccomplish('healthier')">
+                    <div class="icon">🍎</div>
+                    <div class="text">
+                        <h3>Питаться и жить здоровее</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectAccomplish('energy')">
+                    <div class="icon">☀️</div>
+                    <div class="text">
+                        <h3>Улучшить энергию и настроение</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectAccomplish('motivated')">
+                    <div class="icon">💪</div>
+                    <div class="text">
+                        <h3>Оставаться мотивированным</h3>
+                    </div>
+                </div>
+                <div class="card" onclick="selectAccomplish('body')">
+                    <div class="icon">🧘</div>
+                    <div class="text">
+                        <h3>Чувствовать себя лучше</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-10" class="step">
+            <div class="loading-container">
+                <div class="percentage" id="load-percentage">0%</div>
+                <h1 id="loading-title">Готовим ваш план</h1>
+                
+                <div class="loading-bar-wrapper">
+                    <div class="loading-bar-fill" id="load-progress"></div>
+                </div>
+
+                <p class="loading-status" id="load-status">Анализируем ваши данные...</p>
+
+                <div class="recommendation-card">
+                    <h3>Ежедневные рекомендации для:</h3>
+                    <ul class="check-list">
+                        <li id="check-calories">
+                            <span>Калории</span>
+                            <div class="check-icon">✓</div>
+                        </li>
+                        <li id="check-carbs">
+                            <span>Углеводы</span>
+                            <div class="check-icon">✓</div>
+                        </li>
+                        <li id="check-protein">
+                            <span>Белки</span>
+                            <div class="check-icon">✓</div>
+                        </li>
+                        <li id="check-fats">
+                            <span>Жиры</span>
+                            <div class="check-icon">✓</div>
+                        </li>
+                        <li id="check-health">
+                            <span>Индекс здоровья</span>
+                            <div class="check-icon">✓</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <button id="final-btn" class="main-btn" style="display: none;" onclick="calculateAndSend()">Получить план</button>
+        </div>
+
+        <div id="step-11" class="step">
+            <div class="result-header">
+                <div class="check-circle-big">✓</div>
+                <h1>Поздравляем!<br>Ваш персональный план готов!</h1>
+                <p class="subtitle" id="goal-text">Ваша цель: Поддержание веса</p>
+                <div class="target-weight-badge" id="target-weight">75 кг</div>
+            </div>
+
+            <div class="daily-recommendations">
+                <div class="section-title">
+                    <h2>Ежедневная норма</h2>
+                    <span>Можно изменить в любое время</span>
+                </div>
+
+                <div class="macros-grid">
+                    <div class="macro-card">
+                        <div class="macro-info">
+                            <span class="macro-icon">🔥</span>
+                            <span class="macro-name">Калории</span>
+                        </div>
+                        <div class="progress-ring-container">
+                            <svg class="progress-ring" width="100" height="100">
+                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-calories" class="progress-ring__circle" stroke="#000" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                            </svg>
+                            <div class="macro-value" id="res-calories">2062</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-card">
+                        <div class="macro-info">
+                            <span class="macro-icon">🌾</span>
+                            <span class="macro-name">Углеводы</span>
+                        </div>
+                        <div class="progress-ring-container">
+                            <svg class="progress-ring" width="100" height="100">
+                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-carbs" class="progress-ring__circle" stroke="#ffcc80" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                            </svg>
+                            <div class="macro-value" id="res-carbs">234г</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-card">
+                        <div class="macro-info">
+                            <span class="macro-icon">🥩</span>
+                            <span class="macro-name">Белки</span>
+                        </div>
+                        <div class="progress-ring-container">
+                            <svg class="progress-ring" width="100" height="100">
+                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-protein" class="progress-ring__circle" stroke="#ff8a80" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                            </svg>
+                            <div class="macro-value" id="res-protein">152г</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-card">
+                        <div class="macro-info">
+                            <span class="macro-icon">🥑</span>
+                            <span class="macro-name">Жиры</span>
+                        </div>
+                        <div class="progress-ring-container">
+                            <svg class="progress-ring" width="100" height="100">
+                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-fats" class="progress-ring__circle" stroke="#81d4fa" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                            </svg>
+                            <div class="macro-value" id="res-fats">57г</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="how-to-reach">
+                <h2>Как достичь цели:</h2>
+                <div class="tips-container" id="ai-tips">
+                    <!-- Будет заполнено AI -->
+                    <div class="tip-item">
+                        <div class="tip-icon">💖</div>
+                        <div class="tip-text">Используйте индекс здоровья для улучшения режима</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">🥑</div>
+                        <div class="tip-text">Отслеживайте каждый прием пищи</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">⏲️</div>
+                        <div class="tip-text">Следуйте дневной норме калорий</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="main-btn" onclick="tg.close()">Начать!</button>
+        </div>
+
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
