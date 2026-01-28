@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Калькулятор Калорий</title>
-    <link rel="stylesheet" href="style.css?v=1.1.9">
+    <link rel="stylesheet" href="style.css?v=1.1.10">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -381,9 +381,7 @@
 
         <div id="step-12" class="step step-home">
             <div class="home-top-header">
-                <div class="streak-badge">
-                    <span>🔥</span> 1
-                </div>
+                <!-- Streak badge removed -->
             </div>
 
             <div class="calendar-header">
@@ -391,7 +389,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="70 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Пн</div>
                     </div>
@@ -401,7 +398,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="30 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Вт</div>
                     </div>
@@ -411,7 +407,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="90 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Ср</div>
                     </div>
@@ -421,7 +416,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="50 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Чт</div>
                     </div>
@@ -431,7 +425,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="80 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Пт</div>
                     </div>
@@ -441,7 +434,6 @@
                     <div class="day-ring-container">
                         <svg viewBox="0 0 36 36" class="day-ring">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="1.5" stroke-dasharray="2,2"></circle>
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#000" stroke-width="2" stroke-dasharray="10 100" stroke-dashoffset="25" stroke-linecap="round"></circle>
                         </svg>
                         <div class="day-name">Сб</div>
                     </div>
@@ -461,14 +453,14 @@
             <div class="main-calorie-card">
                 <div class="calorie-left">
                     <h2 id="home-calories-left">0</h2>
-                    <span id="home-calories-total">Calories left</span>
+                    <span id="home-calories-total">Ккал осталось</span>
                 </div>
                 <div class="calorie-ring-container">
                     <svg viewBox="0 0 100 100" class="large-ring">
                         <circle cx="50" cy="50" r="45" fill="none" stroke="#f0f0f5" stroke-width="8"></circle>
                         <circle id="home-ring-calories" cx="50" cy="50" r="45" fill="none" stroke="#000" stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7" stroke-linecap="round"></circle>
                     </svg>
-                    <div class="ring-icon">🔥</div>
+                    <div class="ring-icon" style="filter: grayscale(1) brightness(0);">🔥</div>
                 </div>
             </div>
 
@@ -515,16 +507,16 @@
             </div>
 
             <div class="recent-uploads">
-                <h3>Recently uploaded</h3>
+                <h3>Недавно добавлено</h3>
                 <div id="food-list" class="food-list">
-                    <div class="empty-state">No records yet. Press + to add.</div>
+                    <div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>
                 </div>
             </div>
 
             <div class="tab-bar">
                 <div class="tab-item active">
                     <div class="tab-icon">🏠</div>
-                    <span>Home</span>
+                    <span>Главная</span>
                 </div>
                 <div class="tab-item">
                     <div class="tab-icon">📊</div>
@@ -535,7 +527,7 @@
                     <span>Настройки</span>
                 </div>
                 <div class="add-btn-main" onclick="openCamera()">+</div>
-                <div style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.1.9</div>
+                <div style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.1.10</div>
             </div>
         </div>
 
@@ -588,6 +580,6 @@
         </div>
 
     </div>
-    <script src="script.js?v=1.1.9"></script>
+    <script src="script.js?v=1.1.10"></script>
 </body>
 </html>
