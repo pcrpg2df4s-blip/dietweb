@@ -1,3 +1,7 @@
+const CONFIG = {
+    GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ"
+};
+
 let userData = {
     gender: 'male',
     activity: 1.2,
@@ -116,8 +120,7 @@ function startLoadingAnimation() {
 }
 
 async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
-    const GEMINI_API_KEY = "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ"; // From .env
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
     
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
@@ -321,8 +324,9 @@ async function finishAnalysis(imageData) {
         addFoodToHome(result, imageData);
     } catch (err) {
         console.error("AI Analysis error:", err);
-        // Фейковые данные только в крайнем случае
-        addFoodToHome({name: "Красная рыба", calories: 380, protein: 30, carbs: 0, fats: 25}, imageData);
+        // В случае ошибки показываем уведомление и не добавляем рыбу по умолчанию
+        tg.showAlert("Ошибка при анализе фото. Попробуйте еще раз.");
+        nextStep(12); // Возвращаемся на главный экран
     }
 }
 
