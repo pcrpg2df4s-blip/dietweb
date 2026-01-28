@@ -241,6 +241,9 @@ function showResults() {
     const height = parseFloat(document.getElementById('height').value);
     const weight = parseFloat(document.getElementById('weight').value);
     
+    userData.height = height;
+    userData.weight = weight;
+    
     // Расчет калорий
     let bmr;
     if (userData.gender === 'male') {
