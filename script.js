@@ -1,6 +1,6 @@
 const CONFIG = {
     GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
-    VERSION: "1.1.5"
+    VERSION: "1.1.6"
 };
 
 console.log("App Version:", CONFIG.VERSION);
@@ -199,7 +199,7 @@ function startLoadingAnimation() {
 }
 
 async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
     
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
@@ -365,6 +365,7 @@ async function startAnalysis(imageData) {
 }
 
 async function finishAnalysis(imageData) {
+    console.log("Starting finishAnalysis...");
     // Вызываем Gemini для анализа еды
     const prompt = `Анализируй это изображение еды максимально точно. 
     1. Определи конкретное название блюда или основного продукта (например, "Стейк из семги" вместо просто "Обед"). 
@@ -379,6 +380,7 @@ async function finishAnalysis(imageData) {
             throw new Error("API Key is missing in CONFIG");
         }
 
+        console.log("Fetching from Gemini 2.0...");
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -388,29 +390,34 @@ async function finishAnalysis(imageData) {
         });
 
         const data = await response.json();
-        console.log("Gemini Raw Data:", data);
+        console.log("Gemini Raw Data received:", data);
 
         if (data.error) {
             throw new Error(`API Error: ${data.error.message}`);
         }
         
         if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
-            if (data.promptFeedback && data.promptFeedback.blockReason) {
-                throw new Error(`Blocked: ${data.promptFeedback.blockReason}`);
-            }
+            console.error("Gemini response structure is invalid:", data);
             throw new Error("Empty or blocked response");
         }
 
         let text = data.candidates[0].content.parts[0].text;
+        console.log("Gemini response text:", text);
+        
         // Очистка от возможной markdown разметки
         text = text.replace(/```json|```/g, '').trim();
         
         const result = JSON.parse(text);
+        console.log("Parsed result:", result);
         addFoodToHome(result, imageData);
     } catch (err) {
         console.error("AI Analysis error details:", err);
-        tg.showAlert(`[v${CONFIG.VERSION}] Ошибка анализа: ${err.message}. Попробуйте обновить страницу.`);
-        nextStep(12); // Возвращаемся на главный экран
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert(`[v${CONFIG.VERSION}] Ошибка анализа: ${err.message}`);
+        } else {
+            alert(`Ошибка анализа: ${err.message}`);
+        }
+        nextStep(12); // Возвращаемся на главный экран в любом случае при ошибке
     }
 }
 
