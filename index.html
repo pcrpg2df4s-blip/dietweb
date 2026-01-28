@@ -460,8 +460,8 @@
 
             <div class="main-calorie-card">
                 <div class="calorie-left">
-                    <h2 id="home-calories-left">2062</h2>
-                    <span>Ккал осталось</span>
+                    <h2 id="home-calories-left">0</h2>
+                    <span id="home-calories-total">Calories left</span>
                 </div>
                 <div class="calorie-ring-container">
                     <svg viewBox="0 0 100 100" class="large-ring">
@@ -475,39 +475,50 @@
             <div class="macros-home-grid">
                 <div class="macro-home-card">
                     <div class="macro-home-top">
-                        <div class="macro-home-value"><span id="home-protein-left">152</span>г</div>
+                        <div class="macro-home-value"><span id="home-protein-eaten">0</span>g</div>
                         <div class="macro-home-label">Белки - Б</div>
                     </div>
                     <div class="macro-home-ring">
-                        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle><circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#ff8a80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle></svg>
+                        <svg viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#ff8a80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                        </svg>
                         <div class="macro-mini-icon">🥩</div>
                     </div>
                 </div>
                 <div class="macro-home-card">
                     <div class="macro-home-top">
-                        <div class="macro-home-value"><span id="home-carbs-left">234</span>г</div>
+                        <div class="macro-home-value"><span id="home-carbs-eaten">0</span>g</div>
                         <div class="macro-home-label">Углеводы - У</div>
                     </div>
                     <div class="macro-home-ring">
-                        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle><circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#ffcc80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle></svg>
+                        <svg viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#ffcc80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                        </svg>
                         <div class="macro-mini-icon">🌾</div>
                     </div>
                 </div>
                 <div class="macro-home-card">
                     <div class="macro-home-top">
-                        <div class="macro-home-value"><span id="home-fats-left">57</span>г</div>
+                        <div class="macro-home-value"><span id="home-fats-eaten">0</span>g</div>
                         <div class="macro-home-label">Жиры - Ж</div>
                     </div>
                     <div class="macro-home-ring">
-                        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle><circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#81d4fa" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle></svg>
+                        <svg viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#81d4fa" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                        </svg>
                         <div class="macro-mini-icon">🥑</div>
                     </div>
                 </div>
             </div>
 
             <div class="recent-uploads">
-                <h3>Недавние приемы пищи</h3>
-                <div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>
+                <h3>Recently uploaded</h3>
+                <div id="food-list" class="food-list">
+                    <div class="empty-state">No records yet. Press + to add.</div>
+                </div>
             </div>
 
             <div class="tab-bar">
@@ -523,7 +534,55 @@
                     <div class="tab-icon">⚙️</div>
                     <span>Настройки</span>
                 </div>
-                <div class="add-btn-main">+</div>
+                <div class="add-btn-main" onclick="openCamera()">+</div>
+            </div>
+        </div>
+
+        <div id="step-13" class="step camera-step">
+            <div class="camera-overlay">
+                <div class="camera-header">
+                    <div class="close-camera" onclick="closeCamera()">✕</div>
+                    <div class="help-camera">?</div>
+                </div>
+                <div class="camera-frame"></div>
+                <div class="camera-footer">
+                    <div class="shutter-container">
+                        <div class="flash-btn">⚡</div>
+                        <div class="shutter-btn" onclick="takePhoto()"></div>
+                        <div class="flip-btn">🔄</div>
+                    </div>
+                </div>
+            </div>
+            <video id="camera-video" autoplay playsinline></video>
+            <canvas id="camera-canvas" style="display:none;"></canvas>
+        </div>
+
+        <div id="step-14" class="step analysis-step">
+            <div class="analysis-container">
+                <div class="analysis-card-compact">
+                    <div class="analysis-image-part">
+                        <img id="analyzed-img" src="" alt="Food">
+                        <div class="analysis-ring-overlay">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="8"></circle>
+                                <circle id="analysis-ring" cx="50" cy="50" r="45" fill="none" stroke="#fff" stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7" stroke-linecap="round"></circle>
+                            </svg>
+                            <div id="analysis-percent" class="analysis-percent">0%</div>
+                        </div>
+                    </div>
+                    <div class="analysis-text-part">
+                        <h3>Breaking<br>down macros...</h3>
+                        <div class="skeleton-loader">
+                            <div class="skeleton-line-long"></div>
+                            <div class="skeleton-line-row">
+                                <div class="skeleton-pill"></div>
+                                <div class="skeleton-pill"></div>
+                                <div class="skeleton-pill"></div>
+                            </div>
+                        </div>
+                        <p class="analysis-footer-text">We'll notify you when done!</p>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -635,23 +635,328 @@ h1 {
 }
 
 .tab-item span {
-    font-size: 10px;
-    font-weight: 600;
+font-size: 10px;
+font-weight: 600;
 }
 
 .add-btn-main {
-    position: absolute;
-    top: -25px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    background: #000;
-    color: #fff;
-    border-radius: 50%;
+position: absolute;
+top: -25px;
+right: 20px;
+width: 56px;
+height: 56px;
+background: #000;
+color: #fff;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 32px;
+box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+cursor: pointer;
+}
+
+/* Camera Step */
+.camera-step {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: #000;
+z-index: 2000;
+overflow: hidden;
+}
+
+#camera-video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.camera-overlay {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+z-index: 2001;
+padding: 20px;
+box-sizing: border-box;
+background: rgba(0,0,0,0.2);
+}
+
+.camera-header {
+display: flex;
+justify-content: space-between;
+color: #fff;
+font-size: 24px;
+}
+
+.camera-frame {
+width: 250px;
+height: 250px;
+border: 3px solid rgba(255, 255, 255, 0.8);
+border-radius: 40px;
+align-self: center;
+position: relative;
+box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
+}
+
+.camera-footer {
+display: flex;
+flex-direction: column;
+gap: 30px;
+padding-bottom: 20px;
+}
+
+.camera-modes {
+display: flex;
+justify-content: center;
+gap: 15px;
+overflow-x: auto;
+padding-bottom: 10px;
+}
+
+.mode {
+background: rgba(255,255,255,0.2);
+color: #fff;
+padding: 8px 16px;
+border-radius: 12px;
+font-size: 14px;
+white-space: nowrap;
+}
+
+.mode.active {
+background: #fff;
+color: #000;
+font-weight: 700;
+}
+
+.shutter-container {
+display: flex;
+justify-content: space-around;
+align-items: center;
+}
+
+.shutter-btn {
+width: 70px;
+height: 70px;
+background: #fff;
+border: 5px solid rgba(255,255,255,0.3);
+border-radius: 50%;
+cursor: pointer;
+}
+
+.flash-btn, .flip-btn {
+font-size: 24px;
+color: #fff;
+}
+
+/* Analysis Step Refined */
+.analysis-step {
+    background: #f8f8f8;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    cursor: pointer;
+    padding: 20px;
+}
+
+.analysis-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.analysis-card-compact {
+    background: #fff;
+    border-radius: 24px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.analysis-image-part {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.analysis-image-part img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(2px) brightness(0.8);
+}
+
+.analysis-ring-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.analysis-ring-overlay svg {
+    width: 80px;
+    height: 80px;
+    transform: rotate(-90deg);
+}
+
+.analysis-percent {
+    position: absolute;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.analysis-text-part {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.analysis-text-part h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #000;
+}
+
+.skeleton-loader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.skeleton-line-long {
+    height: 6px;
+    background: #f0f0f5;
+    border-radius: 3px;
+    width: 100%;
+}
+
+.skeleton-line-row {
+    display: flex;
+    gap: 6px;
+}
+
+.skeleton-pill {
+    height: 10px;
+    background: #f0f0f5;
+    border-radius: 5px;
+    width: 40px;
+}
+
+.analysis-footer-text {
+    margin: 0;
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+}
+
+/* Food Item Refined (Screenshot 4) */
+.food-item {
+    display: flex;
+    background: #fff;
+    padding: 12px;
+    border-radius: 24px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    align-items: center;
+    gap: 12px;
+}
+
+.food-img {
+    width: 90px;
+    height: 90px;
+    border-radius: 18px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.food-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.food-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.food-details h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+.food-time {
+    font-size: 11px;
+    color: #bbb;
+    font-weight: 500;
+}
+
+.food-calories {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+}
+
+.food-calories span.fire-icon {
+    font-size: 14px;
+}
+
+.food-macros-mini {
+    display: flex;
+    gap: 12px;
+}
+
+.food-macros-mini span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+}
+
+.macro-mini-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.empty-state {
+    color: #bbb;
+    font-size: 14px;
+    text-align: center;
+    padding: 30px 20px;
+    background: #fff;
+    border-radius: 24px;
+    border: 2px dashed #f0f0f5;
+    margin-top: 10px;
 }

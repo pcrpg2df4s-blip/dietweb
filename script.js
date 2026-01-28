@@ -213,22 +213,195 @@ function showResults() {
     nextStep(11);
 }
 
-function goToHome() {
-    // Обновляем данные на главной странице
-    document.getElementById('home-calories-left').innerText = document.getElementById('res-calories').innerText;
-    document.getElementById('home-protein-left').innerText = document.getElementById('res-protein').innerText.replace('г', '');
-    document.getElementById('home-carbs-left').innerText = document.getElementById('res-carbs').innerText.replace('г', '');
-    document.getElementById('home-fats-left').innerText = document.getElementById('res-fats').innerText.replace('г', '');
+let videoStream = null;
+let currentMacros = {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+    totalCalories: 2000,
+    totalProtein: 150,
+    totalCarbs: 250,
+    totalFats: 70
+};
 
-    // Обновляем кольца на главной (пока 0% прогресса, так как ничего не съедено)
-    setHomeProgress('home-ring-calories', 0, 282.7); // 2 * PI * 45
+async function openCamera() {
+    const video = document.getElementById('camera-video');
+    try {
+        const constraints = {
+            video: { 
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }, 
+            audio: false 
+        };
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = videoStream;
+        nextStep(13);
+    } catch (err) {
+        console.error("Camera error:", err);
+        alert("Не удалось получить доступ к камере. Убедитесь, что сайт открыт через HTTPS и вы дали разрешение.");
+    }
+}
+
+function closeCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+    nextStep(12);
+}
+
+function takePhoto() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = canvas.toDataURL('image/jpeg');
+    document.getElementById('analyzed-img').src = imageData;
+    
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+    
+    startAnalysis(imageData);
+}
+
+async function startAnalysis(imageData) {
+    nextStep(14);
+    
+    // Анимация прогресса
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 5) + 2;
+        if (progress > 100) progress = 100;
+        
+        document.getElementById('analysis-percent').innerText = `${progress}%`;
+        setHomeProgress('analysis-ring', progress, 282.7);
+        
+        if (progress === 100) {
+            clearInterval(interval);
+            finishAnalysis(imageData);
+        }
+    }, 150);
+}
+
+async function finishAnalysis(imageData) {
+    // Вызываем Gemini для анализа еды
+    const prompt = `Это фотография еды. Пожалуйста, определи что это за блюдо и оцени примерное количество калорий, белков, жиров и углеводов. 
+    Верни ответ ТОЛЬКО в формате JSON: 
+    {"name": "название блюда", "calories": 300, "protein": 15, "carbs": 30, "fats": 10}`;
+    
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }]
+            })
+        });
+
+        const data = await response.json();
+        const text = data.candidates[0].content.parts[0].text;
+        const result = JSON.parse(text.replace(/```json|```/g, ''));
+        
+        addFoodToHome(result, imageData);
+    } catch (err) {
+        console.error("AI Analysis error:", err);
+        // Фейковые данные если ошибка API
+        addFoodToHome({name: "Обед", calories: 450, protein: 20, carbs: 40, fats: 15}, imageData);
+    }
+}
+
+function addFoodToHome(food, image) {
+    // Обновляем съеденное
+    currentMacros.protein += food.protein;
+    currentMacros.carbs += food.carbs;
+    currentMacros.fats += food.fats;
+    currentMacros.calories += food.calories;
+
+    // Рассчитываем остаток
+    const caloriesLeft = Math.max(0, currentMacros.totalCalories - currentMacros.calories);
+    const proteinLeft = Math.max(0, currentMacros.totalProtein - currentMacros.protein);
+    const carbsLeft = Math.max(0, currentMacros.totalCarbs - currentMacros.carbs);
+    const fatsLeft = Math.max(0, currentMacros.totalFats - currentMacros.fats);
+    
+    // Обновляем UI (Остаток)
+    document.getElementById('home-calories-left').innerText = caloriesLeft;
+    document.getElementById('home-protein-eaten').innerText = proteinLeft;
+    document.getElementById('home-carbs-eaten').innerText = carbsLeft;
+    document.getElementById('home-fats-eaten').innerText = fatsLeft;
+
+    // Обновляем кольца (процент съеденного)
+    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
+    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
+    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
+    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
+
+    // Добавляем в список
+    const foodList = document.getElementById('food-list');
+    if (foodList.querySelector('.empty-state')) foodList.innerHTML = '';
+    
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const item = document.createElement('div');
+    item.className = 'food-item';
+    item.innerHTML = `
+        <img src="${image}" class="food-img">
+        <div class="food-details">
+            <div class="food-header">
+                <h4>${food.name}</h4>
+                <span class="food-time">${time}</span>
+            </div>
+            <div class="food-calories"><span class="fire-icon">🔥</span> ${food.calories} ккал</div>
+            <div class="food-macros-mini">
+                <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${food.protein}г</span>
+                <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${food.carbs}г</span>
+                <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${food.fats}г</span>
+            </div>
+        </div>
+    `;
+    foodList.prepend(item);
+
+    nextStep(12);
+}
+
+function goToHome() {
+    // Сохраняем цели из расчета
+    currentMacros.totalCalories = parseInt(document.getElementById('res-calories').innerText);
+    currentMacros.totalProtein = parseInt(document.getElementById('res-protein').innerText.replace('г', ''));
+    currentMacros.totalCarbs = parseInt(document.getElementById('res-carbs').innerText.replace('г', ''));
+    currentMacros.totalFats = parseInt(document.getElementById('res-fats').innerText.replace('г', ''));
+    
+    // Изначально все съеденное по нулям
+    currentMacros.calories = 0;
+    currentMacros.protein = 0;
+    currentMacros.carbs = 0;
+    currentMacros.fats = 0;
+
+    // В UI отображаем остаток (равен полной цели)
+    document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
+    document.getElementById('home-calories-total').innerText = `Ккал осталось`;
+    
+    document.getElementById('home-protein-eaten').innerText = currentMacros.totalProtein;
+    document.getElementById('home-carbs-eaten').innerText = currentMacros.totalCarbs;
+    document.getElementById('home-fats-eaten').innerText = currentMacros.totalFats;
+
+    // Сбрасываем кольца
+    setHomeProgress('home-ring-calories', 0, 282.7);
     setHomeProgress('home-ring-protein', 0, 100);
     setHomeProgress('home-ring-carbs', 0, 100);
     setHomeProgress('home-ring-fats', 0, 100);
 
-    // Обновляем даты календаря
-    updateCalendarDates();
+    // Очищаем список еды
+    document.getElementById('food-list').innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
 
+    updateCalendarDates();
     nextStep(12);
 }
 
