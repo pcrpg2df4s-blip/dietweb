@@ -1,6 +1,9 @@
 const CONFIG = {
-    GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ"
+    GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
+    VERSION: "1.1.3"
 };
+
+console.log("App Version:", CONFIG.VERSION);
 
 let userData = {
     gender: 'male',
@@ -304,6 +307,10 @@ async function finishAnalysis(imageData) {
     {"name": "Точное название блюда", "calories": 450, "protein": 25, "carbs": 5, "fats": 35}`;
     
     try {
+        if (!CONFIG.GOOGLE_API_KEY) {
+            throw new Error("API Key is missing in CONFIG");
+        }
+
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -334,7 +341,7 @@ async function finishAnalysis(imageData) {
         addFoodToHome(result, imageData);
     } catch (err) {
         console.error("AI Analysis error details:", err);
-        tg.showAlert(`Ошибка анализа: ${err.message}`);
+        tg.showAlert(`[v${CONFIG.VERSION}] Ошибка анализа: ${err.message}. Попробуйте обновить страницу.`);
         nextStep(12); // Возвращаемся на главный экран
     }
 }
