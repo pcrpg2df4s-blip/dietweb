@@ -1,7 +1,12 @@
+const urlParams = new URLSearchParams(window.location.search);
 const CONFIG = {
-    GOOGLE_API_KEY: "AIzaSyAREA3WrdAOeizK3ZYPuvsL4NvNfYB6muQ",
-    VERSION: "1.1.7"
+    GOOGLE_API_KEY: urlParams.get('api_key') || "",
+    VERSION: "1.1.8"
 };
+
+if (!CONFIG.GOOGLE_API_KEY) {
+    console.warn("GOOGLE_API_KEY not found in URL parameters");
+}
 
 console.log("App Version:", CONFIG.VERSION);
 

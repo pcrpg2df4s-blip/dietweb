@@ -11,8 +11,10 @@ from aiogram.types import WebAppInfo
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # Укажите вашу ссылку на Web App здесь или в .env
-WEB_APP_URL = os.getenv("WEB_APP_URL", "https://pcrpg2df4s-blip.github.io/dietweb/")
+BASE_WEB_APP_URL = os.getenv("WEB_APP_URL", "https://pcrpg2df4s-blip.github.io/dietweb/")
+WEB_APP_URL = f"{BASE_WEB_APP_URL}?api_key={GOOGLE_API_KEY}" if GOOGLE_API_KEY else BASE_WEB_APP_URL
 
 if not BOT_TOKEN:
     print("ОШИБКА: BOT_TOKEN не найден в .env файле")
