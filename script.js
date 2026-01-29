@@ -1,10 +1,18 @@
 const urlParams = new URLSearchParams(window.location.search);
-const apiKeyFromUrl = urlParams.get('api_key');
-console.log("Debug: API Key from URL:", apiKeyFromUrl ? "Present (Starts with " + apiKeyFromUrl.substring(0, 5) + "...)" : "Not found");
+let apiKeyFromUrl = urlParams.get('api_key');
+
+// Try to get from URL, otherwise from localStorage
+if (apiKeyFromUrl) {
+    localStorage.setItem('dietApp_google_api_key', apiKeyFromUrl);
+} else {
+    apiKeyFromUrl = localStorage.getItem('dietApp_google_api_key');
+}
+
+console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyFromUrl.substring(0, 5) + "...)" : "Not found");
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.10"
+    VERSION: "1.1.11"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
