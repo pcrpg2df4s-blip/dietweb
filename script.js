@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.32"
+    VERSION: "1.1.33"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -305,8 +305,12 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 }
 
 function showResults() {
+    console.log('showResults() called');
+    
     const height = parseFloat(document.getElementById('height').value);
     const weight = parseFloat(document.getElementById('weight').value);
+    
+    console.log('Height:', height, 'Weight:', weight);
     
     userData.height = height;
     userData.weight = weight;
@@ -319,6 +323,8 @@ function showResults() {
         bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
     }
     const calories = Math.round(bmr * userData.activity);
+    
+    console.log('Calculated calories:', calories);
     
     // Расчет БЖУ (Примерное распределение: 30% белки, 30% жиры, 40% углеводы)
     const protein = Math.round((calories * 0.3) / 4);
@@ -345,8 +351,11 @@ function showResults() {
     setProgress('ring-protein', 90);
     setProgress('ring-fats', 70);
 
+    console.log('Starting fetchGeminiTips...');
+    
     // Загрузка советов от Gemini
     fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
+        console.log('Tips received:', tips);
         const container = document.getElementById('ai-tips');
         container.innerHTML = '';
         tips.forEach(tip => {
@@ -357,9 +366,14 @@ function showResults() {
                 </div>
             `;
         });
+        
+        console.log('Moving to step 11');
+        nextStep(11);
+    }).catch(error => {
+        console.error('Error in fetchGeminiTips:', error);
+        // Even if tips fail, still move to next step
+        nextStep(11);
     });
-
-    nextStep(11);
 }
 
 let videoStream = null;
