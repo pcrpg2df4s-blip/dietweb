@@ -751,43 +751,58 @@ function openSettings() {
 }
 
 function loadSettingsData() {
-    // Load Telegram user data
+    // 1. Загружаем данные Телеграм (Имя + Фото)
     const tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
-        document.getElementById('settings-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
         
-        // Load avatar if available
+        // Ставим имя
+        document.getElementById('settings-name').innerText = 
+            user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        
+        // Ставим фото
+        const avatarEl = document.getElementById('settings-avatar');
         if (user.photo_url) {
-            const avatarEl = document.getElementById('settings-avatar');
             avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
         } else {
-            // Use first letter as placeholder
-            const avatarEl = document.getElementById('settings-avatar');
             const firstLetter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
             avatarEl.innerHTML = `<div class="avatar-placeholder">${firstLetter}</div>`;
         }
     } else {
-        document.getElementById('settings-name').innerText = 'Неизвестный пользователь';
+        document.getElementById('settings-name').innerText = 'Гость';
     }
     
-    // Load user registration data
-    const genderMap = { 'male': 'Мужской', 'female': 'Женский' };
-    const activityMap = { 1.2: 'Низкая', 1.55: 'Средняя', 1.725: 'Высокая' };
-    const goalMap = { 'lose': 'Похудение', 'maintain': 'Поддержание', 'gain': 'Набор массы' };
+    // 2. Словари для перевода цифр в слова
+    const activityMap = { 
+        1.2: 'Сидячий', 
+        1.375: 'Лёгкий', 
+        1.55: 'Умеренный', 
+        1.725: 'Высокая', 
+        1.9: 'Экстремальная' 
+    };
     
-    document.getElementById('settings-gender').innerText = genderMap[userData.gender] || '-';
-    document.getElementById('settings-age').innerText = userData.age ? userData.age + ' лет' : '-';
-    document.getElementById('settings-height').innerText = userData.height ? userData.height + ' см' : '-';
-    document.getElementById('settings-weight').innerText = userData.weight ? userData.weight + ' кг' : '-';
-    document.getElementById('settings-activity').innerText = activityMap[userData.activity] || '-';
-    document.getElementById('settings-goal').innerText = goalMap[userData.goal] || '-';
+    const goalMap = { 
+        'lose': 'Похудение', 
+        'maintain': 'Удержание', 
+        'gain': 'Набор массы' 
+    };
     
-    // Load nutrition targets
-    document.getElementById('settings-calories').innerText = currentMacros.totalCalories || '0';
-    document.getElementById('settings-protein').innerText = (currentMacros.totalProtein || '0') + 'г';
-    document.getElementById('settings-carbs').innerText = (currentMacros.totalCarbs || '0') + 'г';
-    document.getElementById('settings-fats').innerText = (currentMacros.totalFats || '0') + 'г';
+    // 3. Заполняем список значениями из памяти (userData)
+    // Эти ID (set-activity-text и т.д.) соответствуют новому HTML, который мы сделали
+    
+    // Активность
+    const actText = activityMap[userData.activity] || 'Умеренный';
+    document.getElementById('set-activity-text').innerText = actText;
+    
+    // Вес
+    document.getElementById('set-weight-text').innerText = (userData.weight || 0) + ' кг';
+    
+    // Цель
+    const goalText = goalMap[userData.goal] || 'Здоровье';
+    document.getElementById('set-goal-text').innerText = goalText;
+    
+    // Рост
+    document.getElementById('set-height-text').innerText = (userData.height || 0) + ' см';
 }
 
 function resetAppData() {

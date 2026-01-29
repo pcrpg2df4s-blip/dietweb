@@ -656,88 +656,63 @@
             </div>
 
         <div id="step-16" class="step">
-            <div class="settings-page">
-                <div class="settings-header">
-                    <h2>Настройки</h2>
+            <div class="settings-page-new">
+                
+                <div class="profile-header-center">
+                    <div class="avatar-large-container" id="settings-avatar">
+                        </div>
+                    <h2 id="settings-name">Загрузка...</h2>
+                    <div class="user-status-badge">User</div>
                 </div>
 
-                <div class="profile-card">
-                    <div class="profile-avatar" id="settings-avatar">
-                        <div class="avatar-placeholder">?</div>
+                <div class="settings-group-label">Мои данные</div>
+                <div class="settings-list-container">
+                    
+                    <div class="settings-row">
+                        <span class="row-label">Уровень активности</span>
+                        <div class="row-value-group">
+                            <span id="set-activity-text">-</span> <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </div>
                     </div>
-                    <div class="profile-info">
-                        <h3 id="settings-name">Загрузка...</h3>
-                        <p class="profile-subtitle">Telegram профиль</p>
-                    </div>
-                </div>
 
-                <div class="settings-section">
-                    <h4>Ваши данные</h4>
-                    <div class="data-grid">
-                        <div class="data-item">
-                            <span class="data-label">Пол</span>
-                            <span class="data-value" id="settings-gender">-</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="data-label">Возраст</span>
-                            <span class="data-value" id="settings-age">-</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="data-label">Рост</span>
-                            <span class="data-value" id="settings-height">-</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="data-label">Вес</span>
-                            <span class="data-value" id="settings-weight">-</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="data-label">Активность</span>
-                            <span class="data-value" id="settings-activity">-</span>
-                        </div>
-                        <div class="data-item">
-                            <span class="data-label">Цель</span>
-                            <span class="data-value" id="settings-goal">-</span>
+                    <div class="settings-row">
+                        <span class="row-label">Текущий вес</span>
+                        <div class="row-value-group">
+                            <span id="set-weight-text">-</span>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
-                </div>
 
-                <div class="settings-section">
-                    <h4>Цели питания</h4>
-                    <div class="macros-targets">
-                        <div class="macro-target">
-                            <span class="macro-icon">🔥</span>
-                            <div class="macro-info">
-                                <span class="macro-name">Калории</span>
-                                <span class="macro-value" id="settings-calories">0</span>
-                            </div>
+                    <div class="settings-row">
+                        <span class="row-label">Цель</span>
+                        <div class="row-value-group">
+                            <span id="set-goal-text">-</span>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
-                        <div class="macro-target">
-                            <span class="macro-icon">🥩</span>
-                            <div class="macro-info">
-                                <span class="macro-name">Белки</span>
-                                <span class="macro-value" id="settings-protein">0г</span>
-                            </div>
-                        </div>
-                        <div class="macro-target">
-                            <span class="macro-icon">🌾</span>
-                            <div class="macro-info">
-                                <span class="macro-name">Углеводы</span>
-                                <span class="macro-value" id="settings-carbs">0г</span>
-                            </div>
-                        </div>
-                        <div class="macro-target">
-                            <span class="macro-icon">🥑</span>
-                            <div class="macro-info">
-                                <span class="macro-name">Жиры</span>
-                                <span class="macro-value" id="settings-fats">0г</span>
-                            </div>
+                    </div>
+
+                    <div class="settings-row no-border">
+                        <span class="row-label">Рост</span>
+                        <div class="row-value-group">
+                            <span id="set-height-text">-</span>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-actions">
-                    <button class="settings-btn" onclick="resetAppData()">Сбросить данные</button>
+                <div class="settings-group-label">Реферальная программа</div>
+                <div class="referral-box">
+                    <div class="referral-icon">👥</div>
+                    <h3>Пригласи друга</h3>
+                    <p>Получи доступ к PRO функциям за каждого приглашенного друга.</p>
+                    <button class="referral-btn">Подробнее</button>
                 </div>
+
+                <div class="settings-actions" style="margin-top: 30px;">
+                    <button class="settings-btn danger-btn" onclick="resetAppData()">Сбросить все данные</button>
+                </div>
+                
+                <div style="height: 100px;"></div>
             </div>
         </div>
 
