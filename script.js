@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.20"
+    VERSION: "1.1.22"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -65,9 +65,37 @@ function loadSavedData() {
         userData = JSON.parse(savedUser);
         currentMacros = JSON.parse(savedMacros);
         
+        // Reset daily counters if it's a new day
+        const today = new Date().toISOString().split('T')[0];
+        if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
+        
+        // Check if we need to reset today's temporary counters
+        // This is simple: if the last update wasn't today, reset the active counters
+        const lastUpdate = localStorage.getItem('dietApp_lastUpdate');
+        if (lastUpdate !== today) {
+            // Save yesterday's data into history before resetting if not already there
+            if (lastUpdate) {
+                currentMacros.dailyHistory[lastUpdate] = {
+                    calories: currentMacros.calories,
+                    protein: currentMacros.protein,
+                    carbs: currentMacros.carbs,
+                    fats: currentMacros.fats
+                };
+            }
+            
+            // Reset for the new day
+            currentMacros.calories = 0;
+            currentMacros.protein = 0;
+            currentMacros.carbs = 0;
+            currentMacros.fats = 0;
+            currentMacros.foodHistory = []; // Optional: keep or clear history? Image suggests clear or separate.
+            
+            localStorage.setItem('dietApp_lastUpdate', today);
+            saveAllData();
+        }
+
         // Если уже есть рассчитанные цели, идем сразу на главный экран
         if (currentMacros.totalCalories > 0) {
-            // Ждем инициализации DOM элементов
             setTimeout(() => {
                 initHomeScreenFromSaved();
                 nextStep(12);
@@ -453,6 +481,16 @@ function addFoodToHome(food, image) {
     currentMacros.carbs += food.carbs;
     currentMacros.fats += food.fats;
     currentMacros.calories += food.calories;
+
+    // Update daily history immediately
+    const today = new Date().toISOString().split('T')[0];
+    if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
+    currentMacros.dailyHistory[today] = {
+        calories: currentMacros.calories,
+        protein: currentMacros.protein,
+        carbs: currentMacros.carbs,
+        fats: currentMacros.fats
+    };
 
     // Рассчитываем остаток
     const caloriesLeft = Math.max(0, currentMacros.totalCalories - currentMacros.calories);
