@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.11"
+    VERSION: "1.1.12"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -316,23 +316,26 @@ function showResults() {
 
 let videoStream = null;
 async function openCamera() {
-    const video = document.getElementById('camera-video');
-    try {
-        const constraints = {
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }, 
-            audio: false 
+    // Используем нативный способ через input для избежания постоянных запросов разрешений
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // Прямой вызов камеры на мобильных устройствах
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const imageData = event.target.result;
+            document.getElementById('analyzed-img').src = imageData;
+            startAnalysis(imageData);
         };
-        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = videoStream;
-        nextStep(13);
-    } catch (err) {
-        console.error("Camera error:", err);
-        alert("Не удалось получить доступ к камере. Убедитесь, что сайт открыт через HTTPS и вы дали разрешение.");
-    }
+        reader.readAsDataURL(file);
+    };
+    
+    input.click();
 }
 
 function closeCamera() {
@@ -384,11 +387,15 @@ async function finishAnalysis(imageData) {
     console.log("Starting finishAnalysis...");
     // Вызываем Gemini для анализа еды
     const prompt = `Анализируй это изображение еды максимально точно. 
-    1. Определи конкретное название блюда или основного продукта на РУССКОМ ЯЗЫКЕ (например, "Стейк из семги" вместо просто "Обед"). 
+    1. Определи конкретное название блюда или основного продукта СТРОГО на РУССКОМ ЯЗЫКЕ. Даже если это "Burger", пиши "Бургер".
     2. Оцени размер порции визуально.
     3. Рассчитай примерное содержание: калории (ккал), белки (г), жиры (г), углеводы (г).
     
-    ВАЖНО: Авокадо весом 100г содержит примерно 160 ккал. Пожалуйста, будь реалистичен в оценке веса порции.
+    СПРАВКА ДЛЯ ТОЧНОСТИ: 
+    - Авокадо (половина, ~70г) = 110 ккал.
+    - Авокадо (целое, ~150г) = 240 ккал.
+    - Яйцо (1 шт) = 70 ккал.
+    Будь максимально реалистичен.
     
     Верни ответ СТРОГО в формате JSON без лишнего текста и без markdown-разметки:
     {"name": "Название на русском", "calories": 450, "protein": 25, "carbs": 5, "fats": 35}`;
