@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.30"
+    VERSION: "1.1.32"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -751,26 +751,42 @@ function openSettings() {
 }
 
 function loadSettingsData() {
+    console.log('Loading settings data...');
+    
     // 1. Загружаем данные Телеграм (Имя + Фото)
     const tg = window.Telegram.WebApp;
+    console.log('Telegram WebApp:', tg);
+    console.log('User data:', tg ? tg.initDataUnsafe : null);
+    
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
+        console.log('User found:', user);
         
         // Ставим имя
-        document.getElementById('settings-name').innerText = 
-            user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        const nameEl = document.getElementById('settings-name');
+        if (nameEl) {
+            nameEl.innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        }
         
         // Ставим фото
         const avatarEl = document.getElementById('settings-avatar');
-        if (user.photo_url) {
-            avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
-        } else {
-            const firstLetter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
-            avatarEl.innerHTML = `<div class="avatar-placeholder">${firstLetter}</div>`;
+        if (avatarEl) {
+            if (user.photo_url) {
+                avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
+            } else {
+                const firstLetter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
+                avatarEl.innerHTML = `<div class="avatar-placeholder">${firstLetter}</div>`;
+            }
         }
     } else {
-        document.getElementById('settings-name').innerText = 'Гость';
+        console.log('No user data found, showing guest');
+        const nameEl = document.getElementById('settings-name');
+        if (nameEl) {
+            nameEl.innerText = 'Гость';
+        }
     }
+    
+    console.log('userData:', userData);
     
     // 2. Словари для перевода цифр в слова
     const activityMap = { 
@@ -791,18 +807,30 @@ function loadSettingsData() {
     // Эти ID (set-activity-text и т.д.) соответствуют новому HTML, который мы сделали
     
     // Активность
-    const actText = activityMap[userData.activity] || 'Умеренный';
-    document.getElementById('set-activity-text').innerText = actText;
+    const actEl = document.getElementById('set-activity-text');
+    if (actEl) {
+        const actText = activityMap[userData.activity] || 'Умеренный';
+        actEl.innerText = actText;
+    }
     
     // Вес
-    document.getElementById('set-weight-text').innerText = (userData.weight || 0) + ' кг';
+    const weightEl = document.getElementById('set-weight-text');
+    if (weightEl) {
+        weightEl.innerText = (userData.weight || 0) + ' кг';
+    }
     
     // Цель
-    const goalText = goalMap[userData.goal] || 'Здоровье';
-    document.getElementById('set-goal-text').innerText = goalText;
+    const goalEl = document.getElementById('set-goal-text');
+    if (goalEl) {
+        const goalText = goalMap[userData.goal] || 'Здоровье';
+        goalEl.innerText = goalText;
+    }
     
     // Рост
-    document.getElementById('set-height-text').innerText = (userData.height || 0) + ' см';
+    const heightEl = document.getElementById('set-height-text');
+    if (heightEl) {
+        heightEl.innerText = (userData.height || 0) + ' см';
+    }
 }
 
 function resetAppData() {
