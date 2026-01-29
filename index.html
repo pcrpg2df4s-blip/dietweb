@@ -655,66 +655,67 @@
                 </div>
             </div>
 
-        <div id="step-16" class="step">
-            <div class="settings-page-new">
-                
-                <div class="profile-header-center">
-                    <div class="avatar-large-container" id="settings-avatar">
-                        </div>
-                    <h2 id="settings-name">Загрузка...</h2>
-                    <div class="user-status-badge">User</div>
+        <<div id="step-16" class="step">
+    <div class="settings-page-new">
+        
+        <div class="profile-header-center">
+            <div class="avatar-large-container" id="settings-avatar">
                 </div>
+            <h2 id="settings-name">Загрузка...</h2>
+            <div class="user-status-badge">Pro User</div>
+        </div>
 
-                <div class="settings-group-label">Мои данные</div>
-                <div class="settings-list-container">
-                    
-                    <div class="settings-row">
-                        <span class="row-label">Уровень активности</span>
-                        <div class="row-value-group">
-                            <span id="set-activity-text">-</span> <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div>
-                    </div>
-
-                    <div class="settings-row">
-                        <span class="row-label">Текущий вес</span>
-                        <div class="row-value-group">
-                            <span id="set-weight-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div>
-                    </div>
-
-                    <div class="settings-row">
-                        <span class="row-label">Цель</span>
-                        <div class="row-value-group">
-                            <span id="set-goal-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div>
-                    </div>
-
-                    <div class="settings-row no-border">
-                        <span class="row-label">Рост</span>
-                        <div class="row-value-group">
-                            <span id="set-height-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div>
-                    </div>
+        <div class="settings-group-label">Мои данные</div>
+        <div class="settings-list-container">
+            
+            <div class="settings-row">
+                <span class="row-label">Активность</span>
+                <div class="row-value-group">
+                    <span id="set-activity-text">-</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </div>
+            </div>
 
-                <div class="settings-group-label">Реферальная программа</div>
-                <div class="referral-box">
-                    <div class="referral-icon">👥</div>
-                    <h3>Пригласи друга</h3>
-                    <p>Получи доступ к PRO функциям за каждого приглашенного друга.</p>
-                    <button class="referral-btn">Подробнее</button>
+            <div class="settings-row">
+                <span class="row-label">Вес</span>
+                <div class="row-value-group">
+                    <span id="set-weight-text">-</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </div>
+            </div>
 
-                <div class="settings-actions" style="margin-top: 30px;">
-                    <button class="settings-btn danger-btn" onclick="resetAppData()">Сбросить все данные</button>
+            <div class="settings-row">
+                <span class="row-label">Цель</span>
+                <div class="row-value-group">
+                    <span id="set-goal-text">-</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </div>
-                
-                <div style="height: 100px;"></div>
+            </div>
+
+            <div class="settings-row no-border">
+                <span class="row-label">Рост</span>
+                <div class="row-value-group">
+                    <span id="set-height-text">-</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
             </div>
         </div>
+
+        <div class="settings-group-label">Бонусы</div>
+        <div class="referral-box">
+            <div class="referral-icon">🎁</div>
+            <h3>Пригласи друга</h3>
+            <p>Получи доступ к новым функциям за каждого друга.</p>
+            <button class="referral-btn">Получить ссылку</button>
+        </div>
+
+        <div class="settings-actions" style="margin-top: 30px;">
+            <button class="settings-btn danger-btn" onclick="resetAppData()">Сбросить данные</button>
+        </div>
+        
+        <div style="height: 100px;"></div>
+    </div>
+</div>
 
     </div>
     <div id="global-tab-bar" class="tab-bar" style="display: none;">
@@ -734,8 +735,8 @@
             </div>
         </div>
         <div class="add-btn-main" onclick="openCamera()">+</div>
-        <div id="app-version-label" style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.1.33</div>
+        <div id="app-version-label" style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.1.34</div>
     </div>
-    <script src="script.js?v=1.1.33"></script>
+    <script src="script.js?v=1.1.34"></script>
 </body>
 </html>

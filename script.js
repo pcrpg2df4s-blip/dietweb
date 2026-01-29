@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.33"
+    VERSION: "1.1.34"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -765,44 +765,36 @@ function openSettings() {
 }
 
 function loadSettingsData() {
-    console.log('Loading settings data...');
-    
-    // 1. Загружаем данные Телеграм (Имя + Фото)
+    console.log("Открываем настройки...");
+
+    // 1. Загружаем данные из Телеграм (Имя + Фото)
     const tg = window.Telegram.WebApp;
-    console.log('Telegram WebApp:', tg);
-    console.log('User data:', tg ? tg.initDataUnsafe : null);
-    
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
-        console.log('User found:', user);
         
-        // Ставим имя
+        // Имя
         const nameEl = document.getElementById('settings-name');
         if (nameEl) {
             nameEl.innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
         }
         
-        // Ставим фото
+        // Аватарка
         const avatarEl = document.getElementById('settings-avatar');
         if (avatarEl) {
             if (user.photo_url) {
                 avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
             } else {
-                const firstLetter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
-                avatarEl.innerHTML = `<div class="avatar-placeholder">${firstLetter}</div>`;
+                const letter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
+                avatarEl.innerHTML = `<div class="avatar-placeholder">${letter}</div>`;
             }
         }
     } else {
-        console.log('No user data found, showing guest');
+        // Если открыто не в телеграме
         const nameEl = document.getElementById('settings-name');
-        if (nameEl) {
-            nameEl.innerText = 'Гость';
-        }
+        if (nameEl) nameEl.innerText = 'Гость';
     }
-    
-    console.log('userData:', userData);
-    
-    // 2. Словари для перевода цифр в слова
+
+    // 2. Словари для перевода данных в текст
     const activityMap = { 
         1.2: 'Сидячий', 
         1.375: 'Лёгкий', 
@@ -813,38 +805,21 @@ function loadSettingsData() {
     
     const goalMap = { 
         'lose': 'Похудение', 
-        'maintain': 'Удержание', 
-        'gain': 'Набор массы' 
+        'maintain': 'Норма', 
+        'gain': 'Масса' 
     };
     
-    // 3. Заполняем список значениями из памяти (userData)
-    // Эти ID (set-activity-text и т.д.) соответствуют новому HTML, который мы сделали
-    
-    // Активность
-    const actEl = document.getElementById('set-activity-text');
-    if (actEl) {
-        const actText = activityMap[userData.activity] || 'Умеренный';
-        actEl.innerText = actText;
-    }
-    
-    // Вес
-    const weightEl = document.getElementById('set-weight-text');
-    if (weightEl) {
-        weightEl.innerText = (userData.weight || 0) + ' кг';
-    }
-    
-    // Цель
-    const goalEl = document.getElementById('set-goal-text');
-    if (goalEl) {
-        const goalText = goalMap[userData.goal] || 'Здоровье';
-        goalEl.innerText = goalText;
-    }
-    
-    // Рост
-    const heightEl = document.getElementById('set-height-text');
-    if (heightEl) {
-        heightEl.innerText = (userData.height || 0) + ' см';
-    }
+    // 3. Заполняем поля (с проверкой на ошибки)
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+
+    // Берем данные из глобальной переменной userData
+    setText('set-activity-text', activityMap[userData.activity] || 'Норма');
+    setText('set-weight-text', (userData.weight || 0) + ' кг');
+    setText('set-goal-text', goalMap[userData.goal] || 'Здоровье');
+    setText('set-height-text', (userData.height || 0) + ' см');
 }
 
 function resetAppData() {
