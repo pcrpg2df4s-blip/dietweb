@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "2.0"
+    VERSION: "999.0"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
