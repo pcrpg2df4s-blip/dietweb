@@ -12,7 +12,7 @@ console.log("Debug: API Key:", apiKeyFromUrl ? "Present (Starts with " + apiKeyF
 
 const CONFIG = {
     GOOGLE_API_KEY: apiKeyFromUrl || "",
-    VERSION: "1.1.26"
+    VERSION: "1.1.30"
 };
 
 if (!CONFIG.GOOGLE_API_KEY) {
@@ -150,14 +150,15 @@ function nextStep(stepNumber) {
     // Manage Global Tab Bar visibility
     const globalTabBar = document.getElementById('global-tab-bar');
     if (globalTabBar) {
-        // Show tab bar only on main screens (12: Home, 15: Progress)
-        if (stepNumber === 12 || stepNumber === 15) {
+        // Show tab bar only on main screens (12: Home, 15: Progress, 16: Settings)
+        if (stepNumber === 12 || stepNumber === 15 || stepNumber === 16) {
             globalTabBar.style.display = 'flex';
             
             // Update active state in tab bar
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
             if (stepNumber === 12) document.getElementById('tab-home').classList.add('active');
             if (stepNumber === 15) document.getElementById('tab-progress').classList.add('active');
+            if (stepNumber === 16) document.getElementById('tab-settings').classList.add('active');
         } else {
             globalTabBar.style.display = 'none';
         }
@@ -686,7 +687,7 @@ function renderProgressChart() {
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
         
         // Calculate heights (max 150px)
-        const maxVal = 600; // Based on Y-axis
+        const maxVal = 5000; // Updated for higher calorie support
         const pHeight = Math.min(150, (data.protein * 4 / maxVal) * 150);
         const cHeight = Math.min(150, (data.carbs * 4 / maxVal) * 150);
         const fHeight = Math.min(150, (data.fats * 9 / maxVal) * 150);
@@ -744,22 +745,54 @@ function updateBMI() {
     pointerEl.style.left = `${pointerPos}%`;
 }
 
-function calculateAndSend() {
-    showResults();
-    // Отправляем данные боту (фоном)
-    const height = parseFloat(document.getElementById('height').value);
-    const weight = parseFloat(document.getElementById('weight').value);
-    
-    let bmr;
-    if (userData.gender === 'male') {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) + 5;
-    } else {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
-    }
-    const totalCalories = Math.round(bmr * userData.activity);
+function openSettings() {
+    nextStep(16);
+    loadSettingsData();
+}
 
-    tg.sendData(JSON.stringify({
-        calories: totalCalories,
-        details: userData
-    }));
+function loadSettingsData() {
+    // Load Telegram user data
+    const tg = window.Telegram.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('settings-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        
+        // Load avatar if available
+        if (user.photo_url) {
+            const avatarEl = document.getElementById('settings-avatar');
+            avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
+        } else {
+            // Use first letter as placeholder
+            const avatarEl = document.getElementById('settings-avatar');
+            const firstLetter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
+            avatarEl.innerHTML = `<div class="avatar-placeholder">${firstLetter}</div>`;
+        }
+    } else {
+        document.getElementById('settings-name').innerText = 'Неизвестный пользователь';
+    }
+    
+    // Load user registration data
+    const genderMap = { 'male': 'Мужской', 'female': 'Женский' };
+    const activityMap = { 1.2: 'Низкая', 1.55: 'Средняя', 1.725: 'Высокая' };
+    const goalMap = { 'lose': 'Похудение', 'maintain': 'Поддержание', 'gain': 'Набор массы' };
+    
+    document.getElementById('settings-gender').innerText = genderMap[userData.gender] || '-';
+    document.getElementById('settings-age').innerText = userData.age ? userData.age + ' лет' : '-';
+    document.getElementById('settings-height').innerText = userData.height ? userData.height + ' см' : '-';
+    document.getElementById('settings-weight').innerText = userData.weight ? userData.weight + ' кг' : '-';
+    document.getElementById('settings-activity').innerText = activityMap[userData.activity] || '-';
+    document.getElementById('settings-goal').innerText = goalMap[userData.goal] || '-';
+    
+    // Load nutrition targets
+    document.getElementById('settings-calories').innerText = currentMacros.totalCalories || '0';
+    document.getElementById('settings-protein').innerText = (currentMacros.totalProtein || '0') + 'г';
+    document.getElementById('settings-carbs').innerText = (currentMacros.totalCarbs || '0') + 'г';
+    document.getElementById('settings-fats').innerText = (currentMacros.totalFats || '0') + 'г';
+}
+
+function resetAppData() {
+    if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
+        localStorage.clear();
+        location.reload();
+    }
 }
