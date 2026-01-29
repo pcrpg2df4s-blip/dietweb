@@ -43,7 +43,8 @@ let currentMacros = {
     totalProtein: 150,
     totalCarbs: 250,
     totalFats: 70,
-    foodHistory: []
+    foodHistory: [],
+    dailyHistory: {} // Format: { "2026-01-29": { calories: 0, protein: 0, carbs: 0, fats: 0 } }
 };
 
 // Инициализация при загрузке
@@ -578,13 +579,112 @@ function updateCalendarDates() {
     });
 }
 
-function setProgress(id, percent) {
-    const circle = document.getElementById(id);
-    const radius = circle.r.baseVal.value;
-    const circumference = 2 * Math.PI * radius;
-    circle.style.strokeDasharray = `${circumference} ${circumference}`;
-    const offset = circumference - (percent / 100 * circumference);
-    circle.style.strokeDashoffset = offset;
+function updateProgressPage() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Ensure daily history exists
+    if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
+    if (!currentMacros.dailyHistory[today]) {
+        currentMacros.dailyHistory[today] = { calories: 0, protein: 0, carbs: 0, fats: 0 };
+    }
+
+    // Update current day from currentMacros
+    currentMacros.dailyHistory[today] = {
+        calories: currentMacros.calories,
+        protein: currentMacros.protein,
+        carbs: currentMacros.carbs,
+        fats: currentMacros.fats
+    };
+
+    // 1. Update Total Calories
+    document.getElementById('progress-total-calories').innerText = currentMacros.calories;
+
+    // 2. Render Chart
+    renderProgressChart();
+
+    // 3. Update BMI
+    updateBMI();
+
+    nextStep(15);
+}
+
+function renderProgressChart() {
+    const container = document.getElementById('chart-bars');
+    container.innerHTML = '';
+    
+    const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const now = new Date();
+    
+    // Get last 7 days starting from Monday of current week
+    const monday = new Date(now);
+    const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
+    monday.setDate(now.getDate() + diff);
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayLabel = daysShort[date.getDay()];
+        
+        const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
+        
+        // Calculate heights (max 150px)
+        const maxVal = 600; // Based on Y-axis
+        const pHeight = Math.min(150, (data.protein * 4 / maxVal) * 150);
+        const cHeight = Math.min(150, (data.carbs * 4 / maxVal) * 150);
+        const fHeight = Math.min(150, (data.fats * 9 / maxVal) * 150);
+
+        const barHtml = `
+            <div class="bar-column">
+                <div class="bar-stack">
+                    <div class="segment fats" style="height: ${fHeight}px"></div>
+                    <div class="segment carbs" style="height: ${cHeight}px"></div>
+                    <div class="segment protein" style="height: ${pHeight}px"></div>
+                </div>
+                <span class="day-label">${dayLabel}</span>
+            </div>
+        `;
+        container.innerHTML += barHtml;
+    }
+}
+
+function updateBMI() {
+    if (!userData.weight || !userData.height) return;
+    
+    const heightInMeters = userData.height / 100;
+    const bmi = (userData.weight / (heightInMeters * heightInMeters)).toFixed(1);
+    
+    const bmiEl = document.getElementById('bmi-number');
+    const statusTextEl = document.getElementById('bmi-status-text');
+    const pointerEl = document.getElementById('bmi-pointer');
+    
+    bmiEl.innerText = bmi;
+    
+    let status = "Норма";
+    let statusClass = "healthy";
+    let pointerPos = 50; // default middle
+
+    if (bmi < 18.5) {
+        status = "Дефицит";
+        statusClass = "underweight";
+        pointerPos = (bmi / 18.5) * 25;
+    } else if (bmi < 25) {
+        status = "Норма";
+        statusClass = "healthy";
+        pointerPos = 25 + ((bmi - 18.5) / 6.5) * 25;
+    } else if (bmi < 30) {
+        status = "Лишний";
+        statusClass = "overweight";
+        pointerPos = 50 + ((bmi - 25) / 5) * 25;
+    } else {
+        status = "Ожирение";
+        statusClass = "obese";
+        pointerPos = 75 + Math.min(25, ((bmi - 30) / 10) * 25);
+    }
+
+    statusTextEl.innerText = status;
+    statusTextEl.className = `status-badge ${statusClass}`;
+    pointerEl.style.left = `${pointerPos}%`;
 }
 
 function calculateAndSend() {
