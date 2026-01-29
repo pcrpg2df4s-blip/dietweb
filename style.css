@@ -615,7 +615,7 @@ h1 {
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-around;
-    padding: 15px 0 30px 0;
+    padding: 25px 0 35px 0; /* Увеличили высоту (шире вверх и чуть ниже) */
     border-top: 1px solid #f0f0f5;
     z-index: 100;
 }
@@ -647,7 +647,7 @@ h1 {
 
 .add-btn-main {
     position: absolute;
-    top: -45px; /* Подняли кнопку выше */
+    top: -40px; /* Скорректировали положение кнопки под новый паддинг */
     right: 20px;
     width: 56px;
     height: 56px;
