@@ -665,7 +665,7 @@ h1 {
 
 /* Progress Page */
 .progress-page {
-    padding: 20px 20px 120px 20px;
+    padding: 5px 20px 120px 20px;
     background: #fcfcfd;
     min-height: 100vh;
     box-sizing: border-box;
@@ -725,7 +725,7 @@ h1 {
 
 .y-axis {
     position: absolute;
-    left: 0;
+    left: -30px;
     top: 0;
     bottom: 20px;
     display: flex;
