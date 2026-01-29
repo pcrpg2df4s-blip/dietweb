@@ -144,7 +144,25 @@ tg.expand();
 
 function nextStep(stepNumber) {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById(`step-${stepNumber}`).classList.add('active');
+    const targetStep = document.getElementById(`step-${stepNumber}`);
+    if (targetStep) targetStep.classList.add('active');
+    
+    // Manage Global Tab Bar visibility
+    const globalTabBar = document.getElementById('global-tab-bar');
+    if (globalTabBar) {
+        // Show tab bar only on main screens (12: Home, 15: Progress)
+        if (stepNumber === 12 || stepNumber === 15) {
+            globalTabBar.style.display = 'flex';
+            
+            // Update active state in tab bar
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            if (stepNumber === 12) document.getElementById('tab-home').classList.add('active');
+            if (stepNumber === 15) document.getElementById('tab-progress').classList.add('active');
+        } else {
+            globalTabBar.style.display = 'none';
+        }
+    }
+    
     window.scrollTo(0,0);
 }
 
@@ -622,10 +640,7 @@ function updateProgressPage() {
     
     // Ensure daily history exists
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-    if (!currentMacros.dailyHistory[today]) {
-        currentMacros.dailyHistory[today] = { calories: 0, protein: 0, carbs: 0, fats: 0 };
-    }
-
+    
     // Update current day from currentMacros
     currentMacros.dailyHistory[today] = {
         calories: currentMacros.calories,
@@ -635,7 +650,10 @@ function updateProgressPage() {
     };
 
     // 1. Update Total Calories
-    document.getElementById('progress-total-calories').innerText = currentMacros.calories;
+    const progressTotalCalories = document.getElementById('progress-total-calories');
+    if (progressTotalCalories) {
+        progressTotalCalories.innerText = currentMacros.calories;
+    }
 
     // 2. Render Chart
     renderProgressChart();
@@ -647,7 +665,8 @@ function updateProgressPage() {
 }
 
 function renderProgressChart() {
-    const container = document.getElementById('chart-bars');
+    const container = document.getElementById('chart-bars-container');
+    if (!container) return;
     container.innerHTML = '';
     
     const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
