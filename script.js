@@ -855,3 +855,15 @@ function resetAppData() {
         location.reload();
     }
 }
+
+function setProgress(id, percent) {
+    const circle = document.getElementById(id);
+    if (circle) {
+        const radius = 40; // Радиус круга из HTML
+        const circumference = 2 * Math.PI * radius;
+        
+        const offset = circumference - (percent / 100 * circumference);
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = offset;
+    }
+}
