@@ -427,25 +427,20 @@ async function startAnalysis(imageData) {
 }
 
 async function finishAnalysis(imageData) {
-    const prompt = `Анализируй это изображение еды максимально точно. 
-    1. Определи конкретное название блюда или основного продукта СТРОГО на РУССКОМ ЯЗЫКЕ. Даже если это "Burger", пиши "Бургер".
-    2. Оцени размер порции визуально.
-    3. Рассчитай примерное содержание: калории (ккал), белки (г), жиры (г), углеводы (г).
-    
-    СПРАВКА ДЛЯ ТОЧНОСТИ: 
-    - Авокадо (половина, ~70г) = 110 ккал.
-    - Авокадо (целое, ~150г) = 240 ккал.
-    - Яйцо (1 шт) = 70 ккал.
-    Будь максимально реалистичен.
-    
-    Верни ответ СТРОГО в формате JSON без лишнего текста и без markdown-разметки:
-    {"name": "Название на русском", "calories": 450, "protein": 25, "carbs": 5, "fats": 35}`;
+    // 1. Проверяем, видит ли вообще скрипт твой ключ
+    if (!CONFIG.GOOGLE_API_KEY) {
+        alert("ОШИБКА: Скрипт не видит API ключ! (Хотя в .env он может быть). Проблема в передаче ключа.");
+        nextStep(12);
+        return;
+    }
+
+    const prompt = `Анализируй это изображение еды. 
+    1. Название блюда (на русском).
+    2. Калории (ккал), белки (г), жиры (г), углеводы (г).
+    Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
     
     try {
-        if (!CONFIG.GOOGLE_API_KEY) {
-            throw new Error("API Key is missing in CONFIG");
-        }
-
+        // Отправляем запрос
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -456,21 +451,37 @@ async function finishAnalysis(imageData) {
 
         const data = await response.json();
 
-        if (data.error) throw new Error(`API Error: ${data.error.message}`);
+        // 2. Если Google вернул ошибку, показываем её текст
+        if (data.error) {
+            alert(`GOOGLE ОТКАЗАЛ: ${data.error.message} (Code: ${data.error.code})`);
+            throw new Error(data.error.message);
+        }
         
-        if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
-            throw new Error("Empty or blocked response");
+        if (!data.candidates || !data.candidates[0].content) {
+            alert("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ (Блокировка безопасности или сбой)");
+            throw new Error("Empty response");
         }
 
         let text = data.candidates[0].content.parts[0].text;
         text = text.replace(/```json|```/g, '').trim();
         
         const result = JSON.parse(text);
-        addFoodToHome(result, imageData);
+        addFoodToHome(result, imageData); // Всё ок
+
     } catch (err) {
-        console.error("AI Analysis error:", err);
-        // Тихо переходим на главный экран даже при ошибке
-        nextStep(12);
+        console.error("Critical AI Error:", err);
+        
+        // 3. В СЛУЧАЕ ОШИБКИ — МЫ ВСЁ РАВНО ДОБАВЛЯЕМ ЕДУ (ЧТОБЫ ТЫ ВИДЕЛ РЕЗУЛЬТАТ)
+        alert(`Сбой анализа: ${err.message}. Добавляю тестовую еду.`);
+        
+        const errorFood = {
+            name: "⚠️ Ошибка (см. детали)",
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fats: 0
+        };
+        addFoodToHome(errorFood, imageData);
     }
 }
 
