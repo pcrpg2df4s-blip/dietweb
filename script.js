@@ -1,5 +1,9 @@
+alert("ВЕРСИЯ ОБНОВИЛАСЬ!"); 
 const urlParams = new URLSearchParams(window.location.search);
 let apiKeyFromUrl = urlParams.get('api_key');
+
+// Try to get from URL, otherwise from localStorage
+// ... и дальше пошел твой старый код ...
 
 // Try to get from URL, otherwise from localStorage
 if (apiKeyFromUrl) {
