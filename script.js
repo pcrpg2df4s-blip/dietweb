@@ -1,9 +1,13 @@
-alert("ВЕРСИЯ ОБНОВИЛАСЬ!"); 
 const urlParams = new URLSearchParams(window.location.search);
 let apiKeyFromUrl = urlParams.get('api_key');
 
-// Try to get from URL, otherwise from localStorage
-// ... и дальше пошел твой старый код ...
+// Попытка получить ключ из URL, иначе из localStorage
+if (apiKeyFromUrl) {
+    localStorage.setItem('dietApp_google_api_key', apiKeyFromUrl);
+} else {
+    apiKeyFromUrl = localStorage.getItem('dietApp_google_api_key');
+}
+// ... дальше твой код (const CONFIG = ...)
 
 // Try to get from URL, otherwise from localStorage
 if (apiKeyFromUrl) {
@@ -309,75 +313,94 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 }
 
 function showResults() {
-    console.log('showResults() called');
-    
-    const height = parseFloat(document.getElementById('height').value);
-    const weight = parseFloat(document.getElementById('weight').value);
-    
-    console.log('Height:', height, 'Weight:', weight);
-    
-    userData.height = height;
-    userData.weight = weight;
-    
-    // Расчет калорий
-    let bmr;
-    if (userData.gender === 'male') {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) + 5;
-    } else {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
-    }
-    const calories = Math.round(bmr * userData.activity);
-    
-    console.log('Calculated calories:', calories);
-    
-    // Расчет БЖУ (Примерное распределение: 30% белки, 30% жиры, 40% углеводы)
-    const protein = Math.round((calories * 0.3) / 4);
-    const fats = Math.round((calories * 0.3) / 9);
-    const carbs = Math.round((calories * 0.4) / 4);
+    alert("1. Кнопка нажата! Начинаем...");
 
-    // Обновление UI
-    document.getElementById('res-calories').innerText = calories;
-    document.getElementById('res-carbs').innerText = carbs + 'г';
-    document.getElementById('res-protein').innerText = protein + 'г';
-    document.getElementById('res-fats').innerText = fats + 'г';
-    document.getElementById('target-weight').innerText = weight + ' кг';
-    
-    const goalMap = {
-        'lose': 'Похудение',
-        'maintain': 'Поддержание веса',
-        'gain': 'Набор массы'
-    };
-    document.getElementById('goal-text').innerText = `Ваша цель: ${goalMap[userData.goal] || 'Здоровье'}`;
+    try {
+        const heightInput = document.getElementById('height');
+        const weightInput = document.getElementById('weight');
 
-    // Анимация колец (100% заполнение для примера)
-    setProgress('ring-calories', 100);
-    setProgress('ring-carbs', 85);
-    setProgress('ring-protein', 90);
-    setProgress('ring-fats', 70);
+        if (!heightInput || !weightInput) {
+            alert("ОШИБКА: Не найдены поля ввода роста или веса в HTML!");
+            return;
+        }
 
-    console.log('Starting fetchGeminiTips...');
-    
-    // Загрузка советов от Gemini
-    fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
-        console.log('Tips received:', tips);
-        const container = document.getElementById('ai-tips');
-        container.innerHTML = '';
-        tips.forEach(tip => {
-            container.innerHTML += `
-                <div class="tip-item">
-                    <div class="tip-icon">${tip.icon}</div>
-                    <div class="tip-text">${tip.text}</div>
-                </div>
-            `;
-        });
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
         
-        console.log('Moving to step 11');
-        nextStep(11);
-    }).catch(error => {
-        console.error('Error in fetchGeminiTips:', error);
-        // Even if tips fail, still move to next step
-        nextStep(11);
-    });
+        alert("2. Данные взяты: Рост " + height + ", Вес " + weight);
+        
+        userData.height = height;
+        userData.weight = weight;
+        
+        // Расчет калорий
+        let bmr;
+        if (userData.gender === 'male') {
+            bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) + 5;
+        } else {
+            bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
+        }
+        const calories = Math.round(bmr * userData.activity);
+        
+        alert("3. Калории посчитаны: " + calories);
+        
+        // Расчет БЖУ
+        const protein = Math.round((calories * 0.3) / 4);
+        const fats = Math.round((calories * 0.3) / 9);
+        const carbs = Math.round((calories * 0.4) / 4);
+
+        // Обновление UI
+        document.getElementById('res-calories').innerText = calories;
+        document.getElementById('res-carbs').innerText = carbs + 'г';
+        document.getElementById('res-protein').innerText = protein + 'г';
+        document.getElementById('res-fats').innerText = fats + 'г';
+        document.getElementById('target-weight').innerText = weight + ' кг';
+        
+        const goalMap = {
+            'lose': 'Похудение',
+            'maintain': 'Поддержание веса',
+            'gain': 'Набор массы'
+        };
+        const goalText = goalMap[userData.goal] || 'Здоровье';
+        document.getElementById('goal-text').innerText = `Ваша цель: ${goalText}`;
+
+        // Анимация
+        setProgress('ring-calories', 100);
+        setProgress('ring-carbs', 85);
+        setProgress('ring-protein', 90);
+        setProgress('ring-fats', 70);
+
+        alert("4. UI обновлен. Проверяем API ключ...");
+        
+        if (!CONFIG.GOOGLE_API_KEY) {
+            alert("ПРЕДУПРЕЖДЕНИЕ: Нет API ключа! AI советы не сработают, но экран должен открыться.");
+        }
+
+        console.log('Starting fetchGeminiTips...');
+        
+        // Загрузка советов
+        fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
+            alert("5. Ответ от AI получен!"); // Если дойдет сюда
+            const container = document.getElementById('ai-tips');
+            if (container) {
+                container.innerHTML = '';
+                tips.forEach(tip => {
+                    container.innerHTML += `
+                        <div class="tip-item">
+                            <div class="tip-icon">${tip.icon}</div>
+                            <div class="tip-text">${tip.text}</div>
+                        </div>
+                    `;
+                });
+            }
+            nextStep(11);
+        }).catch(error => {
+            alert("Ошибка AI: " + error.message + "\nПереходим дальше принудительно.");
+            nextStep(11);
+        });
+
+    } catch (e) {
+        alert("КРИТИЧЕСКАЯ ОШИБКА В КОДЕ: " + e.message);
+    }
 }
 
 let videoStream = null;
