@@ -168,10 +168,25 @@ function initHomeScreenFromSaved() {
     foodList.innerHTML = '';
     
     if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
-        currentMacros.foodHistory.forEach(itemHtml => {
+        currentMacros.foodHistory.forEach((food, index) => {
             const div = document.createElement('div');
             div.className = 'food-item';
-            div.innerHTML = itemHtml;
+            div.innerHTML = `
+                <div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>
+                <div class="food-details">
+                    <div class="food-header">
+                        <h4>${food.name}</h4>
+                        <span class="food-time">${food.time}</span>
+                    </div>
+                    <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
+                    <div class="food-macros-mini">
+                        <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${Math.round(food.protein)}г</span>
+                        <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${Math.round(food.carbs)}г</span>
+                        <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
+                    </div>
+                </div>
+                <button class="delete-food-btn" onclick="deleteFood(${index})">🗑️</button>
+            `;
             foodList.appendChild(div);
         });
     } else {
@@ -573,10 +588,41 @@ async function finishAnalysis(imageData) {
 }
 
 function addFoodToHome(food, image) {
-    currentMacros.protein += food.protein;
-    currentMacros.carbs += food.carbs;
-    currentMacros.fats += food.fats;
-    currentMacros.calories += food.calories;
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const foodEntry = {
+        name: food.name,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fats: food.fats,
+        time: time
+    };
+
+    if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
+    currentMacros.foodHistory.unshift(foodEntry);
+    
+    recalculateMacros();
+    saveAllData();
+    initHomeScreenFromSaved();
+    nextStep(12);
+}
+
+function recalculateMacros() {
+    currentMacros.protein = 0;
+    currentMacros.carbs = 0;
+    currentMacros.fats = 0;
+    currentMacros.calories = 0;
+
+    if (currentMacros.foodHistory) {
+        currentMacros.foodHistory.forEach(food => {
+            currentMacros.protein += food.protein;
+            currentMacros.carbs += food.carbs;
+            currentMacros.fats += food.fats;
+            currentMacros.calories += food.calories;
+        });
+    }
 
     const today = new Date().toISOString().split('T')[0];
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
@@ -586,61 +632,17 @@ function addFoodToHome(food, image) {
         carbs: currentMacros.carbs,
         fats: currentMacros.fats
     };
+}
 
-    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
-    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
-    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
-    const fatsLeft = Math.round(Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats)));
-    
-    document.getElementById('home-calories-left').innerText = caloriesLeft;
-    document.getElementById('home-protein-eaten').innerText = proteinLeft;
-    document.getElementById('home-carbs-eaten').innerText = carbsLeft;
-    document.getElementById('home-fats-eaten').innerText = fatsLeft;
-
-    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
-    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
-    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
-    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
-
-    const foodList = document.getElementById('food-list');
-    if (foodList.querySelector('.empty-state')) foodList.innerHTML = '';
-    
-    const now = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // В UI показываем реальное фото для текущего сеанса
-    // Используем красивую заглушку-эмодзи вместо тяжелого Base64 изображения
-    const itemContent = `
-        <div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>
-        <div class="food-details">
-            <div class="food-header">
-                <h4>${food.name}</h4>
-                <span class="food-time">${time}</span>
-            </div>
-            <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
-            <div class="food-macros-mini">
-                <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${Math.round(food.protein)}г</span>
-                <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${Math.round(food.carbs)}г</span>
-                <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
-            </div>
-        </div>
-    `;
-    
-    const item = document.createElement('div');
-    item.className = 'food-item';
-    item.innerHTML = itemContent;
-    foodList.prepend(item);
-
-    if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
-    
-    // Сохраняем в историю ТОЛЬКО текст и заглушку. Base64 (image) больше не сохраняется.
-    currentMacros.foodHistory.unshift(itemContent);
-    
-    console.log(`[Storage] Saved food record without image to prevent QuotaExceededError.`);
-
-    saveAllData();
-
-    nextStep(12);
+function deleteFood(index) {
+    if (confirm("Удалить это блюдо?")) {
+        if (currentMacros.foodHistory && currentMacros.foodHistory[index]) {
+            currentMacros.foodHistory.splice(index, 1);
+            recalculateMacros();
+            saveAllData();
+            initHomeScreenFromSaved();
+        }
+    }
 }
 
 function goToHome() {
