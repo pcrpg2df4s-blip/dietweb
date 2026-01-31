@@ -31,7 +31,6 @@ let currentMacros = {
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
-    // Если это ошибка квоты localStorage, она обычно содержит "quota"
     if (message.toLowerCase().includes("quota")) {
         alert(`ОШИБКА ХРАНИЛИЩА: ${message}\nПопробуйте очистить данные в настройках.`);
     }
@@ -47,10 +46,12 @@ window.onunhandledrejection = function(event) {
 
 // 1. Инициализация и навигация
 function initApp() {
+    console.log('Initializing application...');
+    
     // Сброс UI при старте: скрываем все модалки, спиннеры и оверлеи
     document.querySelectorAll('.step, .loading-container, .analysis-step, .camera-step').forEach(el => {
         el.classList.remove('active');
-        el.classList.add('hidden'); // Принудительно скрываем
+        el.classList.add('hidden');
     });
 
     try {
@@ -60,7 +61,6 @@ function initApp() {
         localStorage.clear();
     }
 
-    // Проверка целостности: если данные битые или неполные — на регистрацию
     const isDataValid = userData &&
                        userData.gender &&
                        userData.height &&
@@ -68,11 +68,13 @@ function initApp() {
                        userData.goal &&
                        userData.goal !== '';
 
+    console.log('Is user data valid?', isDataValid);
+
     if (isDataValid) {
-        // Если данные целые — вход
-        goToStep(12); // В index.html step-12 это home-page
+        console.log('Navigating to Dashboard (step-12)');
+        goToStep(12);
     } else {
-        // Если данных нет или они битые — сброс и регистрация
+        console.log('Navigating to Registration (step-1)');
         localStorage.clear();
         goToStep(1);
     }
@@ -83,30 +85,48 @@ function startApp() {
 }
 
 function nextStep(step) {
-    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-    document.getElementById(`step-${step}`).classList.add('active');
+    console.log(`Navigating to step-${step}`);
     
-    // Обновляем прогресс-бар (шаги 1-10)
-    if (step <= 10) {
-        const progress = (step / 10) * 100;
-        const progressBar = document.querySelector('.progress');
-        if (progressBar) progressBar.style.width = `${progress}%`;
+    const target = document.getElementById(`step-${step}`);
+    if (!target) {
+        console.error(`Error: Step-${step} element not found!`);
+        return;
     }
 
-    // Обработка специальных шагов
-    if (step === 11) {
-        // Запуск экрана загрузки/анализа
+    document.querySelectorAll('.step, .loading-container, .analysis-step, .camera-step').forEach(s => {
+        s.classList.remove('active');
+        s.classList.add('hidden');
+    });
+
+    target.classList.remove('hidden');
+    target.classList.add('active');
+    
+    // Progress bar update logic
+    const stepProgressMap = {
+        1: 10, 2: 20, 3: 30, 4: 40, 5: 50, 6: 60, 7: 70, 8: 80, 9: 90, 10: 100
+    };
+    
+    if (stepProgressMap[step]) {
+        const progressBar = target.querySelector('.progress');
+        if (progressBar) progressBar.style.width = `${stepProgressMap[step]}%`;
+    }
+
+    if (step === 10) {
         startLoading();
     }
     
-    if (step === 12) {
+    if (step === 11) {
         calculateMacros();
     }
     
-    if (step === 14) {
+    if (step === 12) {
         updateHomeUI();
         updateCalendarDates();
     }
+}
+
+function prevStep(step) {
+    nextStep(step);
 }
 
 function goToStep(step) {
@@ -115,88 +135,149 @@ function goToStep(step) {
 
 // 2. Сбор данных
 function selectGender(gender) {
+    console.log('Gender selected:', gender);
     userData.gender = gender;
-    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
-    setTimeout(() => nextStep(2), 300);
+    nextStep(2);
 }
 
 function selectActivity(activity) {
+    console.log('Activity selected:', activity);
     userData.activity = activity;
-    setTimeout(() => nextStep(3), 300);
+    nextStep(3);
 }
 
 function savePhysical() {
-    userData.height = parseInt(document.getElementById('height').value);
-    userData.weight = parseInt(document.getElementById('weight').value);
-    userData.age = parseInt(document.getElementById('age').value);
-    if (userData.height && userData.weight && userData.age) {
-        nextStep(4);
+    console.log('savePhysical called');
+    const heightInput = document.getElementById('height');
+    const weightInput = document.getElementById('weight');
+    
+    const height = heightInput ? parseInt(heightInput.value) : null;
+    const weight = weightInput ? parseInt(weightInput.value) : null;
+    
+    // В текущей верстке index.html на шаге 4 только Рост и Вес.
+    // Возраст (age) может отсутствовать или быть на другом шаге,
+    // но в userData он есть. Для прохождения шага 4 достаточно роста и веса.
+    
+    console.log('Weight/Height saved, going to next step', { height, weight });
+    
+    if (height && weight) {
+        userData.height = height;
+        userData.weight = weight;
+        // Если на этом шаге нет поля возраста, берем дефолтный или из userData
+        if (!userData.age) userData.age = 25;
+        
+        nextStep(5); // Идем к Дате Рождения
     } else {
-        alert('Please fill all fields');
+        console.log('Validation failed:', { height, weight });
+        alert('Пожалуйста, заполните все поля (Рост и Вес)');
+    }
+}
+
+function saveBorn() {
+    const input = document.getElementById('birthdate');
+    const val = input ? input.value : null;
+    console.log('Birthday selected:', val);
+
+    if (val) {
+        userData.birthdate = val;
+        nextStep(6);
+    } else {
+        alert('Пожалуйста, выберите дату');
     }
 }
 
 function selectGoal(goal) {
+    console.log('Goal selected:', goal);
     userData.goal = goal;
-    nextStep(5);
-}
-
-function selectStopper(stopper) {
-    userData.stopper = stopper;
-    nextStep(6);
-}
-
-function selectDiet(diet) {
-    userData.diet = diet;
     nextStep(7);
 }
 
-function selectAccomplish(accomplish) {
-    userData.accomplish = accomplish;
+function selectStopper(stopper) {
+    console.log('Stopper selected:', stopper);
+    userData.stopper = stopper;
     nextStep(8);
 }
 
-function saveBirthdate() {
-    userData.birthdate = document.getElementById('birthdate').value;
-    if (userData.birthdate) {
-        nextStep(9);
-    } else {
-        alert('Please select date');
-    }
+function selectDiet(diet) {
+    console.log('Diet selected:', diet);
+    userData.diet = diet;
+    nextStep(9);
+}
+
+function selectAccomplish(accomplish) {
+    console.log('Accomplish selected:', accomplish);
+    userData.accomplish = accomplish;
+    nextStep(10);
 }
 
 // 3. Анализ и расчеты
 function startLoading() {
+    console.log('startLoading called');
     let progress = 0;
-    const bar = document.getElementById('loading-bar-fill');
-    const text = document.getElementById('loading-status-text');
-    const title = document.getElementById('loading-title');
+    const bar = document.getElementById('load-progress');
+    const percentText = document.getElementById('load-percentage');
+    const statusText = document.getElementById('load-status');
     
     const statuses = [
-        "Analyzing your metabolism...",
-        "Calculating optimal macros...",
-        "Creating your custom plan...",
-        "Finalizing results..."
+        "Анализируем ваш метаболизм...",
+        "Рассчитываем оптимальные макросы...",
+        "Создаем ваш персональный план...",
+        "Финальная настройка результатов..."
     ];
 
+    const checks = [
+        'check-calories',
+        'check-carbs',
+        'check-protein',
+        'check-fats',
+        'check-health'
+    ];
+
+    // Сброс галочек перед началом
+    checks.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active', 'checked');
+    });
+
     const interval = setInterval(() => {
-        progress += 2;
-        bar.style.width = `${progress}%`;
+        progress += 1;
+        if (bar) bar.style.width = `${progress}%`;
+        if (percentText) percentText.innerText = `${progress}%`;
         
+        // Обновление статуса
         if (progress % 25 === 0) {
-            text.innerText = statuses[Math.floor(progress / 26)];
+            const statusIdx = Math.min(statuses.length - 1, Math.floor(progress / 26));
+            if (statusText) statusText.innerText = statuses[statusIdx];
         }
+
+        // Ставим галочки по мере прогресса
+        if (progress === 20) document.getElementById(checks[0])?.classList.add('checked');
+        if (progress === 40) document.getElementById(checks[1])?.classList.add('checked');
+        if (progress === 60) document.getElementById(checks[2])?.classList.add('checked');
+        if (progress === 80) document.getElementById(checks[3])?.classList.add('checked');
+        if (progress === 95) document.getElementById(checks[4])?.classList.add('checked');
 
         if (progress >= 100) {
             clearInterval(interval);
-            nextStep(12);
+            console.log('Loading complete');
+            const finalBtn = document.getElementById('final-btn');
+            if (finalBtn) {
+                finalBtn.style.display = 'block';
+                finalBtn.classList.add('fade-in');
+                finalBtn.scrollIntoView({ behavior: 'smooth' });
+            }
         }
-    }, 50);
+    }, 40);
+}
+
+function showResults() {
+    console.log('showResults called');
+    calculateMacros();
+    nextStep(11);
 }
 
 function calculateMacros() {
-    // BMR Calculation (Mifflin-St Jeor Equation)
+    console.log('Calculating macros for', userData);
     let bmr;
     if (userData.gender === 'male') {
         bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age + 5;
@@ -204,41 +285,70 @@ function calculateMacros() {
         bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age - 161;
     }
 
-    const tdee = bmr * userData.activity;
+    const tdee = bmr * (userData.activity || 1.2);
     
-    // Set calories based on goal
-    if (userData.goal === 'Lose weight') {
+    if (userData.goal === 'lose') {
         currentMacros.totalCalories = Math.round(tdee - 500);
-    } else if (userData.goal === 'Gain muscle') {
+    } else if (userData.goal === 'gain') {
         currentMacros.totalCalories = Math.round(tdee + 300);
     } else {
         currentMacros.totalCalories = Math.round(tdee);
     }
 
-    // Set macro ratios
     currentMacros.totalProtein = Math.round((currentMacros.totalCalories * 0.3) / 4);
     currentMacros.totalCarbs = Math.round((currentMacros.totalCalories * 0.4) / 4);
     currentMacros.totalFats = Math.round((currentMacros.totalCalories * 0.3) / 9);
 
-    document.getElementById('res-calories').innerText = currentMacros.totalCalories;
-    document.getElementById('res-protein').innerText = `${currentMacros.totalProtein}g`;
-    document.getElementById('res-carbs').innerText = `${currentMacros.totalCarbs}g`;
-    document.getElementById('res-fats').innerText = `${currentMacros.totalFats}g`;
+    const updateEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
+
+    updateEl('res-calories', currentMacros.totalCalories);
+    updateEl('res-protein', `${currentMacros.totalProtein}г`);
+    updateEl('res-carbs', `${currentMacros.totalCarbs}г`);
+    updateEl('res-fats', `${currentMacros.totalFats}г`);
+    
+    const goalEl = document.getElementById('goal-text');
+    if (goalEl) {
+        const goals = { 'lose': 'Похудение', 'maintain': 'Поддержание веса', 'gain': 'Набор массы' };
+        goalEl.innerText = `Ваша цель: ${goals[userData.goal] || 'Здоровье'}`;
+    }
+
+    const weightEl = document.getElementById('target-weight');
+    if (weightEl) weightEl.innerText = `${userData.weight} кг`;
     
     saveUserData();
+}
+
+function goToHome() {
+    console.log('Entering Dashboard');
+    
+    // Показываем таббар
+    const tabBar = document.getElementById('global-tab-bar');
+    if (tabBar) {
+        tabBar.style.display = 'flex';
+        tabBar.classList.remove('hidden');
+    }
+
+    // Сохраняем и обновляем UI
+    saveUserData();
+    updateHomeUI();
+    updateCalendarDates();
+    
+    nextStep(12);
 }
 
 // 4. Основной функционал (Home)
 function updateHomeUI() {
     const calLeft = currentMacros.totalCalories - currentMacros.calories;
-    document.getElementById('calories-left').innerText = calLeft > 0 ? calLeft : 0;
+    const calEl = document.getElementById('calories-left');
+    if (calEl) calEl.innerText = calLeft > 0 ? calLeft : 0;
     
-    // Update main ring
     const progress = Math.min(100, (currentMacros.calories / currentMacros.totalCalories) * 100);
-    setHomeProgress('main-ring-fill', progress, 283); // 2 * PI * 45
+    setHomeProgress('main-ring-fill', progress, 283);
 
-    // Update macro rings
-    updateMacroCard('protein', currentMacros.protein, currentMacros.totalProtein, 113); // 2 * PI * 18
+    updateMacroCard('protein', currentMacros.protein, currentMacros.totalProtein, 113);
     updateMacroCard('carbs', currentMacros.carbs, currentMacros.totalCarbs, 113);
     updateMacroCard('fats', currentMacros.fats, currentMacros.totalFats, 113);
 
@@ -263,7 +373,7 @@ function renderFoodHistory() {
     if (!container) return;
     
     if (currentMacros.foodHistory.length === 0) {
-        container.innerHTML = '<div class="empty-state">No meals added today</div>';
+        container.innerHTML = '<div class="empty-state">Нет записей за сегодня</div>';
         return;
     }
 
@@ -273,15 +383,15 @@ function renderFoodHistory() {
             <div class="food-details">
                 <div class="food-header">
                     <h4>${item.name}</h4>
-                    <span class="food-time">${item.time || 'Today'}</span>
+                    <span class="food-time">${item.time || 'Сегодня'}</span>
                 </div>
                 <div class="food-calories">
-                    <span class="fire-icon">🔥</span> ${item.calories} kcal
+                    <span class="fire-icon">🔥</span> ${item.calories} ккал
                 </div>
                 <div class="food-macros-mini">
-                    <span><div class="macro-mini-dot" style="background: #ff7070"></div> ${item.protein}g</span>
-                    <span><div class="macro-mini-dot" style="background: #ffb366"></div> ${item.carbs}g</span>
-                    <span><div class="macro-mini-dot" style="background: #66b3ff"></div> ${item.fats}g</span>
+                    <span><div class="macro-mini-dot" style="background: #ff7070"></div> ${item.protein}г</span>
+                    <span><div class="macro-mini-dot" style="background: #ffb366"></div> ${item.carbs}г</span>
+                    <span><div class="macro-mini-dot" style="background: #66b3ff"></div> ${item.fats}г</span>
                 </div>
             </div>
             <button class="delete-food-btn" onclick="deleteFoodItem(${index})">×</button>
@@ -292,50 +402,45 @@ function renderFoodHistory() {
 // 5. Камера и Анализ (Симуляция)
 function openCamera() {
     const video = document.getElementById('camera-video');
-    const step = document.querySelector('.camera-step');
-    step.classList.add('active');
+    nextStep(13); // camera-step
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         .then(stream => {
-            video.srcObject = stream;
+            if (video) video.srcObject = stream;
         })
         .catch(err => {
             console.error("Camera error:", err);
-            // Если камера не поддерживается, просто имитируем
             setTimeout(simulateAnalysis, 1000);
         });
 }
 
 function closeCamera() {
     const video = document.getElementById('camera-video');
-    if (video.srcObject) {
+    if (video && video.srcObject) {
         video.srcObject.getTracks().forEach(track => track.stop());
     }
-    document.querySelector('.camera-step').classList.remove('active');
+    nextStep(12);
 }
 
 function takePhoto() {
-    // В реальности здесь захват кадра. Мы просто имитируем.
     closeCamera();
     simulateAnalysis();
 }
 
 function simulateAnalysis() {
-    const analysisStep = document.querySelector('.analysis-step');
-    analysisStep.classList.add('active');
+    nextStep(14); // analysis-step
     
-    // Имитация "умного" анализа
     const results = [
-        { name: "Avocado Toast", calories: 350, protein: 12, carbs: 45, fats: 18 },
-        { name: "Chicken Salad", calories: 420, protein: 35, carbs: 15, fats: 22 },
-        { name: "Salmon with Rice", calories: 580, protein: 42, carbs: 55, fats: 24 }
+        { name: "Авокадо тост", calories: 350, protein: 12, carbs: 45, fats: 18 },
+        { name: "Куриный салат", calories: 420, protein: 35, carbs: 15, fats: 22 },
+        { name: "Лосось с рисом", calories: 580, protein: 42, carbs: 55, fats: 24 }
     ];
     
     const randomFood = results[Math.floor(Math.random() * results.length)];
     
     setTimeout(() => {
-        analysisStep.classList.remove('active');
         addFoodItem(randomFood);
+        nextStep(12);
     }, 2500);
 }
 
@@ -346,7 +451,7 @@ function addFoodItem(item) {
     const newItem = {
         ...item,
         time: timeStr,
-        image: null // Здесь могла бы быть ссылка на фото
+        image: null
     };
 
     currentMacros.foodHistory.unshift(newItem);
@@ -357,9 +462,6 @@ function addFoodItem(item) {
 
     updateHomeUI();
     saveUserData();
-    
-    // Визуальный фидбек
-    alert(`Added: ${item.name} (+${item.calories} kcal)`);
 }
 
 function deleteFoodItem(index) {
@@ -401,26 +503,19 @@ function loadUserData() {
         }
 
         userData = data.user;
-        
-        // Сброс дневных данных, если наступил новый день
         const today = new Date().toDateString();
+        
         if (data.lastUpdate !== today) {
-            // Сохраняем в историю перед сбросом
-            if (data.macros && data.lastUpdate) {
-                const d = new Date(data.lastUpdate);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const histDate = `${year}-${month}-${day}`;
-                
-                if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-                currentMacros.dailyHistory[histDate] = {
-                    calories: data.macros.calories,
-                    protein: data.macros.protein,
-                    carbs: data.macros.carbs,
-                    fats: data.macros.fats
-                };
-            }
+            if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
+            const d = new Date(data.lastUpdate);
+            const histDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            
+            currentMacros.dailyHistory[histDate] = {
+                calories: data.macros.calories,
+                protein: data.macros.protein,
+                carbs: data.macros.carbs,
+                fats: data.macros.fats
+            };
             
             currentMacros.calories = 0;
             currentMacros.protein = 0;
@@ -431,7 +526,6 @@ function loadUserData() {
             currentMacros = data.macros;
         }
         
-        // Синхронизируем цели
         currentMacros.totalCalories = data.macros.totalCalories;
         currentMacros.totalProtein = data.macros.totalProtein;
         currentMacros.totalCarbs = data.macros.totalCarbs;
@@ -441,12 +535,11 @@ function loadUserData() {
     } catch (e) {
         console.error("Error parsing localStorage:", e);
         localStorage.clear();
-        // Мы не бросаем ошибку дальше, чтобы initApp мог корректно обработать пустые данные
     }
 }
 
-function resetAllData() {
-    if (confirm("Are you sure you want to reset all data and history?")) {
+function resetAppData() {
+    if (confirm("Вы уверены, что хотите сбросить все данные?")) {
         localStorage.clear();
         location.reload();
     }
@@ -480,27 +573,22 @@ function updateCalendarDates() {
         date.setDate(monday.getDate() + index);
         
         const dayNum = date.getDate();
-        el.querySelector('.day-number').innerText = dayNum;
-        el.querySelector('.day-name').innerText = days[date.getDay()];
+        const numEl = el.querySelector('.day-number');
+        const nameEl = el.querySelector('.day-name');
+        if (numEl) numEl.innerText = dayNum;
+        if (nameEl) nameEl.innerText = days[date.getDay()];
         
-        // Progress Logic
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const dayData = currentMacros.dailyHistory ? currentMacros.dailyHistory[dateStr] : null;
-        const totalCalories = currentMacros.totalCalories || 2000;
         
         let percent = 0;
         if (dayData && dayData.calories) {
-            percent = Math.min(100, Math.round((dayData.calories / totalCalories) * 100));
+            percent = Math.min(100, Math.round((dayData.calories / currentMacros.totalCalories) * 100));
         }
         
         const ring = el.querySelector('.day-ring-container');
         if (ring) {
-            // --primary-color typically used for filled part, #f0f0f5 for empty
             ring.style.background = `conic-gradient(#FF9F0A ${percent}%, #E5E5EA 0)`;
-            ring.style.borderRadius = '50%';
         }
 
         if (date.toDateString() === now.toDateString()) {
@@ -513,10 +601,7 @@ function updateCalendarDates() {
 
 function updateProgressPage() {
     const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
     
@@ -527,14 +612,11 @@ function updateProgressPage() {
         fats: currentMacros.fats
     };
 
-    const progressTotalCalories = document.getElementById('progress-total-calories');
-    if (progressTotalCalories) {
-        progressTotalCalories.innerText = currentMacros.calories;
-    }
+    const calEl = document.getElementById('progress-total-calories');
+    if (calEl) calEl.innerText = currentMacros.calories;
 
     renderProgressChart();
     updateBMI();
-    nextStep(15);
 }
 
 function renderProgressChart() {
@@ -544,7 +626,6 @@ function renderProgressChart() {
     
     const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
-    
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
     monday.setDate(now.getDate() + diff);
@@ -552,14 +633,8 @@ function renderProgressChart() {
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
-        
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-        
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const dayLabel = daysShort[date.getDay()];
-        
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
         
         const maxVal = 5000;
@@ -567,7 +642,7 @@ function renderProgressChart() {
         const cHeight = Math.min(150, (data.carbs * 4 / maxVal) * 150);
         const fHeight = Math.min(150, (data.fats * 9 / maxVal) * 150);
 
-        const barHtml = `
+        container.innerHTML += `
             <div class="bar-column">
                 <div class="bar-stack">
                     <div class="segment protein" style="height: ${pHeight}px"></div>
@@ -577,7 +652,6 @@ function renderProgressChart() {
                 <span class="day-label">${dayLabel}</span>
             </div>
         `;
-        container.innerHTML += barHtml;
     }
 }
 
@@ -588,25 +662,30 @@ function updateBMI() {
     
     const pointer = document.getElementById('bmi-pointer');
     if (pointer) {
-        // Simple mapping: 15 to 35 BMI -> 0% to 100%
         let pos = ((bmi - 15) / (35 - 15)) * 100;
         pos = Math.max(0, Math.min(100, pos));
         pointer.style.left = `${pos}%`;
     }
 }
 
-// 8. Настройки
-function updateSettingsUI() {
-    document.getElementById('set-weight').innerText = `${userData.weight} kg`;
-    document.getElementById('set-height').innerText = `${userData.height} cm`;
-    document.getElementById('set-age').innerText = `${userData.age}`;
-    document.getElementById('set-goal').innerText = userData.goal;
-    
-    document.getElementById('set-target-calories').innerText = currentMacros.totalCalories;
-    document.getElementById('set-target-protein').innerText = `${currentMacros.totalProtein}g`;
-    document.getElementById('set-target-carbs').innerText = `${currentMacros.totalCarbs}g`;
-    document.getElementById('set-target-fats').innerText = `${currentMacros.totalFats}g`;
+function openSettings() {
+    nextStep(16);
+    updateSettingsUI();
 }
 
-// Запуск при загрузке
+function updateSettingsUI() {
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
+    set('set-weight', `${userData.weight} кг`);
+    set('set-height', `${userData.height} см`);
+    set('set-age', userData.age);
+    set('set-goal', userData.goal);
+    set('set-target-calories', currentMacros.totalCalories);
+    set('set-target-protein', `${currentMacros.totalProtein}г`);
+    set('set-target-carbs', `${currentMacros.totalCarbs}г`);
+    set('set-target-fats', `${currentMacros.totalFats}г`);
+}
+
 document.addEventListener('DOMContentLoaded', startApp);
