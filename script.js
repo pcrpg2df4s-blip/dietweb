@@ -543,50 +543,62 @@ function showResults() {
 
 let videoStream = null;
 async function openCamera() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; 
+    const cameraScreen = document.getElementById('camera-screen');
+    const video = document.getElementById('video-preview');
     
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const imageData = event.target.result;
-            document.getElementById('analyzed-img').src = imageData;
-            startAnalysis(imageData);
-        };
-        reader.readAsDataURL(file);
-    };
+    cameraScreen.classList.remove('hidden');
     
-    input.click();
+    try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            },
+            audio: false
+        });
+        video.srcObject = videoStream;
+        await video.play();
+    } catch (err) {
+        console.error("Error accessing camera:", err);
+        alert("Не удалось получить доступ к камере. Убедитесь, что вы дали разрешение.");
+        closeCamera();
+    }
 }
 
 function closeCamera() {
+    const cameraScreen = document.getElementById('camera-screen');
+    cameraScreen.classList.add('hidden');
+    
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
     }
-    nextStep(12);
 }
 
 function takePhoto() {
-    const video = document.getElementById('camera-video');
+    const video = document.getElementById('video-preview');
     const canvas = document.getElementById('camera-canvas');
     const context = canvas.getContext('2d');
     
+    // Set canvas dimensions to match video stream
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    
+    // Draw the current frame from the video onto the canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
+    // Convert to JPEG
     const imageData = canvas.toDataURL('image/jpeg');
-    document.getElementById('analyzed-img').src = imageData;
     
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
+    // Set to analysis image and start analysis
+    const analyzedImg = document.getElementById('analyzed-img');
+    if (analyzedImg) analyzedImg.src = imageData;
     
+    // Stop camera and close screen
+    closeCamera();
+    
+    // Start AI analysis
     startAnalysis(imageData);
 }
 
