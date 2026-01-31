@@ -45,639 +45,376 @@ window.onunhandledrejection = function(event) {
     }
 };
 
-// Инициализация при загрузке
-window.addEventListener('DOMContentLoaded', () => {
-    console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
+// 1. Инициализация и навигация
+function startApp() {
+    loadUserData();
+    if (userData.gender && userData.height) {
+        // Если данные уже есть, переходим на экран 14 (Home)
+        goToStep(14);
+    } else {
+        nextStep(1);
+    }
+}
+
+function nextStep(step) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step-${step}`).classList.add('active');
     
-    // Проверяем наличие ключа в URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlKey = urlParams.get('api_key');
-    if (urlKey) {
-        console.log("Using API Key from URL");
-        CONFIG.GOOGLE_API_KEY = urlKey;
+    // Обновляем прогресс-бар (шаги 1-10)
+    if (step <= 10) {
+        const progress = (step / 10) * 100;
+        const progressBar = document.querySelector('.progress');
+        if (progressBar) progressBar.style.width = `${progress}%`;
     }
 
-    loadSavedData();
-});
-
-function checkTotalStorageUsage() {
-    let total = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const value = localStorage.getItem(key);
-        total += (key.length + value.length) * 2; // Approximate bytes (UTF-16)
-        console.log(`[Storage] Key: ${key}, Size: ~${((key.length + value.length) * 2 / 1024).toFixed(2)} KB`);
+    // Обработка специальных шагов
+    if (step === 11) {
+        // Запуск экрана загрузки/анализа
+        startLoading();
     }
-    console.log(`[Storage] TOTAL Usage: ~( ${(total / 1024).toFixed(2)} KB )`);
-    return total;
+    
+    if (step === 12) {
+        calculateMacros();
+    }
+    
+    if (step === 14) {
+        updateHomeUI();
+        updateCalendarDates();
+    }
 }
 
-function saveAllData() {
-    try {
-        checkTotalStorageUsage();
-        const userDataStr = JSON.stringify(userData);
-        const macrosStr = JSON.stringify(currentMacros);
+function goToStep(step) {
+    nextStep(step);
+}
+
+// 2. Сбор данных
+function selectGender(gender) {
+    userData.gender = gender;
+    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    setTimeout(() => nextStep(2), 300);
+}
+
+function selectActivity(activity) {
+    userData.activity = activity;
+    setTimeout(() => nextStep(3), 300);
+}
+
+function savePhysical() {
+    userData.height = parseInt(document.getElementById('height').value);
+    userData.weight = parseInt(document.getElementById('weight').value);
+    userData.age = parseInt(document.getElementById('age').value);
+    if (userData.height && userData.weight && userData.age) {
+        nextStep(4);
+    } else {
+        alert('Please fill all fields');
+    }
+}
+
+function selectGoal(goal) {
+    userData.goal = goal;
+    nextStep(5);
+}
+
+function selectStopper(stopper) {
+    userData.stopper = stopper;
+    nextStep(6);
+}
+
+function selectDiet(diet) {
+    userData.diet = diet;
+    nextStep(7);
+}
+
+function selectAccomplish(accomplish) {
+    userData.accomplish = accomplish;
+    nextStep(8);
+}
+
+function saveBirthdate() {
+    userData.birthdate = document.getElementById('birthdate').value;
+    if (userData.birthdate) {
+        nextStep(9);
+    } else {
+        alert('Please select date');
+    }
+}
+
+// 3. Анализ и расчеты
+function startLoading() {
+    let progress = 0;
+    const bar = document.getElementById('loading-bar-fill');
+    const text = document.getElementById('loading-status-text');
+    const title = document.getElementById('loading-title');
+    
+    const statuses = [
+        "Analyzing your metabolism...",
+        "Calculating optimal macros...",
+        "Creating your custom plan...",
+        "Finalizing results..."
+    ];
+
+    const interval = setInterval(() => {
+        progress += 2;
+        bar.style.width = `${progress}%`;
         
-        console.log(`[Storage] Attempting to save userData: ${(userDataStr.length / 1024).toFixed(2)} KB`);
-        console.log(`[Storage] Attempting to save macros: ${(macrosStr.length / 1024).toFixed(2)} KB`);
-        
-        localStorage.setItem('dietApp_userData', userDataStr);
-        localStorage.setItem('dietApp_macros', macrosStr);
-        
-        console.log(`[Storage] Successfully saved.`);
-    } catch (e) {
-        console.error("[Storage] Failed to save data to localStorage:", e);
-        if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.message.includes("quota")) {
-            console.warn("[Storage] Quota exceeded. Attempting to trim food history...");
-            if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
-                // Keep only last 2 items
-                currentMacros.foodHistory = currentMacros.foodHistory.slice(0, 2);
-                console.log("[Storage] Trimmed history to 2 items. Retrying save...");
-                try {
-                    localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
-                    console.log("[Storage] Save successful after trimming.");
-                    alert("Внимание: История фотографий была сокращена, так как место в браузере закончилось.");
-                } catch (e2) {
-                    console.error("[Storage] Still failing after trimming:", e2);
-                    alert("Критическая ошибка: Место в браузере полностью исчерпано (даже после удаления фото). Возможно, другие приложения на этом сайте занимают всё место.");
-                }
-            } else {
-                alert("Ошибка: Превышен лимит памяти браузера. Даже без истории фотографий не удается сохранить данные. Попробуйте очистить кэш браузера для этого сайта.");
-            }
+        if (progress % 25 === 0) {
+            text.innerText = statuses[Math.floor(progress / 26)];
         }
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            nextStep(12);
+        }
+    }, 50);
+}
+
+function calculateMacros() {
+    // BMR Calculation (Mifflin-St Jeor Equation)
+    let bmr;
+    if (userData.gender === 'male') {
+        bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age + 5;
+    } else {
+        bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age - 161;
+    }
+
+    const tdee = bmr * userData.activity;
+    
+    // Set calories based on goal
+    if (userData.goal === 'Lose weight') {
+        currentMacros.totalCalories = Math.round(tdee - 500);
+    } else if (userData.goal === 'Gain muscle') {
+        currentMacros.totalCalories = Math.round(tdee + 300);
+    } else {
+        currentMacros.totalCalories = Math.round(tdee);
+    }
+
+    // Set macro ratios
+    currentMacros.totalProtein = Math.round((currentMacros.totalCalories * 0.3) / 4);
+    currentMacros.totalCarbs = Math.round((currentMacros.totalCalories * 0.4) / 4);
+    currentMacros.totalFats = Math.round((currentMacros.totalCalories * 0.3) / 9);
+
+    document.getElementById('res-calories').innerText = currentMacros.totalCalories;
+    document.getElementById('res-protein').innerText = `${currentMacros.totalProtein}g`;
+    document.getElementById('res-carbs').innerText = `${currentMacros.totalCarbs}g`;
+    document.getElementById('res-fats').innerText = `${currentMacros.totalFats}g`;
+    
+    saveUserData();
+}
+
+// 4. Основной функционал (Home)
+function updateHomeUI() {
+    const calLeft = currentMacros.totalCalories - currentMacros.calories;
+    document.getElementById('calories-left').innerText = calLeft > 0 ? calLeft : 0;
+    
+    // Update main ring
+    const progress = Math.min(100, (currentMacros.calories / currentMacros.totalCalories) * 100);
+    setHomeProgress('main-ring-fill', progress, 283); // 2 * PI * 45
+
+    // Update macro rings
+    updateMacroCard('protein', currentMacros.protein, currentMacros.totalProtein, 113); // 2 * PI * 18
+    updateMacroCard('carbs', currentMacros.carbs, currentMacros.totalCarbs, 113);
+    updateMacroCard('fats', currentMacros.fats, currentMacros.totalFats, 113);
+
+    renderFoodHistory();
+}
+
+function updateMacroCard(id, current, total, circ) {
+    const percent = Math.min(100, (current / total) * 100);
+    const valueEl = document.getElementById(`home-${id}-value`);
+    if (valueEl) valueEl.innerText = `${current}g`;
+    
+    const circle = document.getElementById(`${id}-ring-fill`);
+    if (circle) {
+        const offset = circ - (percent / 100 * circ);
+        circle.style.strokeDasharray = `${circ} ${circ}`;
+        circle.style.strokeDashoffset = offset;
     }
 }
 
-function loadSavedData() {
-    const savedUser = localStorage.getItem('dietApp_userData');
-    const savedMacros = localStorage.getItem('dietApp_macros');
+function renderFoodHistory() {
+    const container = document.getElementById('food-history-container');
+    if (!container) return;
+    
+    if (currentMacros.foodHistory.length === 0) {
+        container.innerHTML = '<div class="empty-state">No meals added today</div>';
+        return;
+    }
 
-    if (savedUser && savedMacros) {
-        userData = JSON.parse(savedUser);
-        currentMacros = JSON.parse(savedMacros);
+    container.innerHTML = currentMacros.foodHistory.map((item, index) => `
+        <div class="food-item">
+            ${item.image ? `<img src="${item.image}" class="food-img">` : '<div class="food-img-placeholder">🍲</div>'}
+            <div class="food-details">
+                <div class="food-header">
+                    <h4>${item.name}</h4>
+                    <span class="food-time">${item.time || 'Today'}</span>
+                </div>
+                <div class="food-calories">
+                    <span class="fire-icon">🔥</span> ${item.calories} kcal
+                </div>
+                <div class="food-macros-mini">
+                    <span><div class="macro-mini-dot" style="background: #ff7070"></div> ${item.protein}g</span>
+                    <span><div class="macro-mini-dot" style="background: #ffb366"></div> ${item.carbs}g</span>
+                    <span><div class="macro-mini-dot" style="background: #66b3ff"></div> ${item.fats}g</span>
+                </div>
+            </div>
+            <button class="delete-food-btn" onclick="deleteFoodItem(${index})">×</button>
+        </div>
+    `).join('');
+}
+
+// 5. Камера и Анализ (Симуляция)
+function openCamera() {
+    const video = document.getElementById('camera-video');
+    const step = document.querySelector('.camera-step');
+    step.classList.add('active');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            console.error("Camera error:", err);
+            // Если камера не поддерживается, просто имитируем
+            setTimeout(simulateAnalysis, 1000);
+        });
+}
+
+function closeCamera() {
+    const video = document.getElementById('camera-video');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+    document.querySelector('.camera-step').classList.remove('active');
+}
+
+function takePhoto() {
+    // В реальности здесь захват кадра. Мы просто имитируем.
+    closeCamera();
+    simulateAnalysis();
+}
+
+function simulateAnalysis() {
+    const analysisStep = document.querySelector('.analysis-step');
+    analysisStep.classList.add('active');
+    
+    // Имитация "умного" анализа
+    const results = [
+        { name: "Avocado Toast", calories: 350, protein: 12, carbs: 45, fats: 18 },
+        { name: "Chicken Salad", calories: 420, protein: 35, carbs: 15, fats: 22 },
+        { name: "Salmon with Rice", calories: 580, protein: 42, carbs: 55, fats: 24 }
+    ];
+    
+    const randomFood = results[Math.floor(Math.random() * results.length)];
+    
+    setTimeout(() => {
+        analysisStep.classList.remove('active');
+        addFoodItem(randomFood);
+    }, 2500);
+}
+
+function addFoodItem(item) {
+    const now = new Date();
+    const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+    
+    const newItem = {
+        ...item,
+        time: timeStr,
+        image: null // Здесь могла бы быть ссылка на фото
+    };
+
+    currentMacros.foodHistory.unshift(newItem);
+    currentMacros.calories += item.calories;
+    currentMacros.protein += item.protein;
+    currentMacros.carbs += item.carbs;
+    currentMacros.fats += item.fats;
+
+    updateHomeUI();
+    saveUserData();
+    
+    // Визуальный фидбек
+    alert(`Added: ${item.name} (+${item.calories} kcal)`);
+}
+
+function deleteFoodItem(index) {
+    const item = currentMacros.foodHistory[index];
+    currentMacros.calories -= item.calories;
+    currentMacros.protein -= item.protein;
+    currentMacros.carbs -= item.carbs;
+    currentMacros.fats -= item.fats;
+    
+    currentMacros.foodHistory.splice(index, 1);
+    
+    updateHomeUI();
+    saveUserData();
+}
+
+// 6. Хранение данных (localStorage)
+function saveUserData() {
+    try {
+        const data = {
+            user: userData,
+            macros: currentMacros,
+            lastUpdate: new Date().toDateString()
+        };
+        localStorage.setItem('web4fun_data', JSON.stringify(data));
+        console.log("Data saved successfully");
+    } catch (e) {
+        console.error("Save error:", e);
+    }
+}
+
+function loadUserData() {
+    const saved = localStorage.getItem('web4fun_data');
+    if (saved) {
+        const data = JSON.parse(saved);
+        userData = data.user;
         
-        const today = new Date().toISOString().split('T')[0];
-        if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-        
-        const lastUpdate = localStorage.getItem('dietApp_lastUpdate');
-        if (lastUpdate !== today) {
-            if (lastUpdate) {
-                currentMacros.dailyHistory[lastUpdate] = {
-                    calories: currentMacros.calories,
-                    protein: currentMacros.protein,
-                    carbs: currentMacros.carbs,
-                    fats: currentMacros.fats
+        // Сброс дневных данных, если наступил новый день
+        const today = new Date().toDateString();
+        if (data.lastUpdate !== today) {
+            // Сохраняем в историю перед сбросом
+            if (data.macros && data.lastUpdate) {
+                const histDate = new Date(data.lastUpdate).toISOString().split('T')[0];
+                if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
+                currentMacros.dailyHistory[histDate] = {
+                    calories: data.macros.calories,
+                    protein: data.macros.protein,
+                    carbs: data.macros.carbs,
+                    fats: data.macros.fats
                 };
             }
+            
             currentMacros.calories = 0;
             currentMacros.protein = 0;
             currentMacros.carbs = 0;
             currentMacros.fats = 0;
             currentMacros.foodHistory = [];
-            
-            localStorage.setItem('dietApp_lastUpdate', today);
-            saveAllData();
-        }
-
-        if (userData.goal) {
-            setTimeout(() => {
-                initHomeScreenFromSaved();
-                nextStep(12);
-            }, 100);
-        }
-    }
-}
-
-function initHomeScreenFromSaved() {
-    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
-    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
-    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
-    const fatsLeft = Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats));
-
-    document.getElementById('home-calories-left').innerText = caloriesLeft;
-    document.getElementById('home-protein-eaten').innerText = proteinLeft;
-    document.getElementById('home-carbs-eaten').innerText = carbsLeft;
-    document.getElementById('home-fats-eaten').innerText = fatsLeft;
-
-    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
-    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
-    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
-    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
-
-    const foodList = document.getElementById('food-list');
-    foodList.innerHTML = '';
-    
-    if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
-        currentMacros.foodHistory.forEach((food, index) => {
-            const div = document.createElement('div');
-            div.className = 'food-item';
-            div.innerHTML = `
-                <div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>
-                <div class="food-details">
-                    <div class="food-header">
-                        <h4>${food.name}</h4>
-                        <span class="food-time">${food.time}</span>
-                    </div>
-                    <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
-                    <div class="food-macros-mini">
-                        <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${Math.round(food.protein)}г</span>
-                        <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${Math.round(food.carbs)}г</span>
-                        <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
-                    </div>
-                </div>
-                <button class="delete-food-btn" onclick="deleteFood(${index})">🗑️</button>
-            `;
-            foodList.appendChild(div);
-        });
-    } else {
-        foodList.innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
-    }
-
-    updateCalendarDates();
-}
-
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-function nextStep(stepNumber) {
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    const targetStep = document.getElementById(`step-${stepNumber}`);
-    if (targetStep) targetStep.classList.add('active');
-    
-    const globalTabBar = document.getElementById('global-tab-bar');
-    if (globalTabBar) {
-        if (stepNumber === 12 || stepNumber === 15 || stepNumber === 16) {
-            globalTabBar.style.display = 'flex';
-            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-            if (stepNumber === 12) document.getElementById('tab-home').classList.add('active');
-            if (stepNumber === 15) document.getElementById('tab-progress').classList.add('active');
-            if (stepNumber === 16) document.getElementById('tab-settings').classList.add('active');
         } else {
-            globalTabBar.style.display = 'none';
-        }
-    }
-    window.scrollTo(0,0);
-}
-
-function prevStep(stepNumber) {
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById(`step-${stepNumber}`).classList.add('active');
-    window.scrollTo(0,0);
-}
-
-function selectGender(gender) {
-    userData.gender = gender;
-    nextStep(2);
-}
-
-function selectActivity(multiplier) {
-    userData.activity = multiplier;
-    nextStep(3);
-}
-
-function saveBorn() {
-    const birthdate = document.getElementById('birthdate').value;
-    if (!birthdate) {
-        tg.showAlert("Пожалуйста, выберите дату рождения");
-        return;
-    }
-    userData.birthdate = birthdate;
-    const birthYear = new Date(birthdate).getFullYear();
-    const currentYear = new Date().getFullYear();
-    userData.age = currentYear - birthYear;
-    nextStep(6);
-}
-
-function selectGoal(goal) {
-    userData.goal = goal;
-    nextStep(7);
-}
-
-function selectStopper(stopper) {
-    userData.stopper = stopper;
-    nextStep(8);
-}
-
-function selectDiet(diet) {
-    userData.diet = diet;
-    nextStep(9);
-}
-
-function selectAccomplish(accomplish) {
-    userData.accomplish = accomplish;
-    nextStep(10);
-    startLoadingAnimation();
-}
-
-function startLoadingAnimation() {
-    const percentageEl = document.getElementById('load-percentage');
-    const progressBar = document.getElementById('load-progress');
-    const statusEl = document.getElementById('load-status');
-    const finalBtn = document.getElementById('final-btn');
-    
-    const steps = [
-        { percent: 20, status: "Анализируем ваши данные...", check: "check-calories" },
-        { percent: 40, status: "Рассчитываем метаболический возраст...", check: "check-carbs" },
-        { percent: 60, status: "Подбираем оптимальный баланс БЖУ...", check: "check-protein" },
-        { percent: 80, status: "Формируем персональные рекомендации...", check: "check-fats" },
-        { percent: 100, status: "Ваш план готов!", check: "check-health" }
-    ];
-
-    let currentPercent = 0;
-    let stepIndex = 0;
-
-    const interval = setInterval(() => {
-        if (currentPercent < 100) {
-            currentPercent++;
-            percentageEl.innerText = `${currentPercent}%`;
-            progressBar.style.width = `${currentPercent}%`;
-
-            if (stepIndex < steps.length && currentPercent >= steps[stepIndex].percent) {
-                statusEl.innerText = steps[stepIndex].status;
-                const checkItem = document.getElementById(steps[stepIndex].check);
-                if (checkItem) {
-                    checkItem.classList.add('checked');
-                }
-                stepIndex++;
-            }
-        } else {
-            clearInterval(interval);
-            setTimeout(() => {
-                document.getElementById('loading-title').innerText = "План успешно составлен!";
-                statusEl.style.display = 'none';
-                finalBtn.style.display = 'block';
-            }, 500);
-        }
-    }, 40);
-}
-
-async function fetchWithRetry(url, options, maxRetries = 3, delay = 2000) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const response = await fetch(url, options);
-            if (response.status === 429) {
-                console.warn(`Quota exceeded (429). Retry attempt ${i + 1} of ${maxRetries}...`);
-                if (i < maxRetries - 1) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    continue;
-                }
-            }
-            return response;
-        } catch (error) {
-            if (i === maxRetries - 1) throw error;
-            console.warn(`Network error. Retry attempt ${i + 1} of ${maxRetries}...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
-    if (!CONFIG.GOOGLE_API_KEY) {
-        console.warn("No API key, skipping tips");
-        return [
-            { icon: "🥗", text: "Следите за балансом БЖУ ежедневно" },
-            { icon: "💧", text: "Пейте достаточное количество воды" },
-            { icon: "🏃", text: "Старайтесь больше двигаться" },
-            { icon: "😴", text: "Соблюдайте режим сна" }
-        ];
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-
-    const prompt = `Пользователь:
-- Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
-- Вес: ${userData.weight} кг
-- Рост: ${userData.height} см
-- Возраст: ${userData.age} лет
-- Цель: ${userData.goal}
-- Препятствие: ${userData.stopper}
-- Диета: ${userData.diet}
-- Желание: ${userData.accomplish}
-
-Его норма: ${calories} ккал, БЖУ: ${protein}г белка, ${fats}г жиров, ${carbs}г углеводов.
-
-Дай 4 коротких, конкретных совета на русском языке, как ему достичь цели, основываясь на его ответах. 
-Верни ТОЛЬКО JSON массив объектов с полями "icon" (эмодзи) и "text" (совет до 60 символов).
-Пример: [{"icon": "🥑", "text": "Ешь больше жиров"}, ...]`;
-
-    try {
-        const response = await fetchWithRetry(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error.message);
-        }
-
-        const text = data.candidates[0].content.parts[0].text;
-        const cleanJson = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(cleanJson);
-    } catch (e) {
-        console.error("Gemini error:", e);
-        return [
-            { icon: "🥗", text: "Следите за балансом БЖУ ежедневно" },
-            { icon: "💧", text: "Пейте достаточное количество воды" },
-            { icon: "🏃", text: "Старайтесь больше двигаться" },
-            { icon: "😴", text: "Соблюдайте режим сна" }
-        ];
-    }
-}
-
-function showResults() {
-    const heightInput = document.getElementById('height');
-    const weightInput = document.getElementById('weight');
-
-    if (!heightInput || !weightInput) return;
-
-    const height = parseFloat(heightInput.value);
-    const weight = parseFloat(weightInput.value);
-    
-    userData.height = height;
-    userData.weight = weight;
-    
-    // Расчет калорий
-    let bmr;
-    if (userData.gender === 'male') {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) + 5;
-    } else {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
-    }
-    const calories = Math.round(bmr * userData.activity);
-    
-    // Расчет БЖУ
-    const protein = Math.round((calories * 0.3) / 4);
-    const fats = Math.round((calories * 0.3) / 9);
-    const carbs = Math.round((calories * 0.4) / 4);
-
-    // Обновление UI
-    document.getElementById('res-calories').innerText = calories;
-    document.getElementById('res-carbs').innerText = carbs + 'г';
-    document.getElementById('res-protein').innerText = protein + 'г';
-    document.getElementById('res-fats').innerText = fats + 'г';
-    document.getElementById('target-weight').innerText = weight + ' кг';
-    
-    const goalMap = {
-        'lose': 'Похудение',
-        'maintain': 'Поддержание веса',
-        'gain': 'Набор массы'
-    };
-    const goalText = goalMap[userData.goal] || 'Здоровье';
-    document.getElementById('goal-text').innerText = `Ваша цель: ${goalText}`;
-
-    // Анимация
-    setProgress('ring-calories', 100);
-    setProgress('ring-carbs', 85);
-    setProgress('ring-protein', 90);
-    setProgress('ring-fats', 70);
-    
-    // Загрузка советов
-    fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
-        const container = document.getElementById('ai-tips');
-        if (container) {
-            container.innerHTML = '';
-            tips.forEach(tip => {
-                container.innerHTML += `
-                    <div class="tip-item">
-                        <div class="tip-icon">${tip.icon}</div>
-                        <div class="tip-text">${tip.text}</div>
-                    </div>
-                `;
-            });
-        }
-        nextStep(11);
-    }).catch(error => {
-        console.error("Tips error", error);
-        nextStep(11);
-    });
-}
-
-let videoStream = null;
-async function openCamera() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; 
-    
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const imageData = event.target.result;
-            document.getElementById('analyzed-img').src = imageData;
-            startAnalysis(imageData);
-        };
-        reader.readAsDataURL(file);
-    };
-    
-    input.click();
-}
-
-function closeCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-    nextStep(12);
-}
-
-function takePhoto() {
-    const video = document.getElementById('camera-video');
-    const canvas = document.getElementById('camera-canvas');
-    const context = canvas.getContext('2d');
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    const imageData = canvas.toDataURL('image/jpeg');
-    document.getElementById('analyzed-img').src = imageData;
-    
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-    
-    startAnalysis(imageData);
-}
-
-async function startAnalysis(imageData) {
-    nextStep(14);
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 5) + 2;
-        if (progress > 100) progress = 100;
-        
-        document.getElementById('analysis-percent').innerText = `${progress}%`;
-        setHomeProgress('analysis-ring', progress, 282.7);
-        
-        if (progress === 100) {
-            clearInterval(interval);
-            finishAnalysis(imageData);
-        }
-    }, 150);
-}
-
-async function finishAnalysis(imageData) {
-    // 1. Проверяем, видит ли вообще скрипт твой ключ
-    if (!CONFIG.GOOGLE_API_KEY) {
-        alert("ОШИБКА: Скрипт не видит API ключ! (Хотя в .env он может быть). Проблема в передаче ключа.");
-        nextStep(12);
-        return;
-    }
-
-    const prompt = `Анализируй это изображение еды. 
-    1. Название блюда (на русском).
-    2. Калории (ккал), белки (г), жиры (г), углеводы (г).
-    Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
-    
-    try {
-        // Отправляем запрос
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-        const response = await fetchWithRetry(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }]
-            })
-        });
-
-        const data = await response.json();
-
-        // 2. Если Google вернул ошибку, показываем её текст
-        if (data.error) {
-            if (data.error.code === 429) {
-                alert(`Лимит запросов исчерпан (429) после 3 попыток. Попробуйте позже.`);
-            } else {
-                alert(`GOOGLE ОТКАЗАЛ: ${data.error.message} (Code: ${data.error.code})`);
-            }
-            throw new Error(data.error.message);
+            currentMacros = data.macros;
         }
         
-        if (!data.candidates || !data.candidates[0].content) {
-            alert("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ (Блокировка безопасности или сбой)");
-            throw new Error("Empty response");
-        }
-
-        let text = data.candidates[0].content.parts[0].text;
-        text = text.replace(/```json|```/g, '').trim();
+        // Синхронизируем цели
+        currentMacros.totalCalories = data.macros.totalCalories;
+        currentMacros.totalProtein = data.macros.totalProtein;
+        currentMacros.totalCarbs = data.macros.totalCarbs;
+        currentMacros.totalFats = data.macros.totalFats;
         
-        const result = JSON.parse(text);
-        addFoodToHome(result, imageData); // Всё ок
-
-    } catch (err) {
-        console.error("Critical AI Error:", err);
-        
-        // 3. В СЛУЧАЕ ОШИБКИ — МЫ ВСЁ РАВНО ДОБАВЛЯЕМ ЕДУ (ЧТОБЫ ТЫ ВИДЕЛ РЕЗУЛЬТАТ)
-        alert(`Сбой анализа: ${err.message}. Добавляю тестовую еду.`);
-        
-        const errorFood = {
-            name: "⚠️ Ошибка (см. детали)",
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fats: 0
-        };
-        addFoodToHome(errorFood, imageData);
+        if (!currentMacros.dailyHistory) currentMacros.dailyHistory = data.macros.dailyHistory || {};
     }
 }
 
-function addFoodToHome(food, image) {
-    const now = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const foodEntry = {
-        name: food.name,
-        calories: food.calories,
-        protein: food.protein,
-        carbs: food.carbs,
-        fats: food.fats,
-        time: time
-    };
-
-    if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
-    currentMacros.foodHistory.unshift(foodEntry);
-    
-    recalculateMacros();
-    saveAllData();
-    initHomeScreenFromSaved();
-    nextStep(12);
-}
-
-function recalculateMacros() {
-    currentMacros.protein = 0;
-    currentMacros.carbs = 0;
-    currentMacros.fats = 0;
-    currentMacros.calories = 0;
-
-    if (currentMacros.foodHistory) {
-        currentMacros.foodHistory.forEach(food => {
-            currentMacros.protein += food.protein;
-            currentMacros.carbs += food.carbs;
-            currentMacros.fats += food.fats;
-            currentMacros.calories += food.calories;
-        });
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-    currentMacros.dailyHistory[today] = {
-        calories: currentMacros.calories,
-        protein: currentMacros.protein,
-        carbs: currentMacros.carbs,
-        fats: currentMacros.fats
-    };
-}
-
-function deleteFood(index) {
-    if (confirm("Удалить это блюдо?")) {
-        if (currentMacros.foodHistory && currentMacros.foodHistory[index]) {
-            currentMacros.foodHistory.splice(index, 1);
-            recalculateMacros();
-            saveAllData();
-            initHomeScreenFromSaved();
-        }
+function resetAllData() {
+    if (confirm("Are you sure you want to reset all data and history?")) {
+        localStorage.clear();
+        location.reload();
     }
 }
 
-function goToHome() {
-    currentMacros.totalCalories = parseInt(document.getElementById('res-calories').innerText);
-    currentMacros.totalProtein = parseInt(document.getElementById('res-protein').innerText.replace('г', ''));
-    currentMacros.totalCarbs = parseInt(document.getElementById('res-carbs').innerText.replace('г', ''));
-    currentMacros.totalFats = parseInt(document.getElementById('res-fats').innerText.replace('г', ''));
-    
-    currentMacros.calories = 0;
-    currentMacros.protein = 0;
-    currentMacros.carbs = 0;
-    currentMacros.fats = 0;
-    currentMacros.foodHistory = [];
-
-    // Save registration date to track daily resets
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('dietApp_lastUpdate', today);
-
-    document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
-    document.getElementById('home-calories-total').innerText = `Ккал осталось`;
-    
-    document.getElementById('home-protein-eaten').innerText = currentMacros.totalProtein;
-    document.getElementById('home-carbs-eaten').innerText = currentMacros.totalCarbs;
-    document.getElementById('home-fats-eaten').innerText = currentMacros.totalFats;
-
-    setHomeProgress('home-ring-calories', 0, 282.7);
-    setHomeProgress('home-ring-protein', 0, 100);
-    setHomeProgress('home-ring-carbs', 0, 100);
-    setHomeProgress('home-ring-fats', 0, 100);
-
-    document.getElementById('food-list').innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
-
-    saveAllData();
-    updateCalendarDates();
-    nextStep(12);
+// 7. Прогресс и Календарь
+function updateCalendar() {
+    nextStep(15);
+    updateProgressPage();
 }
 
 function setHomeProgress(id, percent, circumference) {
@@ -779,9 +516,9 @@ function renderProgressChart() {
         const barHtml = `
             <div class="bar-column">
                 <div class="bar-stack">
-                    <div class="segment fats" style="height: ${fHeight}px"></div>
-                    <div class="segment carbs" style="height: ${cHeight}px"></div>
                     <div class="segment protein" style="height: ${pHeight}px"></div>
+                    <div class="segment carbs" style="height: ${cHeight}px"></div>
+                    <div class="segment fats" style="height: ${fHeight}px"></div>
                 </div>
                 <span class="day-label">${dayLabel}</span>
             </div>
@@ -791,113 +528,31 @@ function renderProgressChart() {
 }
 
 function updateBMI() {
-    if (!userData.weight || !userData.height) return;
+    const bmi = userData.weight / ((userData.height / 100) ** 2);
+    const bmiEl = document.getElementById('bmi-value');
+    if (bmiEl) bmiEl.innerText = bmi.toFixed(1);
     
-    const heightInMeters = userData.height / 100;
-    const bmi = (userData.weight / (heightInMeters * heightInMeters)).toFixed(1);
-    
-    const bmiEl = document.getElementById('bmi-number');
-    const statusTextEl = document.getElementById('bmi-status-text');
-    const pointerEl = document.getElementById('bmi-pointer');
-    
-    bmiEl.innerText = bmi;
-    
-    let status = "Норма";
-    let statusClass = "healthy";
-    let pointerPos = 50; 
-
-    if (bmi < 18.5) {
-        status = "Дефицит";
-        statusClass = "underweight";
-        pointerPos = (bmi / 18.5) * 25;
-    } else if (bmi < 25) {
-        status = "Норма";
-        statusClass = "healthy";
-        pointerPos = 25 + ((bmi - 18.5) / 6.5) * 25;
-    } else if (bmi < 30) {
-        status = "Лишний";
-        statusClass = "overweight";
-        pointerPos = 50 + ((bmi - 25) / 5) * 25;
-    } else {
-        status = "Ожирение";
-        statusClass = "obese";
-        pointerPos = 75 + Math.min(25, ((bmi - 30) / 10) * 25);
-    }
-
-    statusTextEl.innerText = status;
-    statusTextEl.className = `status-badge ${statusClass}`;
-    pointerEl.style.left = `${pointerPos}%`;
-}
-
-function openSettings() {
-    nextStep(16);
-    loadSettingsData();
-}
-
-function loadSettingsData() {
-    const tg = window.Telegram.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        
-        const nameEl = document.getElementById('settings-name');
-        if (nameEl) {
-            nameEl.innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        }
-        
-        const avatarEl = document.getElementById('settings-avatar');
-        if (avatarEl) {
-            if (user.photo_url) {
-                avatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
-            } else {
-                const letter = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
-                avatarEl.innerHTML = `<div class="avatar-placeholder">${letter}</div>`;
-            }
-        }
-    } else {
-        const nameEl = document.getElementById('settings-name');
-        if (nameEl) nameEl.innerText = 'Гость';
-    }
-
-    const activityMap = { 
-        1.2: 'Сидячий', 
-        1.375: 'Лёгкий', 
-        1.55: 'Умеренный', 
-        1.725: 'Высокая', 
-        1.9: 'Экстремальная' 
-    };
-    
-    const goalMap = { 
-        'lose': 'Похудение', 
-        'maintain': 'Норма', 
-        'gain': 'Масса' 
-    };
-    
-    const setText = (id, text) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = text;
-    };
-
-    setText('set-activity-text', activityMap[userData.activity] || 'Норма');
-    setText('set-weight-text', (userData.weight || 0) + ' кг');
-    setText('set-goal-text', goalMap[userData.goal] || 'Здоровье');
-    setText('set-height-text', (userData.height || 0) + ' см');
-}
-
-function resetAppData() {
-    if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
-        localStorage.clear();
-        location.reload();
+    const pointer = document.getElementById('bmi-pointer');
+    if (pointer) {
+        // Simple mapping: 15 to 35 BMI -> 0% to 100%
+        let pos = ((bmi - 15) / (35 - 15)) * 100;
+        pos = Math.max(0, Math.min(100, pos));
+        pointer.style.left = `${pos}%`;
     }
 }
 
-function setProgress(id, percent) {
-    const circle = document.getElementById(id);
-    if (circle) {
-        const radius = 40; 
-        const circumference = 2 * Math.PI * radius;
-        
-        const offset = circumference - (percent / 100 * circumference);
-        circle.style.strokeDasharray = `${circumference} ${circumference}`;
-        circle.style.strokeDashoffset = offset;
-    }
+// 8. Настройки
+function updateSettingsUI() {
+    document.getElementById('set-weight').innerText = `${userData.weight} kg`;
+    document.getElementById('set-height').innerText = `${userData.height} cm`;
+    document.getElementById('set-age').innerText = `${userData.age}`;
+    document.getElementById('set-goal').innerText = userData.goal;
+    
+    document.getElementById('set-target-calories').innerText = currentMacros.totalCalories;
+    document.getElementById('set-target-protein').innerText = `${currentMacros.totalProtein}g`;
+    document.getElementById('set-target-carbs').innerText = `${currentMacros.totalCarbs}g`;
+    document.getElementById('set-target-fats').innerText = `${currentMacros.totalFats}g`;
 }
+
+// Запуск при загрузке
+document.addEventListener('DOMContentLoaded', startApp);
