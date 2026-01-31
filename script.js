@@ -47,10 +47,6 @@ window.onunhandledrejection = function(event) {
 
 // Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
-    // Экстренный сброс для удаления тяжелых данных и разблокировки localStorage
-    localStorage.clear();
-    console.log("Emergency storage reset performed to free space.");
-
     console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
     
     // Проверяем наличие ключа в URL
@@ -143,7 +139,7 @@ function loadSavedData() {
             saveAllData();
         }
 
-        if (currentMacros.totalCalories > 0) {
+        if (userData.goal) {
             setTimeout(() => {
                 initHomeScreenFromSaved();
                 nextStep(12);
@@ -658,6 +654,10 @@ function goToHome() {
     currentMacros.carbs = 0;
     currentMacros.fats = 0;
     currentMacros.foodHistory = [];
+
+    // Save registration date to track daily resets
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('dietApp_lastUpdate', today);
 
     document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
     document.getElementById('home-calories-total').innerText = `Ккал осталось`;
