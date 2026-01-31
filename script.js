@@ -689,7 +689,7 @@ function setHomeProgress(id, percent, circumference) {
 }
 
 function updateCalendarDates() {
-    const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const days = ['В', 'П', 'В', 'С', 'Ч', 'П', 'С'];
     const now = new Date();
     
     const monday = new Date(now);
@@ -703,7 +703,24 @@ function updateCalendarDates() {
         
         const dayNum = date.getDate();
         el.querySelector('.day-number').innerText = dayNum;
+        el.querySelector('.day-name').innerText = days[date.getDay()];
         
+        // Progress Logic
+        const dateStr = date.toISOString().split('T')[0];
+        const dayData = currentMacros.dailyHistory ? currentMacros.dailyHistory[dateStr] : null;
+        const totalCalories = currentMacros.totalCalories || 2000;
+        
+        let progress = 0;
+        if (dayData && dayData.calories) {
+            progress = Math.min(100, (dayData.calories / totalCalories) * 100);
+        }
+        
+        const ring = el.querySelector('.day-ring-container');
+        if (ring) {
+            ring.style.background = `conic-gradient(var(--primary-color, #000) ${progress}%, #f0f0f5 ${progress}%)`;
+            ring.style.borderRadius = '50%';
+        }
+
         if (date.toDateString() === now.toDateString()) {
             el.classList.add('active');
         } else {
