@@ -36,6 +36,10 @@ body {
     display: block;
 }
 
+.hidden {
+    display: none !important;
+}
+
 #step-12 {
     height: auto;
     min-height: 100%;
@@ -1222,13 +1226,14 @@ h1 {
     background: #000;
     z-index: 2000;
     overflow: hidden;
-    display: flex;
+    display: none; /* Changed from flex to none by default */
     flex-direction: column;
     justify-content: space-between;
 }
 
-#camera-screen.hidden {
-    display: none;
+/* Active state for camera */
+#camera-screen:not(.hidden) {
+    display: flex;
 }
 
 #video-preview {
@@ -1290,9 +1295,6 @@ h1 {
 
 /* Bottom corners using another element or pseudo-elements of another div if needed,
    but we can also use focus-corners::before/after and box-shadow or just more divs */
-.focus-corners {
-    /* Use pseudo-elements for bottom corners by nesting or adding more */
-}
 
 /* Let's redefine focus-corners to be more robust */
 .focus-corners {
