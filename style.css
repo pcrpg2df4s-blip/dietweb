@@ -1,25 +1,41 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    overflow-x: hidden;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: #f9f9f9;
     color: #000;
-    margin: 0;
-    padding: 20px;
     display: flex;
     justify-content: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .container {
     width: 100%;
     max-width: 400px;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 /* Скрытие всех шагов, кроме активного */
 .step {
     display: none;
     animation: fadeIn 0.3s ease;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 .step.active {
     display: block;
+}
+
+/* Home screen specific padding to prevent overlap with tab bar */
+.step-home {
+    padding-bottom: 120px;
 }
 
 h1 {
