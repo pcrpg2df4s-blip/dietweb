@@ -28,14 +28,84 @@ let currentMacros = {
     dailyHistory: {} 
 };
 
+// Глобальный перехватчик ошибок для диагностики
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error("Global error:", message, source, lineno);
+    // Если это ошибка квоты localStorage, она обычно содержит "quota"
+    if (message.toLowerCase().includes("quota")) {
+        alert(`ОШИБКА ХРАНИЛИЩА: ${message}\nПопробуйте очистить данные в настройках.`);
+    }
+    return false;
+};
+
+window.onunhandledrejection = function(event) {
+    console.error("Unhandled rejection:", event.reason);
+    if (event.reason && event.reason.toString().toLowerCase().includes("quota")) {
+        alert(`ОШИБКА КВОТЫ (Promise): ${event.reason}`);
+    }
+};
+
 // Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
+    console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
+    
+    // Проверяем наличие ключа в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlKey = urlParams.get('api_key');
+    if (urlKey) {
+        console.log("Using API Key from URL");
+        CONFIG.GOOGLE_API_KEY = urlKey;
+    }
+
     loadSavedData();
 });
 
+function checkTotalStorageUsage() {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        total += (key.length + value.length) * 2; // Approximate bytes (UTF-16)
+        console.log(`[Storage] Key: ${key}, Size: ~${((key.length + value.length) * 2 / 1024).toFixed(2)} KB`);
+    }
+    console.log(`[Storage] TOTAL Usage: ~( ${(total / 1024).toFixed(2)} KB )`);
+    return total;
+}
+
 function saveAllData() {
-    localStorage.setItem('dietApp_userData', JSON.stringify(userData));
-    localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
+    try {
+        checkTotalStorageUsage();
+        const userDataStr = JSON.stringify(userData);
+        const macrosStr = JSON.stringify(currentMacros);
+        
+        console.log(`[Storage] Attempting to save userData: ${(userDataStr.length / 1024).toFixed(2)} KB`);
+        console.log(`[Storage] Attempting to save macros: ${(macrosStr.length / 1024).toFixed(2)} KB`);
+        
+        localStorage.setItem('dietApp_userData', userDataStr);
+        localStorage.setItem('dietApp_macros', macrosStr);
+        
+        console.log(`[Storage] Successfully saved.`);
+    } catch (e) {
+        console.error("[Storage] Failed to save data to localStorage:", e);
+        if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.message.includes("quota")) {
+            console.warn("[Storage] Quota exceeded. Attempting to trim food history...");
+            if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
+                // Keep only last 2 items
+                currentMacros.foodHistory = currentMacros.foodHistory.slice(0, 2);
+                console.log("[Storage] Trimmed history to 2 items. Retrying save...");
+                try {
+                    localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
+                    console.log("[Storage] Save successful after trimming.");
+                    alert("Внимание: История фотографий была сокращена, так как место в браузере закончилось.");
+                } catch (e2) {
+                    console.error("[Storage] Still failing after trimming:", e2);
+                    alert("Критическая ошибка: Место в браузере полностью исчерпано (даже после удаления фото). Возможно, другие приложения на этом сайте занимают всё место.");
+                }
+            } else {
+                alert("Ошибка: Превышен лимит памяти браузера. Даже без истории фотографий не удается сохранить данные. Попробуйте очистить кэш браузера для этого сайта.");
+            }
+        }
+    }
 }
 
 function loadSavedData() {
@@ -560,7 +630,18 @@ function addFoodToHome(food, image) {
     foodList.prepend(item);
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
+    
+    // Log image size
+    if (image) {
+        console.log(`[Storage] Adding image of size: ${(image.length / 1024).toFixed(2)} KB`);
+    }
+
     currentMacros.foodHistory.unshift(itemContent);
+    
+    // Check if history is getting too large
+    const historySize = JSON.stringify(currentMacros.foodHistory).length / 1024;
+    console.log(`[Storage] Total food history size: ${historySize.toFixed(2)} KB`);
+
     saveAllData();
 
     nextStep(12);
