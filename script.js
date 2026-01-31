@@ -375,7 +375,14 @@ function loadUserData() {
         if (data.lastUpdate !== today) {
             // Сохраняем в историю перед сбросом
             if (data.macros && data.lastUpdate) {
-                const histDate = new Date(data.lastUpdate).toISOString().split('T')[0];
+                // date.toISOString() might be off by a day depending on TZ
+                // Better to use a safe way to get YYYY-MM-DD from the saved date string
+                const d = new Date(data.lastUpdate);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const histDate = `${year}-${month}-${day}`;
+                
                 if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
                 currentMacros.dailyHistory[histDate] = {
                     calories: data.macros.calories,
@@ -443,18 +450,22 @@ function updateCalendarDates() {
         el.querySelector('.day-name').innerText = days[date.getDay()];
         
         // Progress Logic
-        const dateStr = date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         const dayData = currentMacros.dailyHistory ? currentMacros.dailyHistory[dateStr] : null;
         const totalCalories = currentMacros.totalCalories || 2000;
         
-        let progress = 0;
+        let percent = 0;
         if (dayData && dayData.calories) {
-            progress = Math.min(100, (dayData.calories / totalCalories) * 100);
+            percent = Math.min(100, Math.round((dayData.calories / totalCalories) * 100));
         }
         
         const ring = el.querySelector('.day-ring-container');
         if (ring) {
-            ring.style.background = `conic-gradient(var(--primary-color, #000) ${progress}%, #f0f0f5 ${progress}%)`;
+            // --primary-color typically used for filled part, #f0f0f5 for empty
+            ring.style.background = `conic-gradient(#FF9F0A ${percent}%, #E5E5EA 0)`;
             ring.style.borderRadius = '50%';
         }
 
@@ -467,7 +478,11 @@ function updateCalendarDates() {
 }
 
 function updateProgressPage() {
-    const today = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
     
@@ -503,7 +518,12 @@ function renderProgressChart() {
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        
         const dayLabel = daysShort[date.getDay()];
         
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };

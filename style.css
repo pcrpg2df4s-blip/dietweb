@@ -491,8 +491,8 @@ h1 {
     font-weight: 600;
     z-index: 2;
     background: #fff;
-    width: 32px;
-    height: 32px;
+    width: 34px; /* Slightly larger to look better inside the donut */
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
