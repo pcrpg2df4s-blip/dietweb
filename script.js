@@ -1,17 +1,4 @@
-const urlParams = new URLSearchParams(window.location.search);
-let apiKeyFromUrl = urlParams.get('api_key');
-
-// Попытка получить ключ из URL, иначе из localStorage
-if (apiKeyFromUrl) {
-    localStorage.setItem('dietApp_google_api_key', apiKeyFromUrl);
-} else {
-    apiKeyFromUrl = localStorage.getItem('dietApp_google_api_key');
-}
-
-console.log("Debug: API Key present:", !!apiKeyFromUrl);
-
-const CONFIG = {
-    GOOGLE_API_KEY: apiKeyFromUrl || "",
+const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
