@@ -239,6 +239,26 @@ function startLoadingAnimation() {
     }, 40);
 }
 
+async function fetchWithRetry(url, options, maxRetries = 3, delay = 2000) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (response.status === 429) {
+                console.warn(`Quota exceeded (429). Retry attempt ${i + 1} of ${maxRetries}...`);
+                if (i < maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+            }
+            return response;
+        } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            console.warn(`Network error. Retry attempt ${i + 1} of ${maxRetries}...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
 async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
     if (!CONFIG.GOOGLE_API_KEY) {
         console.warn("No API key, skipping tips");
@@ -250,7 +270,7 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
         ];
     }
 
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
 
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
@@ -269,7 +289,7 @@ const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-
 Пример: [{"icon": "🥑", "text": "Ешь больше жиров"}, ...]`;
 
     try {
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -277,6 +297,11 @@ const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-
             })
         });
         const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
         const text = data.candidates[0].content.parts[0].text;
         const cleanJson = text.replace(/```json|```/g, '').trim();
         return JSON.parse(cleanJson);
@@ -441,7 +466,8 @@ async function finishAnalysis(imageData) {
     
     try {
         // Отправляем запрос
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
+        const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -453,7 +479,11 @@ async function finishAnalysis(imageData) {
 
         // 2. Если Google вернул ошибку, показываем её текст
         if (data.error) {
-            alert(`GOOGLE ОТКАЗАЛ: ${data.error.message} (Code: ${data.error.code})`);
+            if (data.error.code === 429) {
+                alert(`Лимит запросов исчерпан (429) после 3 попыток. Попробуйте позже.`);
+            } else {
+                alert(`GOOGLE ОТКАЗАЛ: ${data.error.message} (Code: ${data.error.code})`);
+            }
             throw new Error(data.error.message);
         }
         
