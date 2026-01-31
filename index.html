@@ -512,8 +512,6 @@
                     
                     <div class="chart-container">
                         <div class="y-axis">
-                            <span>5000</span>
-                            <span>4000</span>
                             <span>3000</span>
                             <span>2000</span>
                             <span>1000</span>
@@ -521,8 +519,6 @@
                         </div>
                         <div class="chart-bars">
                             <div class="chart-grid">
-                                <div class="grid-line"></div>
-                                <div class="grid-line"></div>
                                 <div class="grid-line"></div>
                                 <div class="grid-line"></div>
                                 <div class="grid-line"></div>
@@ -553,7 +549,7 @@
                 <div class="progress-card bmi-card">
                     <div class="bmi-header">
                         <h3>Ваш ИМТ</h3>
-                        <div class="help-icon">?</div>
+                        <div class="help-icon bmi-info-icon" style="cursor: pointer;">?</div>
                     </div>
                     
                     <div class="bmi-value-row">
@@ -665,6 +661,17 @@
         </div>
         <div class="add-btn-main" onclick="openCamera()">+</div>
         <div id="app-version-label" style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.2.0</div>
+    </div>
+
+    <div id="bmi-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Формула ИМТ</h3>
+            <div class="formula-box">
+                <span class="formula-text">ИМТ = Вес (кг) / Рост (м)²</span>
+            </div>
+            <p class="modal-desc">Индекс массы тела рассчитывается делением веса в килограммах на квадрат роста в метрах.</p>
+            <button id="close-bmi-modal" class="primary-btn small">Понятно</button>
+        </div>
     </div>
     
     <script src="config.js"></script>

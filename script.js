@@ -58,7 +58,34 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     loadSavedData();
+    initBMIModal();
 });
+
+function initBMIModal() {
+   const modal = document.getElementById('bmi-modal');
+   const closeBtn = document.getElementById('close-bmi-modal');
+   const infoIcon = document.querySelector('.bmi-info-icon');
+
+   if (infoIcon) {
+       infoIcon.addEventListener('click', () => {
+           modal.classList.remove('hidden');
+       });
+   }
+
+   if (closeBtn) {
+       closeBtn.addEventListener('click', () => {
+           modal.classList.add('hidden');
+       });
+   }
+
+   if (modal) {
+       modal.addEventListener('click', (e) => {
+           if (e.target === modal) {
+               modal.classList.add('hidden');
+           }
+       });
+   }
+}
 
 function checkTotalStorageUsage() {
     let total = 0;
@@ -216,7 +243,7 @@ function renderWeeklyCalendar() {
 
     container.innerHTML = '';
 
-    const radius = 16;
+    const radius = 20;
     const circumference = 2 * Math.PI * radius;
 
     for (let i = 0; i < 7; i++) {
@@ -239,14 +266,14 @@ function renderWeeklyCalendar() {
         dayCard.innerHTML = `
             <span class="day-name">${dayName}</span>
             <div class="day-ring-wrapper">
-                <svg width="40" height="40" viewBox="0 0 40 40">
-                    <circle class="ring-track" cx="20" cy="20" r="${radius}" fill="transparent" stroke="#eee" stroke-width="3"></circle>
-                    <circle class="ring-progress" cx="20" cy="20" r="${radius}" fill="transparent" stroke="#000" stroke-width="3"
+                <svg width="48" height="48" viewBox="0 0 48 48">
+                    <circle class="ring-track" cx="24" cy="24" r="${radius}" fill="transparent" stroke="#eee" stroke-width="4"></circle>
+                    <circle class="ring-progress" cx="24" cy="24" r="${radius}" fill="transparent" stroke="#000" stroke-width="4"
                         stroke-dasharray="${circumference} ${circumference}"
                         stroke-dashoffset="${offset}"
                         stroke-linecap="round"
-                        transform="rotate(-90 20 20)"></circle>
-                    <text x="20" y="22" text-anchor="middle" font-size="10" font-weight="700" fill="${isActive ? '#000' : '#333'}">${dayNumber}</text>
+                        transform="rotate(-90 24 24)"></circle>
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="${isActive ? '#000' : '#333'}">${dayNumber}</text>
                 </svg>
             </div>
         `;
@@ -813,10 +840,14 @@ function renderProgressChart() {
         
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
         
-        const maxVal = 5000;
-        const pHeight = Math.min(150, (data.protein * 4 / maxVal) * 150);
-        const cHeight = Math.min(150, (data.carbs * 4 / maxVal) * 150);
-        const fHeight = Math.min(150, (data.fats * 9 / maxVal) * 150);
+        const maxVal = 3000;
+        const totalCals = data.calories || ((data.protein * 4) + (data.carbs * 4) + (data.fats * 9));
+        const scaleFactor = Math.min(1, totalCals / maxVal);
+        
+        // Scale segments proportionally to fill the bar up to 100% (150px)
+        const pHeight = totalCals > 0 ? ((data.protein * 4) / totalCals) * (scaleFactor * 150) : 0;
+        const cHeight = totalCals > 0 ? ((data.carbs * 4) / totalCals) * (scaleFactor * 150) : 0;
+        const fHeight = totalCals > 0 ? ((data.fats * 9) / totalCals) * (scaleFactor * 150) : 0;
 
         const barHtml = `
             <div class="bar-column">
