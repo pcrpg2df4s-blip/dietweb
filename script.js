@@ -46,14 +46,40 @@ window.onunhandledrejection = function(event) {
 };
 
 // 1. Инициализация и навигация
-function startApp() {
-    loadUserData();
-    if (userData.gender && userData.height) {
-        // Если данные уже есть, переходим на экран 14 (Home)
-        goToStep(14);
-    } else {
-        nextStep(1);
+function initApp() {
+    // Сброс UI при старте: скрываем все модалки, спиннеры и оверлеи
+    document.querySelectorAll('.step, .loading-container, .analysis-step, .camera-step').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('hidden'); // Принудительно скрываем
+    });
+
+    try {
+        loadUserData();
+    } catch (e) {
+        console.error("Critical load error:", e);
+        localStorage.clear();
     }
+
+    // Проверка целостности: если данные битые или неполные — на регистрацию
+    const isDataValid = userData &&
+                       userData.gender &&
+                       userData.height &&
+                       userData.weight &&
+                       userData.goal &&
+                       userData.goal !== '';
+
+    if (isDataValid) {
+        // Если данные целые — вход
+        goToStep(12); // В index.html step-12 это home-page
+    } else {
+        // Если данных нет или они битые — сброс и регистрация
+        localStorage.clear();
+        goToStep(1);
+    }
+}
+
+function startApp() {
+    initApp();
 }
 
 function nextStep(step) {
@@ -365,9 +391,15 @@ function saveUserData() {
 }
 
 function loadUserData() {
-    const saved = localStorage.getItem('web4fun_data');
-    if (saved) {
+    try {
+        const saved = localStorage.getItem('web4fun_data');
+        if (!saved) return;
+
         const data = JSON.parse(saved);
+        if (!data || !data.user || !data.macros) {
+            throw new Error("Invalid data structure");
+        }
+
         userData = data.user;
         
         // Сброс дневных данных, если наступил новый день
@@ -375,8 +407,6 @@ function loadUserData() {
         if (data.lastUpdate !== today) {
             // Сохраняем в историю перед сбросом
             if (data.macros && data.lastUpdate) {
-                // date.toISOString() might be off by a day depending on TZ
-                // Better to use a safe way to get YYYY-MM-DD from the saved date string
                 const d = new Date(data.lastUpdate);
                 const year = d.getFullYear();
                 const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -408,6 +438,10 @@ function loadUserData() {
         currentMacros.totalFats = data.macros.totalFats;
         
         if (!currentMacros.dailyHistory) currentMacros.dailyHistory = data.macros.dailyHistory || {};
+    } catch (e) {
+        console.error("Error parsing localStorage:", e);
+        localStorage.clear();
+        // Мы не бросаем ошибку дальше, чтобы initApp мог корректно обработать пустые данные
     }
 }
 
