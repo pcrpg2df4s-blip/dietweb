@@ -47,6 +47,13 @@ window.onunhandledrejection = function(event) {
 
 // Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
+    // Экстренный сброс при первом запуске новой версии, если приложение зависло
+    if (!localStorage.getItem('dietApp_reset_v2')) {
+        localStorage.clear();
+        localStorage.setItem('dietApp_reset_v2', 'true');
+        console.log("Emergency storage reset performed.");
+    }
+
     console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
     
     // Проверяем наличие ключа в URL
@@ -608,8 +615,26 @@ function addFoodToHome(food, image) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    const itemContent = `
+    // В UI показываем реальное фото для текущего сеанса
+    const itemContentUI = `
         <img src="${image}" class="food-img">
+        <div class="food-details">
+            <div class="food-header">
+                <h4>${food.name}</h4>
+                <span class="food-time">${time}</span>
+            </div>
+            <div class="food-calories"><span class="fire-icon">🔥</span> ${food.calories} ккал</div>
+            <div class="food-macros-mini">
+                <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${food.protein}г</span>
+                <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${food.carbs}г</span>
+                <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${food.fats}г</span>
+            </div>
+        </div>
+    `;
+
+    // Для сохранения в историю используем иконку вместо тяжелого Base64
+    const itemContentStorage = `
+        <div class="food-img-placeholder">🍽️</div>
         <div class="food-details">
             <div class="food-header">
                 <h4>${food.name}</h4>
@@ -626,21 +651,15 @@ function addFoodToHome(food, image) {
     
     const item = document.createElement('div');
     item.className = 'food-item';
-    item.innerHTML = itemContent;
+    item.innerHTML = itemContentUI;
     foodList.prepend(item);
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
     
-    // Log image size
-    if (image) {
-        console.log(`[Storage] Adding image of size: ${(image.length / 1024).toFixed(2)} KB`);
-    }
-
-    currentMacros.foodHistory.unshift(itemContent);
+    // Сохраняем в localStorage ТОЛЬКО версию без картинки
+    currentMacros.foodHistory.unshift(itemContentStorage);
     
-    // Check if history is getting too large
-    const historySize = JSON.stringify(currentMacros.foodHistory).length / 1024;
-    console.log(`[Storage] Total food history size: ${historySize.toFixed(2)} KB`);
+    console.log(`[Storage] Saved food record without image to prevent QuotaExceededError.`);
 
     saveAllData();
 
