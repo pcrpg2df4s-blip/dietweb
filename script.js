@@ -250,8 +250,8 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
         ];
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-    
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;    
+
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
 - Вес: ${userData.weight} кг
@@ -441,7 +441,7 @@ async function finishAnalysis(imageData) {
     
     try {
         // Отправляем запрос
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${CONFIG.GOOGLE_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
