@@ -153,10 +153,10 @@ function loadSavedData() {
 }
 
 function initHomeScreenFromSaved() {
-    const caloriesLeft = Math.max(0, currentMacros.totalCalories - currentMacros.calories);
-    const proteinLeft = Math.max(0, currentMacros.totalProtein - currentMacros.protein);
-    const carbsLeft = Math.max(0, currentMacros.totalCarbs - currentMacros.carbs);
-    const fatsLeft = Math.max(0, currentMacros.totalFats - currentMacros.fats);
+    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
+    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
+    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
+    const fatsLeft = Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats));
 
     document.getElementById('home-calories-left').innerText = caloriesLeft;
     document.getElementById('home-protein-eaten').innerText = proteinLeft;
@@ -591,10 +591,10 @@ function addFoodToHome(food, image) {
         fats: currentMacros.fats
     };
 
-    const caloriesLeft = Math.max(0, currentMacros.totalCalories - currentMacros.calories);
-    const proteinLeft = Math.max(0, currentMacros.totalProtein - currentMacros.protein);
-    const carbsLeft = Math.max(0, currentMacros.totalCarbs - currentMacros.carbs);
-    const fatsLeft = Math.max(0, currentMacros.totalFats - currentMacros.fats);
+    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
+    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
+    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
+    const fatsLeft = Math.round(Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats)));
     
     document.getElementById('home-calories-left').innerText = caloriesLeft;
     document.getElementById('home-protein-eaten').innerText = proteinLeft;
@@ -621,11 +621,11 @@ function addFoodToHome(food, image) {
                 <h4>${food.name}</h4>
                 <span class="food-time">${time}</span>
             </div>
-            <div class="food-calories"><span class="fire-icon">🔥</span> ${food.calories} ккал</div>
+            <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
             <div class="food-macros-mini">
-                <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${food.protein}г</span>
-                <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${food.carbs}г</span>
-                <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${food.fats}г</span>
+                <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${Math.round(food.protein)}г</span>
+                <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${Math.round(food.carbs)}г</span>
+                <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
             </div>
         </div>
     `;
