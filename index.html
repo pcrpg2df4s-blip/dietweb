@@ -108,9 +108,10 @@
                 </div>
             </div>
 
-            <button id="physical-next-btn" class="main-btn" onclick="savePhysical()">Далее</button>
+            <button class="main-btn" onclick="nextStep(5)">Далее</button>
         </div>
 
+        <!-- New Steps based on images -->
         <div id="step-5" class="step">
             <div class="header-back" onclick="prevStep(4)">←</div>
             <div class="progress-bar"><div class="progress" style="width: 50%;"></div></div>
@@ -215,28 +216,28 @@
             <h1>Чего бы вы хотели достичь?</h1>
             
             <div class="options-vertical">
-                <div class="card" onclick="selectAccomplish('lose_weight')">
+                <div class="card" onclick="selectAccomplish('healthier')">
                     <div class="icon">🍎</div>
                     <div class="text">
-                        <h3>Похудеть</h3>
+                        <h3>Питаться и жить здоровее</h3>
                     </div>
                 </div>
-                <div class="card" onclick="selectAccomplish('gain_muscle')">
+                <div class="card" onclick="selectAccomplish('energy')">
                     <div class="icon">☀️</div>
                     <div class="text">
-                        <h3>Набрать массу</h3>
+                        <h3>Улучшить энергию и настроение</h3>
                     </div>
                 </div>
-                <div class="card" onclick="selectAccomplish('healthy_habits')">
+                <div class="card" onclick="selectAccomplish('motivated')">
                     <div class="icon">💪</div>
                     <div class="text">
-                        <h3>Здоровые привычки</h3>
+                        <h3>Оставаться мотивированным</h3>
                     </div>
                 </div>
-                <div class="card" onclick="selectAccomplish('more_energy')">
+                <div class="card" onclick="selectAccomplish('body')">
                     <div class="icon">🧘</div>
                     <div class="text">
-                        <h3>Больше энергии</h3>
+                        <h3>Чувствовать себя лучше</h3>
                     </div>
                 </div>
             </div>
@@ -379,54 +380,11 @@
 
         <div id="step-12" class="step step-home">
             <div class="home-page">
+                <div id="week-calendar" class="calendar-container"></div>
                 <div class="home-top-header">
                 <!-- Streak badge removed -->
             </div>
 
-            <div class="calendar-header">
-                <div class="calendar-day">
-                    <div class="day-name">П</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">2</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">В</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">3</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">С</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">4</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">Ч</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">5</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">П</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">6</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">С</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">7</div>
-                    </div>
-                </div>
-                <div class="calendar-day">
-                    <div class="day-name">В</div>
-                    <div class="day-ring-container">
-                        <div class="day-number">8</div>
-                    </div>
-                </div>
-            </div>
 
             <div class="main-calorie-card">
                 <div class="calorie-left">
@@ -690,7 +648,7 @@
 
     </div>
     <div id="global-tab-bar" class="tab-bar" style="display: none;">
-        <div id="tab-home" class="tab-item active" onclick="goToHome()">
+        <div id="tab-home" class="tab-item active" onclick="nextStep(12)">
             <div class="tab-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>

@@ -1,0 +1,21 @@
+# CRITICAL RULES
+
+## 1. DON'T BREAK WORKING FEATURES
+- Strictly forbidden to change registration logic (`step-1` — `step-12`).
+- Do not modify functions: `initApp`, `saveBorn`, `savePhysical`, `saveGoal`.
+- Do not modify navigation logic (`nextStep`) unless explicitly requested.
+
+## 2. FEATURE ISOLATION
+- New features (calendars, graphs, etc.) must be implemented in isolation.
+- They must not affect existing data saving logic or screen transitions.
+
+## 3. SAFE UI
+- New UI elements must be integrated carefully.
+- Do not break the existing structure of `display: none/block` and `hidden` classes.
+
+## 4. LOCALSTORAGE
+- Never use `localStorage.clear()` without explicit instructions.
+- Do not change the structure of the `userData` object.
+
+## 5. PRE-CHANGE ANALYSIS
+- Before any change, analyze if it might break the current registration flow.
