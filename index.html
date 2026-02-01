@@ -773,23 +773,19 @@
     <div id="check-result-modal" class="modal hidden">
         <div class="modal-content recipe-content">
             <div class="modal-flex-container">
-                <div class="modal-header">
-                    <h2>Анализ продукта</h2>
-                </div>
-                <div class="modal-body-scroll">
-                    <div class="check-score-container">
-                        <div class="score-bar-wrapper">
-                            <div id="check-score-fill" class="score-bar-fill" style="width: 0%;"></div>
-                        </div>
-                        <div class="score-value"><span id="check-score-number">0</span>/100</div>
+                <h2 style="flex-shrink: 0;">Результаты анализа</h2>
+                <div class="check-score-container" style="flex-shrink: 0; margin-top: 15px;">
+                    <div class="score-bar-wrapper">
+                        <div id="check-score-fill" class="score-bar-fill" style="width: 0%;"></div>
                     </div>
+                    <div class="score-value"><span id="check-score-number">0</span>/100</div>
+                </div>
+                <div class="modal-body-scroll" style="flex: 1; overflow-y: auto;">
                     <p id="check-summary" class="recipe-text"></p>
                 </div>
-                <div class="modal-footer-fixed">
-                    <div class="modal-actions">
-                        <button id="recheck-btn" class="main-btn" style="margin-top: 0;">Проверить снова</button>
-                        <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border: 2px solid #000; color: #000; border-radius: 30px; padding: 16px;">Закрыть</button>
-                    </div>
+                <div class="modal-actions" style="flex-shrink: 0;">
+                    <button id="recheck-btn" class="main-btn" style="margin-top: 0;">Проверить снова</button>
+                    <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border: 2px solid #000; color: #000; border-radius: 30px; padding: 16px;">Закрыть</button>
                 </div>
             </div>
         </div>

@@ -1790,6 +1790,9 @@ h1 {
     text-align: center;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     animation: modalAppear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 @keyframes modalAppear {
@@ -2252,15 +2255,19 @@ h1 {
 
 /* Adjust inner containers for auto height */
 #check-result-modal .modal-flex-container {
-    max-height: 80vh;
+    flex: 1;
     height: auto;
 }
 
 /* Product Check Styles */
 .check-score-container {
-    margin: 20px auto;
-    text-align: center;
-    max-width: 250px; /* Shorter container */
+    width: 85% !important;
+    max-width: none !important;
+    margin: 15px auto !important;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .score-bar-wrapper {
@@ -2287,7 +2294,13 @@ h1 {
 
 #check-summary {
     padding: 10px 15px;
+    overflow-y: auto;
+    flex: 1;
     margin-top: 10px;
+    font-size: 18px !important;    /* Larger text */
+    line-height: 1.5;              /* More space between lines */
+    font-weight: 500;              /* Medium density */
+    color: #000;
 }
 
 /* Unified Typography for Modals Content */
