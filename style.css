@@ -2117,51 +2117,57 @@ h1 {
 }
 
 .recipe-content {
-    /* Размеры */
     width: 90%;
-    max-width: 350px;
-    max-height: 80vh;
-
-    /* Сброс margin, т.к. центрует родитель */
+    max-width: 360px;
+    
+    /* ВАЖНО: Адаптивная высота */
+    height: auto;
+    max-height: 85vh;
+    
+    display: flex;
+    flex-direction: column;
+    
     margin: 0;
-
-    /* Эффект Стекла */
-    background: rgba(255, 255, 255, 0.85); /* Полупрозрачный белый */
-    backdrop-filter: blur(30px); /* Размытие внутри */
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    border-radius: 30px; /* Современное скругление */
+    border-radius: 35px;
     padding: 25px;
-
-    text-align: left;
-    color: #000;
-    overflow-y: auto; /* Скролл внутри карточки */
     position: relative;
+    overflow: hidden;
 }
 
 #recipe-title {
-    font-size: 24px;
+    font-size: 26px; /* Чуть крупнее */
     font-weight: 800;
+    margin-top: 5px; /* Небольшой отступ сверху */
     margin-bottom: 5px;
     line-height: 1.1;
     letter-spacing: -0.5px;
+    text-align: center; /* Строго по центру */
+    width: 100%;
 }
 
 .recipe-macros {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    color: #FF9F0A; /* Оранжевый акцент */
+    color: #FF9F0A;
     margin-bottom: 20px;
+    text-align: center; /* Центрируем строку с калориями */
+    width: 100%;
+    display: block; /* Гарантируем, что это блок */
 }
 
 .recipe-text {
+    /* Убрали flex-grow, теперь высота зависит от текста */
+    overflow-y: auto;
     margin-top: 15px;
-    padding: 0; /* Убираем паддинг контейнера */
-    background: transparent; /* Убираем общий фон */
-    max-height: 300px; /* Ограничиваем высоту текста */
-    overflow-y: auto; /* Включаем вертикальный скролл */
-    padding-right: 5px; /* Отступ для скроллбара */
+    /* Отступ снизу не нужен, его даст блок кнопок */
+    margin-bottom: 0;
+    padding-right: 5px;
+    background: transparent;
 }
 
 /* Стилизация скроллбара (чтобы было красиво на Webkit) */
@@ -2189,7 +2195,14 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.modal-actions {
+    /* Фиксированный отступ от текста до кнопок */
+    margin-top: 20px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
 /* Основная кнопка "Да, приготовить" - Черная */
 #save-recipe-btn {
