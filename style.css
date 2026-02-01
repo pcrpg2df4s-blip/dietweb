@@ -1721,8 +1721,9 @@ h1 {
 }
 
 .food-img-placeholder {
-    width: 90px;
-    height: 90px;
+    width: 70px;  /* Было больше (ок. 40-50px), делаем крупнее */
+    height: 70px; /* Должен быть квадрат */
+    min-width: 70px; /* Чтобы не сплющило в flex-контейнере */
     border-radius: 18px;
     background: #f0f0f5;
     display: flex;
@@ -1732,13 +1733,14 @@ h1 {
     flex-shrink: 0;
     overflow: hidden; /* Обрезает всё, что вылезает за круг/квадрат */
     padding: 0; /* Убираем отступы */
+    margin-right: 15px; /* Чуть больше отступ от текста */
 }
 
 .food-thumb-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Фото заполнит круг, сохраняя пропорции (crop) */
-    border-radius: 12px; /* Совпадаем с радиусом из JS/CSS */
+    object-fit: cover; /* Важно! Заполняет круг, обрезая лишнее, не искажая */
+    display: block; /* Убирает возможные отступы снизу */
 }
 
 .delete-food-btn {

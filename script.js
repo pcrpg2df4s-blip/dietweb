@@ -498,8 +498,8 @@ function initHomeScreenFromSaved() {
             div.className = 'food-item';
             
             const foodIcon = food.thumbnail
-                ? `<img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; margin-right: 12px;">`
-                : `<div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>`;
+                ? `<div class="food-img-placeholder"><img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды"></div>`
+                : `<div class="food-img-placeholder">🥗</div>`;
 
             div.innerHTML = `
                 ${foodIcon}
@@ -950,11 +950,19 @@ function takePhoto() {
 
     // Create thumbnail
     const smallCanvas = document.createElement('canvas');
-    smallCanvas.width = 128;
-    smallCanvas.height = 128;
+    const vWidth = video.videoWidth;
+    const vHeight = video.videoHeight;
+    const shortSide = Math.min(vWidth, vHeight);
+    const startX = (vWidth - shortSide) / 2;
+    const startY = (vHeight - shortSide) / 2;
+
+    smallCanvas.width = 256;
+    smallCanvas.height = 256;
     const smallCtx = smallCanvas.getContext('2d');
-    smallCtx.drawImage(video, 0, 0, 128, 128);
-    const thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.5);
+    
+    // Draw with square crop from center
+    smallCtx.drawImage(video, startX, startY, shortSide, shortSide, 0, 0, 256, 256);
+    const thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
     
     // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
