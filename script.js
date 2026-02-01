@@ -205,8 +205,13 @@ function initHomeScreenFromSaved() {
         currentMacros.foodHistory.forEach((food, index) => {
             const div = document.createElement('div');
             div.className = 'food-item';
+            
+            const foodIcon = food.thumbnail
+                ? `<img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; margin-right: 12px;">`
+                : `<div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>`;
+
             div.innerHTML = `
-                <div class="food-img-placeholder" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #f0f0f0; border-radius: 12px; margin-right: 12px;">🥗</div>
+                ${foodIcon}
                 <div class="food-details">
                     <div class="food-header">
                         <h4>${food.name}</h4>
@@ -621,6 +626,14 @@ function takePhoto() {
     
     // Convert to JPEG
     const imageData = canvas.toDataURL('image/jpeg');
+
+    // Create thumbnail
+    const smallCanvas = document.createElement('canvas');
+    smallCanvas.width = 128;
+    smallCanvas.height = 128;
+    const smallCtx = smallCanvas.getContext('2d');
+    smallCtx.drawImage(video, 0, 0, 128, 128);
+    const thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.5);
     
     // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
@@ -638,10 +651,10 @@ function takePhoto() {
     analysisOverlay.classList.remove('hidden');
     
     // Start AI analysis
-    startAnalysis(imageData);
+    startAnalysis(imageData, thumbnailDataUrl);
 }
 
-async function startAnalysis(imageData) {
+async function startAnalysis(imageData, thumbnailDataUrl) {
     let progress = 0;
     const circ = 2 * Math.PI * 52; // New radius r=52
     
@@ -661,13 +674,13 @@ async function startAnalysis(imageData) {
             setTimeout(() => {
                 document.getElementById('analysis-overlay').classList.add('hidden');
                 closeCamera(); // Now fully close the camera screen
-                finishAnalysis(imageData);
+                finishAnalysis(imageData, thumbnailDataUrl);
             }, 500);
         }
     }, 150);
 }
 
-async function finishAnalysis(imageData) {
+async function finishAnalysis(imageData, thumbnailDataUrl) {
     // 1. Проверяем, видит ли вообще скрипт твой ключ
     if (!CONFIG.GOOGLE_API_KEY) {
         alert("ОШИБКА: Скрипт не видит API ключ! (Хотя в .env он может быть). Проблема в передаче ключа.");
@@ -678,7 +691,7 @@ async function finishAnalysis(imageData) {
     const hash = getImageHash(imageData);
     if (imageAnalysisCache[hash]) {
         console.log("Using cached analysis result");
-        addFoodToHome(imageAnalysisCache[hash], imageData);
+        addFoodToHome(imageAnalysisCache[hash], thumbnailDataUrl);
         return;
     }
 
@@ -725,7 +738,7 @@ async function finishAnalysis(imageData) {
         
         const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
-        addFoodToHome(result, imageData); // Всё ок
+        addFoodToHome(result, thumbnailDataUrl); // Всё ок
 
     } catch (err) {
         console.error("Critical AI Error:", err);
@@ -740,11 +753,11 @@ async function finishAnalysis(imageData) {
             carbs: 0,
             fats: 0
         };
-        addFoodToHome(errorFood, imageData);
+        addFoodToHome(errorFood, thumbnailDataUrl);
     }
 }
 
-function addFoodToHome(food, image) {
+function addFoodToHome(food, thumbnail) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
@@ -754,7 +767,8 @@ function addFoodToHome(food, image) {
         protein: food.protein,
         carbs: food.carbs,
         fats: food.fats,
-        time: time
+        time: time,
+        thumbnail: thumbnail
     };
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];

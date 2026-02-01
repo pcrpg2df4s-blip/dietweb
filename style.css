@@ -1708,6 +1708,15 @@ h1 {
     justify-content: center;
     font-size: 32px;
     flex-shrink: 0;
+    overflow: hidden; /* Обрезает всё, что вылезает за круг/квадрат */
+    padding: 0; /* Убираем отступы */
+}
+
+.food-thumb-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Фото заполнит круг, сохраняя пропорции (crop) */
+    border-radius: 12px; /* Совпадаем с радиусом из JS/CSS */
 }
 
 .delete-food-btn {
