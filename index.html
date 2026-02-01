@@ -651,6 +651,14 @@
             </div>
         </div>
         <div id="add-options-menu" class="hidden">
+            <button id="option-check-btn" class="menu-option-btn">
+                <span class="option-label">Проверка</span>
+                <div class="option-icon" style="background: #000;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 5v14h2V5H3zm4 0v14h1V5H7zm3 0v14h3V5h-3zm4 0v14h1V5h-1zm3 0v14h3V5h-3zm4 0v14h1V5h-1zM3 5h18V3H3v2zm0 16h18v-2H3v2z"/>
+                    </svg>
+                </div>
+            </button>
             <button id="option-cooking-btn" class="menu-option-btn">
                 <span class="option-label">Готовка</span>
                 <div class="option-icon" style="background: #FF9F0A;">
@@ -758,6 +766,31 @@
                     Да, приготовить и записать
                 </button>
                 <button id="cancel-recipe-btn" class="secondary-btn">Отмена, другое</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="check-result-modal" class="modal hidden">
+        <div class="modal-content recipe-content">
+            <div class="modal-flex-container">
+                <div class="modal-header">
+                    <h2>Анализ продукта</h2>
+                </div>
+                <div class="modal-body-scroll">
+                    <div class="check-score-container">
+                        <div class="score-bar-wrapper">
+                            <div id="check-score-fill" class="score-bar-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="score-value"><span id="check-score-number">0</span>/100</div>
+                    </div>
+                    <p id="check-summary" class="recipe-text"></p>
+                </div>
+                <div class="modal-footer-fixed">
+                    <div class="modal-actions">
+                        <button id="recheck-btn" class="main-btn" style="margin-top: 0;">Проверить снова</button>
+                        <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border: 2px solid #000; color: #000; border-radius: 30px; padding: 16px;">Закрыть</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

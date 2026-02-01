@@ -36,7 +36,7 @@ let currentMacros = {
 };
 
 let isCameraPermissionGranted = false;
-let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes
+let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes, 'check' for product check
 let currentRecipeData = null;
 let thumbnailDataUrl = null; // Global storage for current photo
 
@@ -75,18 +75,43 @@ window.addEventListener('DOMContentLoaded', () => {
     initManualAddModal();
     initAddMenu();
     initRecipeModal();
+    initCheckModal();
 });
 
 let loaderInterval = null;
 
-function showLoader() {
+function showLoader(mode = 'food') {
     const loader = document.getElementById('ai-loader');
     const fill = loader.querySelector('.progress-bar-fill');
     const statusText = document.getElementById('loader-status');
+    const titleText = document.getElementById('loader-title');
+    const iconEl = loader.querySelector('.loader-icon');
     
     loader.classList.remove('hidden');
     fill.style.width = '0%';
-    statusText.innerText = "Смотрим на фото...";
+
+    let messages = [];
+    if (mode === 'check') {
+        titleText.innerText = "Анализ продукта...";
+        if (iconEl) iconEl.innerText = "🔎";
+        messages = [
+            "Смотрим на фото...",
+            "Ищем химикаты...",
+            "Проверяем Е-шки...",
+            "Пробуем еду...",
+            "Считаем и складываем..."
+        ];
+    } else {
+        titleText.innerText = "Анализ еды...";
+        if (iconEl) iconEl.innerText = "✨";
+        messages = [
+            "Смотрим на фото...",
+            "Определяем продукты...",
+            "Считаем БЖУ..."
+        ];
+    }
+    
+    statusText.innerText = messages[0];
 
     let progress = 0;
     const startTime = Date.now();
@@ -103,12 +128,9 @@ function showLoader() {
             fill.style.width = `${progress}%`;
         }
 
-        // Status text updates based on time elapsed
-        if (elapsed > 2500) {
-            statusText.innerText = "Считаем БЖУ...";
-        } else if (elapsed > 1000) {
-            statusText.innerText = "Определяем продукты...";
-        }
+        // Cycle through messages every 1000ms
+        const msgIndex = Math.min(Math.floor(elapsed / 1000), messages.length - 1);
+        statusText.innerText = messages[msgIndex];
     }, 100);
 }
 
@@ -132,6 +154,7 @@ function initAddMenu() {
     const cameraBtn = document.getElementById('option-camera-btn');
     const textBtn = document.getElementById('option-text-btn');
     const cookingBtn = document.getElementById('option-cooking-btn');
+    const checkBtn = document.getElementById('option-check-btn');
 
     if (addBtn && menu) {
         addBtn.addEventListener('click', (e) => {
@@ -159,6 +182,15 @@ function initAddMenu() {
         if (cookingBtn) {
             cookingBtn.addEventListener('click', () => {
                 cameraMode = 'cook';
+                menu.classList.add('hidden');
+                addBtn.style.transform = 'rotate(0deg)';
+                openCamera();
+            });
+        }
+
+        if (checkBtn) {
+            checkBtn.addEventListener('click', () => {
+                cameraMode = 'check';
                 menu.classList.add('hidden');
                 addBtn.style.transform = 'rotate(0deg)';
                 openCamera();
@@ -996,7 +1028,7 @@ function takePhoto() {
     analysisOverlay.classList.remove('hidden');
     
     // Start AI analysis
-    showLoader();
+    showLoader(cameraMode);
     startAnalysis(imageData, thumbnailDataUrl);
 }
 
@@ -1039,6 +1071,8 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         console.log("Using cached analysis result");
         if (cameraMode === 'cook') {
             showRecipeModal(imageAnalysisCache[hash]);
+        } else if (cameraMode === 'check') {
+            showCheckResult(imageAnalysisCache[hash]);
         } else {
             addFoodToHome(imageAnalysisCache[hash], thumbnailDataUrl);
         }
@@ -1048,6 +1082,8 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     let prompt;
     if (cameraMode === 'cook') {
         prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions). Use \\n for new lines between steps in instructions. Return ONLY a JSON object: { \"recipeName\": \"Название блюда\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Шаг 1: ...\\nШаг 2: ...\" }";
+    } else if (cameraMode === 'check') {
+        prompt = "Проанализируй состав продукта на фото. Оцени его вредность/полезность по шкале от 0 до 100 (где 0 — сплошная химия/вредно, 100 — идеально чисто/полезно). Дай краткое резюме (почему такая оценка) на русском языке. Верни строго JSON: { \"score\": number, \"summary\": \"string\" }";
     } else {
         prompt = `You are a strict, professional nutritionist.
         Analyze this food image. Analyze the portion size realistically. Do not overestimate.
@@ -1095,6 +1131,8 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         imageAnalysisCache[hash] = result;
         if (cameraMode === 'cook') {
             showRecipeModal(result);
+        } else if (cameraMode === 'check') {
+            showCheckResult(result);
         } else {
             addFoodToHome(result, thumbnailDataUrl); // Всё ок
         }
@@ -1498,4 +1536,88 @@ function showRecipeModal(recipeData) {
     
     const modal = document.getElementById('recipe-modal');
     if (modal) modal.classList.remove('hidden');
+}
+
+function initCheckModal() {
+    const recheckBtn = document.getElementById('recheck-btn');
+    const closeBtn = document.getElementById('close-check-btn');
+    const modal = document.getElementById('check-result-modal');
+
+    if (recheckBtn) {
+        recheckBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            cameraMode = 'check';
+            openCamera();
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+}
+
+function showCheckResult(result) {
+    const modal = document.getElementById('check-result-modal');
+    const scoreFill = document.getElementById('check-score-fill');
+    const scoreNum = document.getElementById('check-score-number');
+    const summaryText = document.getElementById('check-summary');
+
+    if (!modal || !scoreFill || !scoreNum || !summaryText) return;
+
+    // Reset before animation
+    scoreNum.innerText = "0";
+    scoreFill.style.width = "0%";
+    
+    const score = result.score || 0;
+    summaryText.innerText = result.summary || "";
+
+    // Set color based on score
+    let color = "#ff3b30"; // Red 0-40
+    if (score > 40 && score <= 70) {
+        color = "#ff9f0a"; // Orange/Yellow 41-70
+    } else if (score > 70) {
+        color = "#34c759"; // Green 71-100
+    }
+    scoreFill.style.backgroundColor = color;
+
+    modal.classList.remove('hidden');
+    
+    // Start animation after modal is visible
+    setTimeout(() => {
+        animateScore(score);
+    }, 100);
+}
+
+function animateScore(targetScore) {
+    const scoreFill = document.getElementById('check-score-fill');
+    const scoreNum = document.getElementById('check-score-number');
+    if (!scoreFill || !scoreNum) return;
+
+    let currentScore = 0;
+    const duration = 1200; // 1.2 seconds
+    const startTime = performance.now();
+
+    function update(timestamp) {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function: easeOutCubic
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        currentScore = Math.floor(easeProgress * targetScore);
+        
+        scoreNum.innerText = currentScore;
+        scoreFill.style.width = (easeProgress * targetScore) + "%";
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            scoreNum.innerText = targetScore;
+            scoreFill.style.width = targetScore + "%";
+        }
+    }
+
+    requestAnimationFrame(update);
 }
