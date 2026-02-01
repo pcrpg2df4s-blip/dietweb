@@ -70,7 +70,44 @@ window.addEventListener('DOMContentLoaded', () => {
     initBMIModal();
     initErrorModal();
     initManualAddModal();
+    initAddMenu();
 });
+
+function initAddMenu() {
+    const addBtn = document.getElementById('add-btn-main');
+    const menu = document.getElementById('add-options-menu');
+    const cameraBtn = document.getElementById('option-camera-btn');
+    const textBtn = document.getElementById('option-text-btn');
+
+    if (addBtn && menu) {
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('hidden');
+            addBtn.style.transform = menu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(45deg)';
+            addBtn.style.transition = 'transform 0.3s ease';
+        });
+
+        cameraBtn.addEventListener('click', () => {
+            menu.classList.add('hidden');
+            addBtn.style.transform = 'rotate(0deg)';
+            openCamera();
+        });
+
+        textBtn.addEventListener('click', () => {
+            menu.classList.add('hidden');
+            addBtn.style.transform = 'rotate(0deg)';
+            const manualModal = document.getElementById('manual-add-modal');
+            if (manualModal) manualModal.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== addBtn) {
+                menu.classList.add('hidden');
+                addBtn.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+}
 
 async function analyzeTextFood(foodName, userCalories) {
     if (!CONFIG.GOOGLE_API_KEY) {

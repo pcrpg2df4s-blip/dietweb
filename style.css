@@ -738,15 +738,15 @@ h1 {
     position: absolute;
     top: -40px; /* Скорректировали положение кнопки под новый паддинг */
     right: 20px;
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     background: #000;
     color: #fff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    padding: 0;
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     cursor: pointer;
     z-index: 101;
@@ -1808,6 +1808,66 @@ h1 {
     border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
+}
+
+/* Add Options Menu */
+#add-options-menu {
+    position: absolute;
+    bottom: 150px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-end;
+    z-index: 2000;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#add-options-menu.hidden {
+    display: flex !important; /* Force flex to allow animation */
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+}
+
+.menu-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.option-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+}
+
+.menu-option-btn:active .option-icon {
+    transform: scale(0.9);
+}
+
+.option-label {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    color: #000;
+    white-space: nowrap;
 }
 
 /* Error Modal */
