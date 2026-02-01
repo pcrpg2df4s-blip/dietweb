@@ -68,7 +68,35 @@ window.addEventListener('DOMContentLoaded', () => {
 
     loadSavedData();
     initBMIModal();
+    initErrorModal();
 });
+
+function initErrorModal() {
+    const modal = document.getElementById('error-modal');
+    const closeBtn = document.getElementById('error-close-btn');
+    const manualBtn = document.getElementById('manual-add-btn');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    if (manualBtn) {
+        manualBtn.addEventListener('click', () => {
+            console.log("Manual add clicked");
+            modal.classList.add('hidden');
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+}
 
 function initBMIModal() {
    const modal = document.getElementById('bmi-modal');
@@ -760,17 +788,19 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     } catch (err) {
         console.error("Critical AI Error:", err);
         
-        // 3. В СЛУЧАЕ ОШИБКИ — МЫ ВСЁ РАВНО ДОБАВЛЯЕМ ЕДУ (ЧТОБЫ ТЫ ВИДЕЛ РЕЗУЛЬТАТ)
-        alert(`Сбой анализа: ${err.message}. Добавляю тестовую еду.`);
+        // Замени alert на вызов нового окна
+        const errorModal = document.getElementById('error-modal');
+        if (errorModal) {
+            errorModal.classList.remove('hidden');
+        }
         
-        const errorFood = {
-            name: "⚠️ Ошибка (см. детали)",
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fats: 0
-        };
-        addFoodToHome(errorFood, thumbnailDataUrl);
+        // We still need to leave analysis screen if it was active
+        const analysisOverlay = document.getElementById('analysis-overlay');
+        if (analysisOverlay) {
+            analysisOverlay.classList.add('hidden');
+        }
+        closeCamera();
+        nextStep(12); // Go back home
     }
 }
 
