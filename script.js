@@ -195,6 +195,7 @@ async function analyzeTextFood(foodName, userCalories) {
         const result = JSON.parse(text);
         
         return {
+            id: Date.now().toString(),
             name: result.name || foodName,
             calories: parseInt(result.calories) || parseInt(userCalories) || 0,
             protein: parseInt(result.protein) || 0,
@@ -204,6 +205,7 @@ async function analyzeTextFood(foodName, userCalories) {
     } catch (e) {
         console.error("Gemini text analysis error:", e);
         return {
+            id: Date.now().toString(),
             name: foodName,
             calories: parseInt(userCalories) || 0,
             protein: 0,
@@ -252,6 +254,12 @@ function initManualAddModal() {
     const clearInputs = () => {
         document.getElementById('manual-name').value = '';
         document.getElementById('manual-calories').value = '';
+        document.getElementById('manual-protein').value = '';
+        document.getElementById('manual-fat').value = '';
+        document.getElementById('manual-carbs').value = '';
+        document.getElementById('edit-food-id').value = '';
+        document.getElementById('manual-modal-title').innerText = 'Добавить блюдо';
+        document.getElementById('save-manual-btn').innerText = 'Добавить';
     };
 
     if (cancelBtn) {
@@ -263,26 +271,80 @@ function initManualAddModal() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
+            const id = document.getElementById('edit-food-id').value;
             const name = document.getElementById('manual-name').value.trim();
             const cals = document.getElementById('manual-calories').value.trim();
+            const protein = document.getElementById('manual-protein').value.trim();
+            const fat = document.getElementById('manual-fat').value.trim();
+            const carbs = document.getElementById('manual-carbs').value.trim();
 
             if (!name) {
                 alert("Пожалуйста, введите название блюда");
                 return;
             }
 
-            showLoader();
-            modal.classList.add('hidden');
+            if (!cals || parseInt(cals) === 0) {
+                // AI Recalculation
+                saveBtn.innerText = "Считаю...";
+                saveBtn.disabled = true;
 
-            try {
-                const foodItem = await analyzeTextFood(name, cals);
-                addFoodToHome(foodItem, null);
+                try {
+                    const aiResult = await analyzeTextFood(name);
+                    
+                    if (id) {
+                        // Editing existing with AI
+                        const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                        if (foodIndex !== -1) {
+                            currentMacros.foodHistory[foodIndex].name = aiResult.name;
+                            currentMacros.foodHistory[foodIndex].calories = aiResult.calories;
+                            currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
+                            currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
+                            currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
+                        }
+                    } else {
+                        // Adding new with AI
+                        addFoodToHome(aiResult, null);
+                    }
+                } catch (err) {
+                    console.error("AI recalculation error:", err);
+                    alert("Ошибка при анализе текста.");
+                } finally {
+                    saveBtn.disabled = false;
+                    recalculateMacros();
+                    saveAllData();
+                    initHomeScreenFromSaved();
+                    modal.classList.add('hidden');
+                    clearInputs();
+                }
+            } else {
+                // Manual input
+                if (id) {
+                    // Edit existing manually
+                    const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                    if (foodIndex !== -1) {
+                        currentMacros.foodHistory[foodIndex].name = name;
+                        currentMacros.foodHistory[foodIndex].calories = parseInt(cals) || 0;
+                        currentMacros.foodHistory[foodIndex].protein = parseInt(protein) || 0;
+                        currentMacros.foodHistory[foodIndex].fats = parseInt(fat) || 0;
+                        currentMacros.foodHistory[foodIndex].carbs = parseInt(carbs) || 0;
+                    }
+                } else {
+                    // Add new manually
+                    const foodItem = {
+                        id: Date.now().toString(),
+                        name: name,
+                        calories: parseInt(cals) || 0,
+                        protein: parseInt(protein) || 0,
+                        fats: parseInt(fat) || 0,
+                        carbs: parseInt(carbs) || 0
+                    };
+                    addFoodToHome(foodItem, null);
+                }
+                recalculateMacros();
+                saveAllData();
+                initHomeScreenFromSaved();
+                modal.classList.add('hidden');
                 clearInputs();
-            } catch (err) {
-                console.error("Manual add AI error:", err);
-                alert("Ошибка при анализе текста. Попробуйте еще раз.");
-            } finally {
-                hideLoader();
             }
         });
     }
@@ -454,10 +516,25 @@ function initHomeScreenFromSaved() {
                 </div>
                 <div class="food-item-right">
                     <span class="food-time">${food.time}</span>
-                    <button class="delete-food-btn" onclick="deleteFood(${index})">🗑️</button>
+                    <div class="food-actions">
+                        <button class="action-icon-btn edit-btn" data-id="${food.id}">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="action-icon-btn delete-btn" data-index="${index}">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
                 </div>
             `;
             foodList.appendChild(div);
+        });
+
+        // Add listeners for edit and delete buttons
+        foodList.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+        });
+        foodList.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteFood(parseInt(btn.dataset.index)));
         });
     } else {
         foodList.innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
@@ -1011,6 +1088,7 @@ function addFoodToHome(food, thumbnail) {
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     const foodEntry = {
+        id: food.id || Date.now().toString(),
         name: food.name,
         calories: food.calories,
         protein: food.protein,
@@ -1064,6 +1142,22 @@ function deleteFood(index) {
             initHomeScreenFromSaved();
         }
     }
+}
+
+function openEditModal(id) {
+    const food = currentMacros.foodHistory.find(f => f.id === id);
+    if (!food) return;
+
+    document.getElementById('manual-modal-title').innerText = 'Редактировать блюдо';
+    document.getElementById('save-manual-btn').innerText = 'Сохранить';
+    document.getElementById('edit-food-id').value = food.id;
+    document.getElementById('manual-name').value = food.name;
+    document.getElementById('manual-calories').value = Math.round(food.calories);
+    document.getElementById('manual-protein').value = Math.round(food.protein);
+    document.getElementById('manual-fat').value = Math.round(food.fats);
+    document.getElementById('manual-carbs').value = Math.round(food.carbs);
+
+    document.getElementById('manual-add-modal').classList.remove('hidden');
 }
 
 function goToHome() {
