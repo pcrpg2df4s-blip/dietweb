@@ -36,6 +36,8 @@ let currentMacros = {
 };
 
 let isCameraPermissionGranted = false;
+let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes
+let currentRecipeData = null;
 
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
@@ -71,6 +73,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initErrorModal();
     initManualAddModal();
     initAddMenu();
+    initRecipeModal();
 });
 
 let loaderInterval = null;
@@ -127,6 +130,7 @@ function initAddMenu() {
     const menu = document.getElementById('add-options-menu');
     const cameraBtn = document.getElementById('option-camera-btn');
     const textBtn = document.getElementById('option-text-btn');
+    const cookingBtn = document.getElementById('option-cooking-btn');
 
     if (addBtn && menu) {
         addBtn.addEventListener('click', (e) => {
@@ -137,17 +141,28 @@ function initAddMenu() {
         });
 
         cameraBtn.addEventListener('click', () => {
+            cameraMode = 'log';
             menu.classList.add('hidden');
             addBtn.style.transform = 'rotate(0deg)';
             openCamera();
         });
 
         textBtn.addEventListener('click', () => {
+            cameraMode = 'log';
             menu.classList.add('hidden');
             addBtn.style.transform = 'rotate(0deg)';
             const manualModal = document.getElementById('manual-add-modal');
             if (manualModal) manualModal.classList.remove('hidden');
         });
+
+        if (cookingBtn) {
+            cookingBtn.addEventListener('click', () => {
+                cameraMode = 'cook';
+                menu.classList.add('hidden');
+                addBtn.style.transform = 'rotate(0deg)';
+                openCamera();
+            });
+        }
 
         document.addEventListener('click', (e) => {
             if (!menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== addBtn) {
@@ -1018,19 +1033,28 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         return;
     }
 
-    const hash = getImageHash(imageData);
+    const hash = getImageHash(imageData) + "_" + cameraMode;
     if (imageAnalysisCache[hash]) {
         console.log("Using cached analysis result");
-        addFoodToHome(imageAnalysisCache[hash], thumbnailDataUrl);
+        if (cameraMode === 'cook') {
+            showRecipeModal(imageAnalysisCache[hash]);
+        } else {
+            addFoodToHome(imageAnalysisCache[hash], thumbnailDataUrl);
+        }
         return;
     }
 
-    const prompt = `You are a strict, professional nutritionist.
-    Analyze this food image. Analyze the portion size realistically. Do not overestimate.
-    Provide a single, definitive estimate based on visual evidence.
-    1. Название блюда (на русском).
-    2. Калории (ккал), белки (г), жиры (г), углеводы (г).
-    Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
+    let prompt;
+    if (cameraMode === 'cook') {
+        prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe that can be made from these. Return ONLY a JSON object with this structure: { \"recipeName\": \"Name of the dish\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Step 1... Step 2...\" }";
+    } else {
+        prompt = `You are a strict, professional nutritionist.
+        Analyze this food image. Analyze the portion size realistically. Do not overestimate.
+        Provide a single, definitive estimate based on visual evidence.
+        1. Название блюда (на русском).
+        2. Калории (ккал), белки (г), жиры (г), углеводы (г).
+        Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
+    }
     
     try {
         // Отправляем запрос
@@ -1068,7 +1092,11 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         
         const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
-        addFoodToHome(result, thumbnailDataUrl); // Всё ок
+        if (cameraMode === 'cook') {
+            showRecipeModal(result);
+        } else {
+            addFoodToHome(result, thumbnailDataUrl); // Всё ок
+        }
         hideLoader();
 
     } catch (err) {
@@ -1403,11 +1431,55 @@ function resetAppData() {
 function setProgress(id, percent) {
     const circle = document.getElementById(id);
     if (circle) {
-        const radius = 40; 
+        const radius = 40;
         const circumference = 2 * Math.PI * radius;
         
         const offset = circumference - (percent / 100 * circumference);
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
         circle.style.strokeDashoffset = offset;
     }
+}
+
+function initRecipeModal() {
+    const saveBtn = document.getElementById('save-recipe-btn');
+    const cancelBtn = document.getElementById('cancel-recipe-btn');
+    const modal = document.getElementById('recipe-modal');
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            if (currentRecipeData) {
+                const foodItem = {
+                    id: Date.now().toString(),
+                    name: currentRecipeData.recipeName,
+                    calories: currentRecipeData.calories,
+                    protein: currentRecipeData.protein,
+                    fats: currentRecipeData.fat,
+                    carbs: currentRecipeData.carbs,
+                    thumbnail: null // Или можно поставить эмодзи повара
+                };
+                addFoodToHome(foodItem, null);
+                modal.classList.add('hidden');
+            }
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+}
+
+function showRecipeModal(recipeData) {
+    currentRecipeData = recipeData;
+    
+    document.getElementById('recipe-title').innerText = recipeData.recipeName || "Рецепт";
+    document.getElementById('recipe-cal').innerText = recipeData.calories || 0;
+    document.getElementById('recipe-p').innerText = recipeData.protein || 0;
+    document.getElementById('recipe-f').innerText = recipeData.fat || 0;
+    document.getElementById('recipe-c').innerText = recipeData.carbs || 0;
+    document.getElementById('recipe-instructions').innerText = recipeData.instructions || "";
+    
+    const modal = document.getElementById('recipe-modal');
+    if (modal) modal.classList.remove('hidden');
 }

@@ -2094,3 +2094,13 @@ h1 {
     50% { transform: scale(1.1); opacity: 0.7; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+.recipe-content {
+    text-align: left; /* Рецепт лучше читать слева */
+    max-height: 80vh; /* Ограничим высоту, если рецепт длинный */
+    overflow-y: auto; /* Добавим прокрутку */
+}
+.recipe-macros { font-weight: bold; color: #FF9F0A; margin-bottom: 15px; }
+.recipe-text { line-height: 1.6; white-space: pre-wrap; /* Чтобы сохранять переносы строк от ИИ */ }
+.modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.icon-btn-wide { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }

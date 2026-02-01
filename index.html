@@ -651,6 +651,12 @@
             </div>
         </div>
         <div id="add-options-menu" class="hidden">
+            <button id="option-cooking-btn" class="menu-option-btn">
+                <span class="option-label">Готовка</span>
+                <div class="option-icon" style="background: #FF9F0A;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 2v20"/><path d="M2 10h20"/></svg>
+                </div>
+            </button>
             <button id="option-text-btn" class="menu-option-btn">
                 <span class="option-label">Вручную</span>
                 <div class="option-icon">
@@ -736,6 +742,25 @@
                 <div class="progress-bar-fill"></div>
             </div>
             <p id="loader-status">Распознаем ингредиенты</p>
+        </div>
+    </div>
+
+    <div id="recipe-modal" class="modal hidden">
+        <div class="modal-content recipe-content">
+            <h3>Идея от Шеф-ИИ 👨‍🍳</h3>
+            <div id="recipe-details">
+                <h2 id="recipe-title">Загрузка...</h2>
+                <p class="recipe-macros">Ккал: <span id="recipe-cal">0</span> (Б: <span id="recipe-p">0</span>, Ж: <span id="recipe-f">0</span>, У: <span id="recipe-c">0</span>)</p>
+                <hr>
+                <div id="recipe-instructions" class="recipe-text"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="save-recipe-btn" class="primary-btn icon-btn-wide">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Да, приготовить и записать
+                </button>
+                <button id="cancel-recipe-btn" class="secondary-btn">Отмена, другое</button>
+            </div>
         </div>
     </div>
 
