@@ -545,8 +545,16 @@ let videoStream = null;
 async function openCamera() {
     const cameraScreen = document.getElementById('camera-screen');
     const video = document.getElementById('video-preview');
+    const permissionUI = document.getElementById('camera-permission-ui');
+    const statusText = document.getElementById('camera-status-text');
+    const retryBtn = document.getElementById('retry-camera-btn');
     
+    // Reset UI state
     cameraScreen.classList.remove('hidden');
+    permissionUI.classList.remove('hidden');
+    permissionUI.classList.remove('fade-out');
+    statusText.innerText = "Разрешите доступ к камере, чтобы сканировать еду 📸";
+    retryBtn.classList.add('hidden');
     
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({
@@ -557,12 +565,21 @@ async function openCamera() {
             },
             audio: false
         });
+        
         video.srcObject = videoStream;
         await video.play();
+        
+        // Success: Hide instructions with animation
+        permissionUI.classList.add('fade-out');
+        setTimeout(() => {
+            permissionUI.classList.add('hidden');
+        }, 500);
+        
     } catch (err) {
         console.error("Error accessing camera:", err);
-        alert("Не удалось получить доступ к камере. Убедитесь, что вы дали разрешение.");
-        closeCamera();
+        // Error: Show instructions with manual fix prompt
+        statusText.innerText = "Доступ запрещен. Разрешите камеру в настройках устройства.";
+        retryBtn.classList.remove('hidden');
     }
 }
 
