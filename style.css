@@ -2117,110 +2117,85 @@ h1 {
 }
 
 .recipe-content {
-    /* 1. Ограничиваем высоту карточки */
-    width: 90%;
-    max-width: 360px;
-    height: 80vh; /* Фиксируем высоту: 80% от экрана */
-    max-height: 700px;
-    
-    /* 2. Включаем Flex-колонку */
     display: flex;
     flex-direction: column;
-    
-    /* 3. Запрещаем скролл самой карточке */
+    width: 90%;
+    max-width: 400px;
+    height: 80vh;
+    max-height: 800px;
+    background: #fff;
+    border-radius: 30px;
+    padding: 0;
     overflow: hidden;
-    
-    /* Дизайн (Glassmorphism сохраняем) */
-    margin: 0;
-    background: rgba(255, 255, 255, 0.95); /* Чуть плотнее, чтобы текст не просвечивал */
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    border-radius: 35px;
-    padding: 25px;
-    position: relative;
-}
-
-#recipe-title, .recipe-macros {
-    flex-shrink: 0; /* Запрещаем сжиматься */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
 #recipe-title {
-    font-size: 26px; /* Чуть крупнее */
+    padding: 20px 20px 5px 20px;
+    margin: 0;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 24px;
     font-weight: 800;
-    margin-top: 5px; /* Небольшой отступ сверху */
-    margin-bottom: 5px;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-    text-align: center; /* Строго по центру */
-    width: 100%;
 }
 
 .recipe-macros {
-    font-size: 15px;
-    font-weight: 600;
+    padding: 0 20px 15px 20px;
+    margin: 0;
+    text-align: center;
     color: #FF9F0A;
-    margin-bottom: 20px;
-    text-align: center; /* Центрируем строку с калориями */
+    font-weight: bold;
+    flex-shrink: 0;
+    font-size: 15px;
+}
+
+.recipe-content hr {
     width: 100%;
-    display: block; /* Гарантируем, что это блок */
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .recipe-text {
-    /* Занимает все доступное пространство между заголовком и кнопками */
-    flex-grow: 1;
-    /* Включаем скролл ТОЛЬКО здесь */
+    flex: 1;
     overflow-y: auto;
-    min-height: 0; /* Хак для работы скролла во Flexbox */
-    margin-top: 15px;
-    margin-bottom: 15px;
-    padding-right: 5px; /* Место для скроллбара */
-    background: transparent;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
+    min-height: 0;
 }
 
-/* Стилизация скроллбара (чтобы было красиво на Webkit) */
 .recipe-text::-webkit-scrollbar { width: 4px; }
 .recipe-text::-webkit-scrollbar-track { background: transparent; }
-.recipe-text::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+.recipe-text::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 
 .recipe-step-item {
-    background: rgba(255, 255, 255, 0.6); /* Полупрозрачная белая подложка */
-    padding: 12px 15px;
-    margin-bottom: 8px; /* Отступ между шагами */
-    border-radius: 12px; /* Аккуратные углы */
+    background: #f8f8fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.5;
     color: #333;
-    border-left: 3px solid #FF9F0A; /* Оранжевая полоска слева для акцента */
-    animation: fadeInStep 0.3s ease-in-out; /* Плавное появление */
-}
-
-/* Убираем отступ у последнего элемента */
-.recipe-step-item:last-child { margin-bottom: 0; }
-
-@keyframes fadeInStep {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    border-left: 3px solid #FF9F0A;
 }
 
 .modal-actions {
-    flex-shrink: 0; /* ВАЖНО: Запрещаем сжиматься или исчезать */
+    padding: 20px 20px 25px 20px;
+    background: #fff;
+    border-top: 1px solid #eee;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 0; /* Отступ контролируется блоком recipe-text */
-    padding-top: 10px; /* Небольшой отступ от скроллящегося текста */
-    border-top: 1px solid rgba(0,0,0,0.05); /* Едва заметная линия-разделитель */
 }
 
-/* Основная кнопка "Да, приготовить" - Черная */
 #save-recipe-btn {
     background-color: #000;
     color: #fff;
     border: none;
-    border-radius: 30px; /* Сильное скругление */
-    padding: 14px 20px;
+    border-radius: 30px;
+    padding: 16px;
     font-size: 16px;
     font-weight: 600;
     width: 100%;
@@ -2229,23 +2204,16 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 10px; /* Отступ от кнопки отмены */
 }
 
-/* Кнопка "Отмена" - Белая с черной обводкой */
 #cancel-recipe-btn {
     background-color: #fff;
     color: #000;
-    border: 2px solid #000; /* Жирная обводка */
+    border: 2px solid #000;
     border-radius: 30px;
-    padding: 14px 20px;
+    padding: 16px;
     font-size: 16px;
     font-weight: 600;
     width: 100%;
     cursor: pointer;
-    transition: background 0.2s;
-}
-
-#cancel-recipe-btn:hover {
-    background-color: #f2f2f2;
 }
