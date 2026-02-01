@@ -1359,17 +1359,21 @@ h1 {
 
 /* New Analysis Overlay */
 #analysis-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(5px);
-    z-index: 3000;
-    display: flex;
-    align-items: center;
+    z-index: 2005;
+    display: flex; /* Removed !important */
     justify-content: center;
+    align-items: center;
+}
+
+#analysis-overlay.hidden {
+    display: none !important;
 }
 
 #analysis-card {
@@ -1381,6 +1385,12 @@ h1 {
     box-shadow: 0 12px 36px rgba(0,0,0,0.25);
     text-align: center;
     animation: modalAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Ensure no shifts */
+    margin: 0;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
 }
 
 #analysis-card h3 {
@@ -1413,6 +1423,7 @@ h1 {
 .progress-ring__circle--progress {
     transition: stroke-dashoffset 0.3s ease-out;
     stroke-linecap: round;
+    stroke: #000000 !important;
 }
 
 .progress-text-container {
@@ -1422,7 +1433,7 @@ h1 {
     transform: translate(-50%, -50%);
     display: flex;
     align-items: baseline;
-    color: #FF9F1C;
+    color: #000000 !important;
     font-weight: 800;
 }
 

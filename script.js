@@ -553,6 +553,12 @@ async function openCamera() {
     cameraScreen.classList.remove('hidden');
     permissionUI.classList.remove('hidden');
     permissionUI.classList.remove('fade-out');
+    
+    // Explicitly hide analysis card and show controls at start
+    const analysisOverlay = document.getElementById('analysis-overlay');
+    analysisOverlay.style.display = 'none';
+    analysisOverlay.classList.add('hidden');
+    document.querySelector('.camera-controls').classList.remove('hidden');
 
     statusText.innerText = "Разрешите доступ к камере, чтобы сканировать еду 📸";
     retryBtn.classList.add('hidden');
@@ -618,8 +624,11 @@ function takePhoto() {
         videoStream.getTracks().forEach(track => track.stop());
     }
 
-    // Show analysis overlay
-    document.getElementById('analysis-overlay').classList.remove('hidden');
+    // Hide controls and show analysis overlay
+    document.querySelector('.camera-controls').classList.add('hidden');
+    const analysisOverlay = document.getElementById('analysis-overlay');
+    analysisOverlay.style.display = 'flex';
+    analysisOverlay.classList.remove('hidden');
     
     // Start AI analysis
     startAnalysis(imageData);
