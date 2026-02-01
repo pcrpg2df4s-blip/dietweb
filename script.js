@@ -553,6 +553,7 @@ async function openCamera() {
     cameraScreen.classList.remove('hidden');
     permissionUI.classList.remove('hidden');
     permissionUI.classList.remove('fade-out');
+
     statusText.innerText = "Разрешите доступ к камере, чтобы сканировать еду 📸";
     retryBtn.classList.add('hidden');
     

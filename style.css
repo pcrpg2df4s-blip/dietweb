@@ -1356,21 +1356,22 @@ h1 {
 
 #camera-permission-ui {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2001;
+    top: 20%;
+    left: 0;
+    width: 100%;
+    z-index: 9999 !important;
     text-align: center;
-    width: 80%;
-    pointer-events: auto;
+    pointer-events: none;
     transition: opacity 0.5s ease;
+    color: #ffffff !important;
 }
 
 #camera-status-text {
-    color: #fff;
+    padding: 0 20px;
     font-size: 18px;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    line-height: 1.4;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     margin-bottom: 20px;
 }
 
@@ -1384,6 +1385,7 @@ h1 {
     font-weight: 600;
     cursor: pointer;
     backdrop-filter: blur(5px);
+    pointer-events: auto; /* Allow clicking the button despite parent having pointer-events: none */
 }
 
 .fade-out {
