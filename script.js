@@ -73,6 +73,55 @@ window.addEventListener('DOMContentLoaded', () => {
     initAddMenu();
 });
 
+let loaderInterval = null;
+
+function showLoader() {
+    const loader = document.getElementById('ai-loader');
+    const fill = loader.querySelector('.progress-bar-fill');
+    const statusText = document.getElementById('loader-status');
+    
+    loader.classList.remove('hidden');
+    fill.style.width = '0%';
+    statusText.innerText = "Смотрим на фото...";
+
+    let progress = 0;
+    const startTime = Date.now();
+
+    if (loaderInterval) clearInterval(loaderInterval);
+    
+    loaderInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        
+        // Progress emulation: 0% to 90% over 4 seconds
+        if (progress < 90) {
+            progress += Math.random() * 2;
+            if (progress > 90) progress = 90;
+            fill.style.width = `${progress}%`;
+        }
+
+        // Status text updates based on time elapsed
+        if (elapsed > 2500) {
+            statusText.innerText = "Считаем БЖУ...";
+        } else if (elapsed > 1000) {
+            statusText.innerText = "Определяем продукты...";
+        }
+    }, 100);
+}
+
+function hideLoader() {
+    const loader = document.getElementById('ai-loader');
+    const fill = loader.querySelector('.progress-bar-fill');
+    
+    if (loaderInterval) clearInterval(loaderInterval);
+    
+    fill.style.width = '100%';
+    
+    setTimeout(() => {
+        loader.classList.add('hidden');
+        fill.style.width = '0%';
+    }, 300);
+}
+
 function initAddMenu() {
     const addBtn = document.getElementById('add-btn-main');
     const menu = document.getElementById('add-options-menu');
@@ -222,22 +271,18 @@ function initManualAddModal() {
                 return;
             }
 
-            // Показать лоадер (изменить текст кнопки)
-            const originalText = saveBtn.innerText;
-            saveBtn.innerText = "Считаю...";
-            saveBtn.disabled = true;
+            showLoader();
+            modal.classList.add('hidden');
 
             try {
                 const foodItem = await analyzeTextFood(name, cals);
                 addFoodToHome(foodItem, null);
-                modal.classList.add('hidden');
                 clearInputs();
             } catch (err) {
                 console.error("Manual add AI error:", err);
                 alert("Ошибка при анализе текста. Попробуйте еще раз.");
             } finally {
-                saveBtn.innerText = originalText;
-                saveBtn.disabled = false;
+                hideLoader();
             }
         });
     }
@@ -850,6 +895,7 @@ function takePhoto() {
     analysisOverlay.classList.remove('hidden');
     
     // Start AI analysis
+    showLoader();
     startAnalysis(imageData, thumbnailDataUrl);
 }
 
@@ -938,6 +984,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
         addFoodToHome(result, thumbnailDataUrl); // Всё ок
+        hideLoader();
 
     } catch (err) {
         console.error("Critical AI Error:", err);
@@ -954,6 +1001,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
             analysisOverlay.classList.add('hidden');
         }
         closeCamera();
+        hideLoader();
         nextStep(12); // Go back home
     }
 }
