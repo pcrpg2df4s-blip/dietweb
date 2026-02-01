@@ -35,6 +35,8 @@ let currentMacros = {
     dailyHistory: {} 
 };
 
+let isCameraPermissionGranted = false;
+
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
@@ -565,8 +567,14 @@ async function openCamera() {
     
     // Reset UI state
     cameraScreen.classList.remove('hidden');
-    permissionUI.classList.remove('hidden');
-    permissionUI.classList.remove('fade-out');
+
+    // ШАГ 1 (Проверка): Перед тем как показать #camera-permission-ui, проверь if (!isCameraPermissionGranted)
+    if (!isCameraPermissionGranted) {
+        permissionUI.classList.remove('hidden');
+        permissionUI.classList.remove('fade-out');
+    } else {
+        permissionUI.classList.add('hidden');
+    }
     
     // Explicitly hide analysis card and show controls at start
     const analysisOverlay = document.getElementById('analysis-overlay');
@@ -590,6 +598,9 @@ async function openCamera() {
         video.srcObject = videoStream;
         await video.play();
         
+        // ШАГ 2 (Успех): Установи isCameraPermissionGranted = true
+        isCameraPermissionGranted = true;
+
         // Success: Hide instructions with animation
         permissionUI.classList.add('fade-out');
         setTimeout(() => {
@@ -598,7 +609,11 @@ async function openCamera() {
         
     } catch (err) {
         console.error("Error accessing camera:", err);
+        // ШАГ 3 (Ошибка): Установи isCameraPermissionGranted = false
+        isCameraPermissionGranted = false;
+
         // Error: Show instructions with manual fix prompt
+        permissionUI.classList.remove('hidden'); // Ensure it's visible on error
         statusText.innerText = "Доступ запрещен. Разрешите камеру в настройках устройства.";
         retryBtn.classList.remove('hidden');
     }
