@@ -38,6 +38,7 @@ let currentMacros = {
 let isCameraPermissionGranted = false;
 let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes
 let currentRecipeData = null;
+let thumbnailDataUrl = null; // Global storage for current photo
 
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
@@ -977,7 +978,7 @@ function takePhoto() {
     
     // Draw with square crop from center
     smallCtx.drawImage(video, startX, startY, shortSide, shortSide, 0, 0, 256, 256);
-    const thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
+    thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
     
     // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
@@ -1046,7 +1047,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
 
     let prompt;
     if (cameraMode === 'cook') {
-        prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe that can be made from these. Return ONLY a JSON object with this structure: { \"recipeName\": \"Name of the dish\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Step 1... Step 2...\" }";
+        prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions). Use \\n for new lines between steps in instructions. Return ONLY a JSON object: { \"recipeName\": \"Название блюда\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Шаг 1: ...\\nШаг 2: ...\" }";
     } else {
         prompt = `You are a strict, professional nutritionist.
         Analyze this food image. Analyze the portion size realistically. Do not overestimate.
@@ -1455,10 +1456,11 @@ function initRecipeModal() {
                     protein: currentRecipeData.protein,
                     fats: currentRecipeData.fat,
                     carbs: currentRecipeData.carbs,
-                    thumbnail: null // Или можно поставить эмодзи повара
+                    thumbnail: thumbnailDataUrl // Use the global photo
                 };
-                addFoodToHome(foodItem, null);
+                addFoodToHome(foodItem, thumbnailDataUrl);
                 modal.classList.add('hidden');
+                currentRecipeData = null;
             }
         });
     }
@@ -1478,7 +1480,21 @@ function showRecipeModal(recipeData) {
     document.getElementById('recipe-p').innerText = recipeData.protein || 0;
     document.getElementById('recipe-f').innerText = recipeData.fat || 0;
     document.getElementById('recipe-c').innerText = recipeData.carbs || 0;
-    document.getElementById('recipe-instructions').innerText = recipeData.instructions || "";
+    
+    // Formatting instructions
+    const instructionsContainer = document.getElementById('recipe-instructions');
+    if (instructionsContainer) {
+        instructionsContainer.innerHTML = '';
+        const instructionsText = recipeData.instructions || "";
+        const steps = instructionsText.split('\n').filter(step => step.trim() !== '');
+        
+        steps.forEach((stepText) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'recipe-step-item';
+            stepDiv.textContent = stepText;
+            instructionsContainer.appendChild(stepDiv);
+        });
+    }
     
     const modal = document.getElementById('recipe-modal');
     if (modal) modal.classList.remove('hidden');
