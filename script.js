@@ -212,10 +212,9 @@ function initHomeScreenFromSaved() {
 
             div.innerHTML = `
                 ${foodIcon}
-                <div class="food-details">
+                <div class="food-info">
                     <div class="food-header">
-                        <h4>${food.name}</h4>
-                        <span class="food-time">${food.time}</span>
+                        <span class="food-name">${food.name}</span>
                     </div>
                     <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
                     <div class="food-macros-mini">
@@ -224,7 +223,10 @@ function initHomeScreenFromSaved() {
                         <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
                     </div>
                 </div>
-                <button class="delete-food-btn" onclick="deleteFood(${index})">🗑️</button>
+                <div class="food-item-right">
+                    <span class="food-time">${food.time}</span>
+                    <button class="delete-food-btn" onclick="deleteFood(${index})">🗑️</button>
+                </div>
             `;
             foodList.appendChild(div);
         });
