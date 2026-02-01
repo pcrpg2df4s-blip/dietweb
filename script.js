@@ -609,31 +609,44 @@ function takePhoto() {
     // Convert to JPEG
     const imageData = canvas.toDataURL('image/jpeg');
     
-    // Set to analysis image and start analysis
+    // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
     if (analyzedImg) analyzedImg.src = imageData;
     
-    // Stop camera and close screen
-    closeCamera();
+    // Freeze video feed visually by stopping tracks but keeping screen
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+
+    // Show analysis overlay
+    document.getElementById('analysis-overlay').classList.remove('hidden');
     
     // Start AI analysis
     startAnalysis(imageData);
 }
 
 async function startAnalysis(imageData) {
-    nextStep(14);
-    
     let progress = 0;
+    const circ = 2 * Math.PI * 52; // New radius r=52
+    
     const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 5) + 2;
+        progress += Math.floor(Math.random() * 5) + 3;
         if (progress > 100) progress = 100;
         
-        document.getElementById('analysis-percent').innerText = `${progress}%`;
-        setHomeProgress('analysis-ring', progress, 282.7);
+        // Update new UI elements
+        const percentVal = document.getElementById('analysis-percent-val');
+        if (percentVal) percentVal.innerText = progress;
+        
+        setHomeProgress('analysis-progress-circle', progress, circ);
         
         if (progress === 100) {
             clearInterval(interval);
-            finishAnalysis(imageData);
+            // Add slight delay at 100% for "expensive" feel
+            setTimeout(() => {
+                document.getElementById('analysis-overlay').classList.add('hidden');
+                closeCamera(); // Now fully close the camera screen
+                finishAnalysis(imageData);
+            }, 500);
         }
     }, 150);
 }
