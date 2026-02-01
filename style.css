@@ -1787,12 +1787,14 @@ h1 {
     border-radius: 24px;
     padding: 24px;
     width: 300px;
+    max-width: 320px; /* Added max-width as requested */
     text-align: center;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     animation: modalAppear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto; /* Changed from 100% to auto to prevent stretching */
+    min-height: auto; /* Added for safety, will take content size */
 }
 
 @keyframes modalAppear {
@@ -1823,7 +1825,7 @@ h1 {
     font-size: 14px;
     color: #666;
     line-height: 1.5;
-    margin-bottom: 24px;
+    margin-bottom: 20px; /* Reduced margin slightly to bring button up */
 }
 
 .primary-btn.small {
@@ -1837,6 +1839,7 @@ h1 {
     border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
+    margin-top: 10px; /* Added margin to separate from description if desc is shorter */
 }
 
 /* Add Options Menu */
