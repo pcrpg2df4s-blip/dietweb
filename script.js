@@ -72,6 +72,61 @@ window.addEventListener('DOMContentLoaded', () => {
     initManualAddModal();
 });
 
+async function analyzeTextFood(foodName, userCalories) {
+    if (!CONFIG.GOOGLE_API_KEY) {
+        return {
+            name: foodName,
+            calories: parseInt(userCalories) || 0,
+            protein: 0,
+            fats: 0,
+            carbs: 0
+        };
+    }
+
+    let prompt = "";
+    if (userCalories) {
+        prompt = `User ate: "${foodName}" worth ${userCalories} kcal. Estimate macros (Protein, Fat, Carbs) based on this calorie count. Return ONLY JSON: {"name": "${foodName}", "calories": ${userCalories}, "protein": 10, "carbs": 10, "fats": 10}`;
+    } else {
+        prompt = `User ate: "${foodName}". Estimate calories and macros (Protein, Fat, Carbs) for a standard portion. Return ONLY JSON: {"name": "${foodName}", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
+    
+    try {
+        const response = await fetchWithRetry(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+
+        let text = data.candidates[0].content.parts[0].text;
+        text = text.replace(/```json|```/g, '').trim();
+        const result = JSON.parse(text);
+        
+        return {
+            name: result.name || foodName,
+            calories: parseInt(result.calories) || parseInt(userCalories) || 0,
+            protein: parseInt(result.protein) || 0,
+            fats: parseInt(result.fats) || 0,
+            carbs: parseInt(result.carbs) || 0
+        };
+    } catch (e) {
+        console.error("Gemini text analysis error:", e);
+        return {
+            name: foodName,
+            calories: parseInt(userCalories) || 0,
+            protein: 0,
+            fats: 0,
+            carbs: 0
+        };
+    }
+}
+
 function initErrorModal() {
     const modal = document.getElementById('error-modal');
     const closeBtn = document.getElementById('error-close-btn');
@@ -111,9 +166,6 @@ function initManualAddModal() {
     const clearInputs = () => {
         document.getElementById('manual-name').value = '';
         document.getElementById('manual-calories').value = '';
-        document.getElementById('manual-protein').value = '';
-        document.getElementById('manual-fat').value = '';
-        document.getElementById('manual-carbs').value = '';
     };
 
     if (cancelBtn) {
@@ -124,29 +176,32 @@ function initManualAddModal() {
     }
 
     if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
+        saveBtn.addEventListener('click', async () => {
             const name = document.getElementById('manual-name').value.trim();
             const cals = document.getElementById('manual-calories').value.trim();
-            const prot = document.getElementById('manual-protein').value.trim();
-            const fat = document.getElementById('manual-fat').value.trim();
-            const carbs = document.getElementById('manual-carbs').value.trim();
 
-            if (!name || !cals) {
-                alert("Пожалуйста, введите название и калории");
+            if (!name) {
+                alert("Пожалуйста, введите название блюда");
                 return;
             }
 
-            const foodItem = {
-                name: name,
-                calories: parseInt(cals),
-                protein: parseInt(prot) || 0,
-                fats: parseInt(fat) || 0,
-                carbs: parseInt(carbs) || 0
-            };
+            // Показать лоадер (изменить текст кнопки)
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Считаю...";
+            saveBtn.disabled = true;
 
-            addFoodToHome(foodItem, null);
-            modal.classList.add('hidden');
-            clearInputs();
+            try {
+                const foodItem = await analyzeTextFood(name, cals);
+                addFoodToHome(foodItem, null);
+                modal.classList.add('hidden');
+                clearInputs();
+            } catch (err) {
+                console.error("Manual add AI error:", err);
+                alert("Ошибка при анализе текста. Попробуйте еще раз.");
+            } finally {
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
+            }
         });
     }
 
