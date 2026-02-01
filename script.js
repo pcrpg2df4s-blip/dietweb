@@ -2,6 +2,13 @@ const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
+const imageAnalysisCache = {};
+
+function getImageHash(base64String) {
+    if (!base64String) return "";
+    return `${base64String.length}_${base64String.substring(0, 100)}_${base64String.slice(-100)}`;
+}
+
 let userData = {
     gender: 'male',
     activity: 1.2,
@@ -668,7 +675,16 @@ async function finishAnalysis(imageData) {
         return;
     }
 
-    const prompt = `Анализируй это изображение еды. 
+    const hash = getImageHash(imageData);
+    if (imageAnalysisCache[hash]) {
+        console.log("Using cached analysis result");
+        addFoodToHome(imageAnalysisCache[hash], imageData);
+        return;
+    }
+
+    const prompt = `You are a strict, professional nutritionist.
+    Analyze this food image. Analyze the portion size realistically. Do not overestimate.
+    Provide a single, definitive estimate based on visual evidence.
     1. Название блюда (на русском).
     2. Калории (ккал), белки (г), жиры (г), углеводы (г).
     Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
@@ -680,7 +696,10 @@ async function finishAnalysis(imageData) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }]
+                contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }],
+                generationConfig: {
+                    temperature: 0.1
+                }
             })
         });
 
@@ -705,6 +724,7 @@ async function finishAnalysis(imageData) {
         text = text.replace(/```json|```/g, '').trim();
         
         const result = JSON.parse(text);
+        imageAnalysisCache[hash] = result;
         addFoodToHome(result, imageData); // Всё ок
 
     } catch (err) {
