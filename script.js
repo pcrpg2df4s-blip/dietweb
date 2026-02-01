@@ -69,6 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadSavedData();
     initBMIModal();
     initErrorModal();
+    initManualAddModal();
 });
 
 function initErrorModal() {
@@ -86,6 +87,10 @@ function initErrorModal() {
         manualBtn.addEventListener('click', () => {
             console.log("Manual add clicked");
             modal.classList.add('hidden');
+            const manualModal = document.getElementById('manual-add-modal');
+            if (manualModal) {
+                manualModal.classList.remove('hidden');
+            }
         });
     }
 
@@ -93,6 +98,63 @@ function initErrorModal() {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
+            }
+        });
+    }
+}
+
+function initManualAddModal() {
+    const modal = document.getElementById('manual-add-modal');
+    const cancelBtn = document.getElementById('cancel-manual-btn');
+    const saveBtn = document.getElementById('save-manual-btn');
+
+    const clearInputs = () => {
+        document.getElementById('manual-name').value = '';
+        document.getElementById('manual-calories').value = '';
+        document.getElementById('manual-protein').value = '';
+        document.getElementById('manual-fat').value = '';
+        document.getElementById('manual-carbs').value = '';
+    };
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            clearInputs();
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const name = document.getElementById('manual-name').value.trim();
+            const cals = document.getElementById('manual-calories').value.trim();
+            const prot = document.getElementById('manual-protein').value.trim();
+            const fat = document.getElementById('manual-fat').value.trim();
+            const carbs = document.getElementById('manual-carbs').value.trim();
+
+            if (!name || !cals) {
+                alert("Пожалуйста, введите название и калории");
+                return;
+            }
+
+            const foodItem = {
+                name: name,
+                calories: parseInt(cals),
+                protein: parseInt(prot) || 0,
+                fats: parseInt(fat) || 0,
+                carbs: parseInt(carbs) || 0
+            };
+
+            addFoodToHome(foodItem, null);
+            modal.classList.add('hidden');
+            clearInputs();
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                clearInputs();
             }
         });
     }

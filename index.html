@@ -675,6 +675,23 @@
             </div>
         </div>
     </div>
+
+    <div id="manual-add-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Добавить блюдо</h3>
+            <input type="text" id="manual-name" placeholder="Название (напр. Яблоко)" class="modal-input">
+            <input type="number" id="manual-calories" placeholder="Ккал" class="modal-input">
+            <div class="macros-inputs">
+                <input type="number" id="manual-protein" placeholder="Белки" class="modal-input small">
+                <input type="number" id="manual-fat" placeholder="Жиры" class="modal-input small">
+                <input type="number" id="manual-carbs" placeholder="Угл." class="modal-input small">
+            </div>
+            <div class="modal-buttons">
+                <button id="save-manual-btn" class="primary-btn">Добавить</button>
+                <button id="cancel-manual-btn" class="secondary-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
     
     <script src="config.js"></script>
     <script src="script.js?v=999.0"></script>
