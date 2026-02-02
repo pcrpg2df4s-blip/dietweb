@@ -164,8 +164,14 @@ function initAddMenu() {
             addBtn.style.transition = 'transform 0.3s ease';
         });
 
+        const updateCameraHint = (text) => {
+            const hint = document.getElementById('camera-hint');
+            if (hint) hint.innerText = text;
+        };
+
         cameraBtn.addEventListener('click', () => {
             cameraMode = 'log';
+            updateCameraHint("Сфоткай еду — определим КБЖУ");
             menu.classList.add('hidden');
             addBtn.style.transform = 'rotate(0deg)';
             openCamera();
@@ -182,6 +188,7 @@ function initAddMenu() {
         if (cookingBtn) {
             cookingBtn.addEventListener('click', () => {
                 cameraMode = 'cook';
+                updateCameraHint("Сфоткай свои продукты");
                 menu.classList.add('hidden');
                 addBtn.style.transform = 'rotate(0deg)';
                 openCamera();
@@ -191,6 +198,7 @@ function initAddMenu() {
         if (checkBtn) {
             checkBtn.addEventListener('click', () => {
                 cameraMode = 'check';
+                updateCameraHint("Сфоткай состав на упаковке");
                 menu.classList.add('hidden');
                 addBtn.style.transform = 'rotate(0deg)';
                 openCamera();
@@ -1083,7 +1091,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     if (cameraMode === 'cook') {
         prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions). Use \\n for new lines between steps in instructions. Return ONLY a JSON object: { \"recipeName\": \"Название блюда\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Шаг 1: ...\\nШаг 2: ...\" }";
     } else if (cameraMode === 'check') {
-        prompt = "Ты — эксперт по питанию. Проанализируй фото состава продукта. Верни ответ СТРОГО в формате JSON: { \"product_name\": \"...\", \"score\": 50, \"description\": \"...\" } Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). Например: 'Ветчина из индейки', 'Йогурт клубничный'. score: Оценка полезности от 0 до 100 (целое число). description: Подробный анализ на русском языке (минимум 3-4 предложения). Объясни, почему такая оценка, перечисли вредные и полезные ингредиенты. Текст должен быть информативным, а не кратким.";
+        prompt = "Ты — эксперт по питанию. Проанализируй фото состава продукта. Верни ответ СТРОГО в формате JSON: { \"product_name\": \"...\", \"score\": 50, \"pros\": \"...\", \"cons\": \"...\", \"verdict\": \"...\" } Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). score: Оценка полезности от 0 до 100 (целое число). pros: Плюсы состава (Что хорошего в продукте). cons: Минусы состава (Вредные добавки, сахар и т.д.). verdict: Краткий итог (стоит брать или нет). Весь текст должен быть на русском языке.";
     } else {
         prompt = `You are a strict, professional nutritionist.
         Analyze this food image. Analyze the portion size realistically. Do not overestimate.
@@ -1583,7 +1591,6 @@ function showCheckResult(result) {
     if (nameDisplay) nameDisplay.innerText = result.product_name || "";
     
     const score = result.score || 0;
-    summaryText.innerText = result.description || result.summary || "";
 
     // Set color based on score
     let color = "#ff3b30"; // Red 0-40
@@ -1593,6 +1600,26 @@ function showCheckResult(result) {
         color = "#34c759"; // Green 71-100
     }
     scoreFill.style.backgroundColor = color;
+
+    // Create cards HTML
+    const pros = result.pros || "";
+    const cons = result.cons || "";
+    const verdict = result.verdict || "";
+
+    summaryText.innerHTML = `
+        <div class="analysis-card-item" style="border-left: 4px solid ${color}">
+            <div class="analysis-card-title">Плюсы состава</div>
+            <div class="analysis-card-text">${pros}</div>
+        </div>
+        <div class="analysis-card-item" style="border-left: 4px solid ${color}">
+            <div class="analysis-card-title">Минусы состава</div>
+            <div class="analysis-card-text">${cons}</div>
+        </div>
+        <div class="analysis-card-item" style="border-left: 4px solid ${color}">
+            <div class="analysis-card-title">Вердикт</div>
+            <div class="analysis-card-text">${verdict}</div>
+        </div>
+    `;
 
     modal.classList.remove('hidden');
     

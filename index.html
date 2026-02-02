@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Калькулятор Калорий</title>
     <link rel="stylesheet" href="style.css?v=1.1.28">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -453,6 +454,7 @@
 
         <div id="camera-screen" class="hidden">
             <video id="video-preview" autoplay playsinline muted></video>
+            <div id="camera-hint"></div>
             <div id="camera-permission-ui">
                 <p id="camera-status-text">Разрешите доступ к камере, чтобы сканировать еду 📸</p>
                 <button id="retry-camera-btn" class="secondary-btn hidden" onclick="openCamera()">Попробовать снова</button>
@@ -655,14 +657,14 @@
                 <span class="option-label">Проверка</span>
                 <div class="option-icon" style="background: #000;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 5v14h2V5H3zm4 0v14h1V5H7zm3 0v14h3V5h-3zm4 0v14h1V5h-1zm3 0v14h3V5h-3zm4 0v14h1V5h-1zM3 5h18V3H3v2zm0 16h18v-2H3v2z"/>
+                        <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M8 7v10M12 7v10M16 7v10"/>
                     </svg>
                 </div>
             </button>
             <button id="option-cooking-btn" class="menu-option-btn">
                 <span class="option-label">Готовка</span>
-                <div class="option-icon" style="background: #FF9F0A;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 2v20"/><path d="M2 10h20"/></svg>
+                <div class="option-icon" style="background: #000000;">
+                    <i class="fa-solid fa-kitchen-set" style="color: white; font-size: 20px;"></i>
                 </div>
             </button>
             <button id="option-text-btn" class="menu-option-btn">
@@ -761,11 +763,8 @@
             <div id="recipe-instructions" class="recipe-text"></div>
             
             <div class="modal-actions">
-                <button id="save-recipe-btn" class="primary-btn icon-btn-wide">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    Да, приготовить и записать
-                </button>
-                <button id="cancel-recipe-btn" class="secondary-btn">Отмена, другое</button>
+                <button id="save-recipe-btn" class="primary-btn icon-btn-wide">Да, записать</button>
+                <button id="cancel-recipe-btn" class="secondary-btn">Отмена</button>
             </div>
         </div>
     </div>
@@ -773,14 +772,13 @@
     <div id="check-result-modal" class="modal hidden">
         <div class="modal-content recipe-content">
             <div class="modal-flex-container">
-                <h2 style="flex-shrink: 0;">Результаты анализа</h2>
-                <div class="check-score-container" style="flex-shrink: 0; margin-top: 15px;">
+                <h3 id="product-name-display"></h3>
+                <div class="check-score-container" style="flex-shrink: 0; margin-top: 10px;">
                     <div class="score-bar-wrapper">
                         <div id="check-score-fill" class="score-bar-fill" style="width: 0%;"></div>
                     </div>
                     <div class="score-value"><span id="check-score-number">0</span>/100</div>
                 </div>
-                <h3 id="product-name-display"></h3>
                 <div class="modal-body-wrapper">
                     <div class="modal-body-scroll">
                         <p id="check-summary" class="recipe-text"></p>
