@@ -35,10 +35,40 @@ body {
 /* Скрытие всех шагов, кроме активного */
 .step {
     display: none;
-    animation: fadeIn 0.3s ease;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
 }
 .step.active {
     display: block;
+    opacity: 1;
+}
+
+/* Animations for swipe navigation */
+.step.slide-left-enter {
+    display: block;
+    opacity: 0;
+    transform: translateX(50px);
+}
+.step.slide-left-active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.step.slide-right-enter {
+    display: block;
+    opacity: 0;
+    transform: translateX(-50px);
+}
+.step.slide-right-active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.step.slide-exit {
+    display: block;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
 }
 
 .hidden {

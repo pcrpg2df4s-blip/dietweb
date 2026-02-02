@@ -76,6 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initAddMenu();
     initRecipeModal();
     initCheckModal();
+    initSwipeNavigation();
 });
 
 let loaderInterval = null;
@@ -660,10 +661,33 @@ function renderWeeklyCalendar() {
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-function nextStep(stepNumber) {
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    const targetStep = document.getElementById(`step-${stepNumber}`);
-    if (targetStep) targetStep.classList.add('active');
+function nextStep(stepNumber, direction = null) {
+    const currentStepEl = document.querySelector('.step.active');
+    const targetStepEl = document.getElementById(`step-${stepNumber}`);
+    
+    if (!targetStepEl) return;
+
+    if (direction && currentStepEl) {
+        // Animation logic
+        currentStepEl.classList.remove('active');
+        currentStepEl.classList.add('slide-exit');
+        
+        targetStepEl.classList.add(direction === 'left' ? 'slide-left-enter' : 'slide-right-enter');
+        
+        // Trigger reflow
+        targetStepEl.offsetHeight;
+        
+        targetStepEl.classList.add(direction === 'left' ? 'slide-left-active' : 'slide-right-active');
+        targetStepEl.classList.add('active');
+
+        setTimeout(() => {
+            currentStepEl.classList.remove('slide-exit');
+            targetStepEl.classList.remove('slide-left-enter', 'slide-left-active', 'slide-right-enter', 'slide-right-active');
+        }, 300);
+    } else {
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        targetStepEl.classList.add('active');
+    }
     
     const globalTabBar = document.getElementById('global-tab-bar');
     if (globalTabBar) {
@@ -1320,7 +1344,7 @@ function updateCalendarDates() {
     });
 }
 
-function updateProgressPage() {
+function updateProgressPage(direction = null) {
     const today = new Date().toISOString().split('T')[0];
     
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
@@ -1339,7 +1363,7 @@ function updateProgressPage() {
 
     renderProgressChart();
     updateBMI();
-    nextStep(15);
+    nextStep(15, direction);
 }
 
 function renderProgressChart() {
@@ -1424,8 +1448,8 @@ function updateBMI() {
     pointerEl.style.left = `${pointerPos}%`;
 }
 
-function openSettings() {
-    nextStep(16);
+function openSettings(direction = null) {
+    nextStep(16, direction);
     loadSettingsData();
 }
 
@@ -1659,4 +1683,60 @@ function animateScore(targetScore) {
     }
 
     requestAnimationFrame(update);
+}
+
+function initSwipeNavigation() {
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const swipeThreshold = 50;
+
+    const tabsOrder = [15, 12, 16]; // Progress, Home, Settings
+
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        // Only allow swipe if the global tab bar is visible (meaning we are in the main app, not registration)
+        const globalTabBar = document.getElementById('global-tab-bar');
+        if (!globalTabBar || globalTabBar.style.display === 'none') return;
+
+        const diffX = touchEndX - touchStartX;
+        
+        if (Math.abs(diffX) > swipeThreshold) {
+            const currentStep = parseInt(document.querySelector('.step.active')?.id.split('-')[1]);
+            const currentIndex = tabsOrder.indexOf(currentStep);
+
+            if (currentIndex === -1) return;
+
+            if (diffX < 0) {
+                // Swipe Left -> Next Tab (Right)
+                if (currentIndex < tabsOrder.length - 1) {
+                    const nextTab = tabsOrder[currentIndex + 1];
+                    navigateToTab(nextTab, 'left');
+                }
+            } else {
+                // Swipe Right -> Previous Tab (Left)
+                if (currentIndex > 0) {
+                    const prevTab = tabsOrder[currentIndex - 1];
+                    navigateToTab(prevTab, 'right');
+                }
+            }
+        }
+    }
+
+    function navigateToTab(tabId, direction) {
+        if (tabId === 12) {
+            nextStep(12, direction);
+        } else if (tabId === 15) {
+            updateProgressPage(direction);
+        } else if (tabId === 16) {
+            openSettings(direction);
+        }
+    }
 }
