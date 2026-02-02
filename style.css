@@ -1136,6 +1136,25 @@ h1 {
 .legend-item .dot.carbs { background: #ffb366; }
 .legend-item .dot.fats { background: #66b3ff; }
 
+.settings-btn {
+    width: 100%;
+    padding: 16px;
+    background: #fff;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+
 /* BMI Card */
 .bmi-card .bmi-header {
     display: flex;
@@ -1916,6 +1935,20 @@ h1 {
     font-weight: 800;
 }
 
+/* Специфичные стили для модального окна ИМТ, чтобы сделать его компактным */
+#bmi-modal .modal-content {
+    padding: 20px !important;
+    width: 85% !important;
+    max-width: 320px !important;
+}
+
+#bmi-modal .formula-box {
+    background: #f5f5f7;
+    border-radius: 16px;
+    padding: 10px !important;
+    margin-bottom: 16px;
+}
+
 .formula-box {
     background: #f5f5f7;
     border-radius: 16px;
@@ -1924,7 +1957,7 @@ h1 {
 }
 
 .formula-text {
-    font-weight: 700;
+    font-weight: 800; /* Более жирный шрифт для формулы */
     font-size: 16px;
     color: #000;
 }
@@ -1933,21 +1966,24 @@ h1 {
     font-size: 14px;
     color: #666;
     line-height: 1.5;
-    margin-bottom: 20px; /* Reduced margin slightly to bring button up */
+    margin-top: 10px; /* Поднимаем текст выше к формуле */
+    margin-bottom: 20px; /* Оставляем место до кнопки */
+    padding: 0 10px;
 }
 
-.primary-btn.small {
-    padding: 12px 24px;
+#bmi-modal .primary-btn.small {
+    padding: 14px 32px !important;
     font-size: 16px;
     width: auto;
-    min-width: 120px;
+    min-width: 140px;
     background: #000;
     color: #fff;
     border: none;
-    border-radius: 20px;
-    font-weight: 600;
+    border-radius: 30px; /* Более округлая кнопка как на скрине */
+    font-weight: 700;
     cursor: pointer;
-    margin-top: 10px; /* Added margin to separate from description if desc is shorter */
+    margin: 0 auto;
+    display: inline-block;
 }
 
 /* Add Options Menu */
