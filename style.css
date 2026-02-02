@@ -2134,10 +2134,10 @@ h1 {
 
 #manual-add-modal .modal-content {
     background: white;
-    padding: 25px;
+    padding: 35px;
     border-radius: 24px;
     width: 85%;
-    max-width: 320px;
+    max-width: 340px;
     text-align: center;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
@@ -2145,8 +2145,8 @@ h1 {
 #manual-add-modal .modal-buttons {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px !important;
+    margin-top: 20px;
 }
 
 #manual-add-modal .primary-btn {
@@ -2164,6 +2164,18 @@ h1 {
 #manual-add-modal .primary-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+#manual-add-modal .secondary-btn {
+    background-color: transparent;
+    border: 2px solid #000000;
+    color: #000000;
+    padding: 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
 }
 
 /* AI Loader */
