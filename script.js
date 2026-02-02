@@ -1083,14 +1083,15 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     if (cameraMode === 'cook') {
         prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions). Use \\n for new lines between steps in instructions. Return ONLY a JSON object: { \"recipeName\": \"Название блюда\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Шаг 1: ...\\nШаг 2: ...\" }";
     } else if (cameraMode === 'check') {
-        prompt = "Проанализируй состав продукта на фото. Оцени его вредность/полезность по шкале от 0 до 100 (где 0 — сплошная химия/вредно, 100 — идеально чисто/полезно). Дай краткое резюме (почему такая оценка) на русском языке. Верни строго JSON: { \"score\": number, \"summary\": \"string\" }";
+        prompt = "Ты — эксперт по питанию. Проанализируй фото состава продукта. Верни ответ СТРОГО в формате JSON: { \"product_name\": \"...\", \"score\": 50, \"description\": \"...\" } Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). Например: 'Ветчина из индейки', 'Йогурт клубничный'. score: Оценка полезности от 0 до 100 (целое число). description: Подробный анализ на русском языке (минимум 3-4 предложения). Объясни, почему такая оценка, перечисли вредные и полезные ингредиенты. Текст должен быть информативным, а не кратким.";
     } else {
         prompt = `You are a strict, professional nutritionist.
         Analyze this food image. Analyze the portion size realistically. Do not overestimate.
         Provide a single, definitive estimate based on visual evidence.
-        1. Название блюда (на русском).
+        1. Краткое название продукта (1-2 слова) на русском, в поле "product_name".
         2. Калории (ккал), белки (г), жиры (г), углеводы (г).
-        Верни ТОЛЬКО JSON: {"name": "Блюдо", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
+        3. Общее описание (короткий текст до 150 символов), в поле "description".
+        Верни ТОЛЬКО JSON: {"product_name": "Название", "calories": 100, "protein": 10, "carbs": 10, "fats": 10, "description": "Описание"}`;
     }
     
     try {
@@ -1134,7 +1135,16 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         } else if (cameraMode === 'check') {
             showCheckResult(result);
         } else {
-            addFoodToHome(result, thumbnailDataUrl); // Всё ок
+            // Now map the received JSON keys to expected food entry keys
+            const foodResult = {
+                id: food.id || Date.now().toString(),
+                name: result.product_name || result.name, // Use product_name if present
+                calories: result.calories,
+                protein: result.protein,
+                carbs: result.carbs,
+                fats: result.fats,
+            };
+            addFoodToHome(foodResult, thumbnailDataUrl); // Всё ок
         }
         hideLoader();
 
@@ -1563,15 +1573,17 @@ function showCheckResult(result) {
     const scoreFill = document.getElementById('check-score-fill');
     const scoreNum = document.getElementById('check-score-number');
     const summaryText = document.getElementById('check-summary');
+    const nameDisplay = document.getElementById('product-name-display');
 
     if (!modal || !scoreFill || !scoreNum || !summaryText) return;
 
     // Reset before animation
     scoreNum.innerText = "0";
     scoreFill.style.width = "0%";
+    if (nameDisplay) nameDisplay.innerText = result.product_name || "";
     
     const score = result.score || 0;
-    summaryText.innerText = result.summary || "";
+    summaryText.innerText = result.description || result.summary || "";
 
     // Set color based on score
     let color = "#ff3b30"; // Red 0-40
