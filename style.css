@@ -1243,10 +1243,10 @@ h1 {
 
 #camera-hint {
     position: absolute;
-    top: 8% !important;
+    top: 40px !important;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 2010;
+    z-index: 1000;
     color: #ffffff;
     font-weight: 700;
     font-size: 18px;
@@ -1582,14 +1582,13 @@ h1 {
 }
 
 #product-name-display {
+    padding: 10px 20px 10px 20px;
+    margin: 0;
     text-align: center;
-    font-size: 32px;
+    flex-shrink: 0;
+    font-size: 26px;
     font-weight: 800;
     color: #000;
-    margin-top: 0 !important;
-    margin-bottom: 5px !important;
-    flex-shrink: 0;
-    min-height: 38px;
     line-height: 1.2;
 }
 
@@ -2413,7 +2412,7 @@ h1 {
 .check-score-container {
     width: 85% !important;
     max-width: none !important;
-    margin: 5px auto !important; /* Сокращено в 3 раза (было 15px) */
+    margin: 30px auto 15px auto !important;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -2421,12 +2420,14 @@ h1 {
 }
 
 .score-bar-wrapper {
-    width: 100%;
-    height: 16px; /* Thicker line */
+    width: 90%;
+    height: 18px;
     background: #f0f0f5;
-    border-radius: 10px; /* More rounded */
+    border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .score-bar-fill {
@@ -2437,7 +2438,7 @@ h1 {
 }
 
 .score-value {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 800;
     color: #000;
 }
