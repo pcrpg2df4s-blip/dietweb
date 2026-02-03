@@ -1,3 +1,27 @@
+:root {
+    --bg-background: #F2F2F7;
+    --bg-card: #FFFFFF;
+    --text-primary: #000000;
+    --text-secondary: #8E8E93;
+    --border-color: #E5E5EA;
+    --ring-track: #E5E5EA;
+    --ring-progress: #000000;
+}
+
+[data-theme="dark"] {
+    --bg-background: #151419;
+    --bg-card: #222126;
+    --text-primary: #FFFFFF;
+    --text-secondary: #AEAEB2;
+    --border-color: #2c2b30;
+    --ring-track: #2c2b30;
+    --ring-progress: #FFFFFF;
+}
+
+[data-theme="dark"] .ring-icon {
+    filter: brightness(0) invert(1) !important;
+}
+
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -12,12 +36,12 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #f5f5f7 !important;
+    background-color: var(--bg-background) !important;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #000;
+    color: var(--text-primary);
     display: flex;
     justify-content: center;
 }
@@ -28,7 +52,7 @@ body {
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: #f5f5f7;
+    background-color: var(--bg-background);
     padding: 20px;
 }
 
@@ -43,33 +67,6 @@ body {
     opacity: 1;
 }
 
-/* Animations for swipe navigation */
-.step.slide-left-enter {
-    display: block;
-    opacity: 0;
-    transform: translateX(50px);
-}
-.step.slide-left-active {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.step.slide-right-enter {
-    display: block;
-    opacity: 0;
-    transform: translateX(-50px);
-}
-.step.slide-right-active {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.step.slide-exit {
-    display: block;
-    opacity: 0;
-    position: absolute;
-    width: 100%;
-}
 
 .hidden {
     display: none !important;
@@ -83,17 +80,18 @@ body {
     padding-bottom: 120px;
     box-sizing: border-box;
     width: 100%;
-    background-color: #f5f5f7;
+    background-color: var(--bg-background);
 }
 
 h1 {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 10px;
+    color: var(--text-primary);
 }
 
 .subtitle {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 16px;
     margin-bottom: 30px;
 }
@@ -105,45 +103,46 @@ h1 {
     margin-bottom: 12px;
     border: none;
     border-radius: 12px;
-    background-color: #f0f0f5;
+    background-color: var(--bg-background);
+    color: var(--text-primary);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 .option-btn:hover {
-    background-color: #e0e0eb;
+    background-color: var(--border-color);
 }
 .option-btn:active, .option-btn.selected {
-    background-color: #000;
-    color: #fff;
+    background-color: var(--text-primary);
+    color: var(--bg-card);
 }
 
 /* Карточки активности */
 .card {
     display: flex;
     align-items: center;
-    background: #f0f0f5;
+    background: var(--bg-card);
     padding: 15px;
     border-radius: 16px;
     margin-bottom: 12px;
     cursor: pointer;
 }
 .card:active {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
 }
 .card .icon {
     font-size: 24px;
     margin-right: 15px;
     width: 40px;
     height: 40px;
-    background: #fff;
+    background: var(--bg-background);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #000;
+    color: var(--text-primary);
 }
 .card h3 {
     margin: 0;
@@ -152,15 +151,15 @@ h1 {
 .card p {
     margin: 4px 0 0;
     font-size: 13px;
-    opacity: 0.7;
+    color: var(--text-secondary);
 }
 
 /* Главная кнопка Next */
 .main-btn {
     width: 100%;
     padding: 18px;
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
     border: none;
     border-radius: 30px;
     font-size: 18px;
@@ -182,14 +181,16 @@ h1 {
     width: 100%;
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
     box-sizing: border-box;
     font-size: 18px;
     text-align: center;
 }
 
 .graph-placeholder {
-    background: #f0f0f5;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 20px;
     height: 200px;
@@ -209,13 +210,13 @@ h1 {
 .progress-bar {
     width: 100%;
     height: 6px;
-    background: #f0f0f5;
+    background: var(--border-color);
     border-radius: 3px;
     margin-bottom: 30px;
 }
 .progress {
     height: 100%;
-    background: #000;
+    background: var(--text-primary);
     border-radius: 3px;
     transition: width 0.3s ease;
 }
@@ -228,11 +229,12 @@ h1 {
     width: 100%;
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     font-size: 18px;
     font-family: inherit;
     text-align: center;
-    background: #fff;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 /* Loading Screen */
@@ -255,7 +257,7 @@ h1 {
 .loading-bar-wrapper {
     width: 100%;
     height: 10px;
-    background: #f0f0f5;
+    background: var(--border-color);
     border-radius: 5px;
     overflow: hidden;
     margin-bottom: 15px;
@@ -269,15 +271,15 @@ h1 {
 }
 
 .loading-status {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 16px;
     margin-bottom: 40px;
 }
 
 /* Recommendation Card */
 .recommendation-card {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
     border-radius: 24px;
     padding: 25px;
     text-align: left;
@@ -313,8 +315,8 @@ h1 {
 .check-icon {
     width: 24px;
     height: 24px;
-    background: #fff;
-    color: #000;
+    background: var(--bg-card);
+    color: var(--text-primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -346,8 +348,8 @@ h1 {
 .check-circle-big {
     width: 60px;
     height: 60px;
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -357,7 +359,8 @@ h1 {
 }
 
 .target-weight-badge {
-    background: #f0f0f5;
+    background: var(--border-color);
+    color: var(--text-primary);
     display: inline-block;
     padding: 10px 20px;
     border-radius: 20px;
@@ -375,6 +378,7 @@ h1 {
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 20px;
+    color: var(--text-primary);
 }
 
 .section-title h2 {
@@ -384,7 +388,7 @@ h1 {
 
 .section-title span {
     font-size: 12px;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .macros-grid {
@@ -394,7 +398,7 @@ h1 {
 }
 
 .macro-card {
-    background: #fff;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 24px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -414,7 +418,7 @@ h1 {
 .macro-name {
     font-size: 14px;
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .progress-ring-container {
@@ -428,21 +432,24 @@ h1 {
     transition: stroke-dashoffset 0.35s;
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
+    stroke: var(--text-primary);
 }
 
 .macro-value {
     position: absolute;
     font-size: 18px;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .how-to-reach h2 {
     font-size: 20px;
     margin-bottom: 20px;
+    color: var(--text-primary);
 }
 
 .tips-container {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 24px;
     padding: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -453,7 +460,7 @@ h1 {
     align-items: center;
     gap: 15px;
     padding: 15px;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .tip-item:last-child {
@@ -463,7 +470,7 @@ h1 {
 .tip-icon {
     width: 40px;
     height: 40px;
-    background: #f9f9f9;
+    background: var(--bg-background);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -474,7 +481,7 @@ h1 {
 .tip-text {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     line-height: 1.4;
 }
 
@@ -487,7 +494,7 @@ h1 {
 }
 
 .streak-badge {
-    background: #fff;
+    background: var(--bg-card);
     padding: 6px 16px;
     border-radius: 20px;
     display: flex;
@@ -517,7 +524,7 @@ h1 {
 
 .day-name {
     font-size: 12px;
-    color: #999;
+    color: var(--text-secondary);
     margin-bottom: 8px;
     font-weight: 500;
 }
@@ -546,12 +553,12 @@ h1 {
 }
 
 .calendar-day.active .day-name {
-    color: #000;
+    color: var(--text-primary);
     font-weight: 700;
 }
 
 .calendar-day.active .day-number {
-    color: #000;
+    color: var(--text-primary);
 }
 
 /* Weekly Calendar Widget */
@@ -598,14 +605,14 @@ h1 {
 
 .day-card .day-name {
     font-size: 14px;
-    color: #999;
+    color: var(--text-secondary);
     margin-bottom: 6px;
     text-transform: uppercase;
     font-weight: 600;
 }
 
 .day-card.active .day-name {
-    color: #000;
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -614,9 +621,21 @@ h1 {
     font-weight: 700;
 }
 
+.day-card svg text {
+    fill: var(--text-primary);
+}
+
+.day-card.active svg text {
+    fill: var(--text-primary);
+}
+
+.day-card .ring-track {
+    fill: transparent;
+}
+
 /* Main Calorie Card */
 .main-calorie-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 30px;
     padding: 30px;
     display: flex;
@@ -630,11 +649,12 @@ h1 {
     font-size: 48px;
     margin: 0;
     font-weight: 800;
+    color: var(--text-primary);
 }
 
 .calorie-left span {
     font-size: 16px;
-    color: #999;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -654,6 +674,14 @@ h1 {
     transition: stroke-dashoffset 0.5s ease;
 }
 
+.ring-track {
+    stroke: var(--ring-track) !important;
+}
+
+.ring-progress {
+    stroke: var(--ring-progress) !important;
+}
+
 .ring-icon {
     position: absolute;
     top: 50%;
@@ -671,7 +699,7 @@ h1 {
 }
 
 .macro-home-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 24px;
     padding: 15px 10px;
     text-align: left;
@@ -684,11 +712,12 @@ h1 {
 .macro-home-value {
     font-size: 18px;
     font-weight: 800;
+    color: var(--text-primary);
 }
 
 .macro-home-label {
     font-size: 11px;
-    color: #999;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
@@ -717,16 +746,17 @@ h1 {
 .recent-uploads h3 {
     font-size: 20px;
     margin-bottom: 15px;
+    color: var(--text-primary);
 }
 
 .empty-state {
-    color: #999;
+    color: var(--text-secondary);
     font-size: 14px;
     text-align: center;
     padding: 40px 0;
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 24px;
-    border: 2px dashed #eee;
+    border: 2px dashed var(--border-color);
 }
 
 /* Tab Bar */
@@ -735,12 +765,13 @@ h1 {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: var(--bg-background);
+    opacity: 0.99;
+    backdrop-filter: blur(25px);
     display: flex;
     justify-content: space-around;
     padding: 25px 0 35px 0;
-    border-top: 1px solid #f0f0f5;
+    border-top: 1px solid var(--border-color);
     z-index: 1000; /* Increased z-index */
 }
 
@@ -748,13 +779,13 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: var(--text-secondary);
     flex: 1; /* Каждая вкладка занимает 33% */
     transition: all 0.2s ease;
 }
 
 .tab-item.active {
-    color: #000;
+    color: var(--text-primary);
 }
 
 .tab-icon {
@@ -775,8 +806,8 @@ h1 {
     right: 20px;
     width: 60px;
     height: 60px;
-    background: #000;
-    color: #fff;
+    background: var(--bg-card);
+    color: var(--text-primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -785,6 +816,12 @@ h1 {
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     cursor: pointer;
     z-index: 101;
+    transition: background-color 0.2s;
+}
+
+[data-theme="dark"] .add-btn-main {
+    background: #222126;
+    color: #FFFFFF;
 }
 
 /* Progress Page */
@@ -799,16 +836,16 @@ h1 {
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 24px;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .progress-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 28px;
     padding: 24px;
     margin-bottom: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-    border: 1px solid #f0f0f5;
+    border: 1px solid var(--border-color);
 }
 
 .card-header-top {
@@ -817,7 +854,7 @@ h1 {
 
 .card-title-small {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 600;
     display: block;
     margin-bottom: 4px;
@@ -826,24 +863,25 @@ h1 {
 .card-value-large {
     font-size: 32px;
     font-weight: 800;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .unit-text {
     font-size: 14px;
-    color: #999;
+    color: var(--text-secondary);
     margin-left: 4px;
     font-weight: 600;
 }
 
 /* New Chart Styles */
 .chart-card {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: var(--bg-card) !important;
+    opacity: 1;
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border-radius: 32px;
     padding: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid var(--border-color) !important;
     box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07) !important;
 }
 
@@ -854,7 +892,7 @@ h1 {
 .chart-title {
     font-size: 18px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
@@ -867,12 +905,13 @@ h1 {
 .chart-main-value span:first-child {
     font-size: 36px;
     font-weight: 800;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .chart-unit {
     font-size: 14px;
-    color: #999;
+    color: var(--text-primary);
+    opacity: 0.7;
     font-weight: 500;
 }
 
@@ -907,7 +946,7 @@ h1 {
 
 .legend-label {
     font-size: 12px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -932,7 +971,7 @@ h1 {
     flex-direction: column;
     justify-content: space-between;
     font-size: 11px;
-    color: #999;
+    color: var(--text-secondary);
     font-weight: 400;
     width: 45px;
     text-align: right;
@@ -973,7 +1012,7 @@ h1 {
 /* Settings Page */
 .settings-page {
     padding: 5px 20px 120px 20px;
-    background: #fcfcfd;
+    background: var(--bg-background);
     min-height: 100vh;
     box-sizing: border-box;
 }
@@ -982,16 +1021,16 @@ h1 {
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 24px;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .profile-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 28px;
     padding: 24px;
     margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-    border: 1px solid #f0f0f5;
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     gap: 16px;
@@ -1002,7 +1041,7 @@ h1 {
     height: 60px;
     border-radius: 50%;
     overflow: hidden;
-    background: #f0f0f5;
+    background: var(--bg-background);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1017,7 +1056,7 @@ h1 {
 
 .avatar-placeholder {
     font-size: 24px;
-    color: #999;
+    color: var(--text-secondary);
     font-weight: 700;
 }
 
@@ -1025,29 +1064,29 @@ h1 {
     margin: 0 0 4px 0;
     font-size: 18px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .profile-subtitle {
     margin: 0;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .settings-section {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 28px;
     padding: 24px;
     margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-    border: 1px solid #f0f0f5;
+    border: 1px solid var(--border-color);
 }
 
 .settings-section h4 {
     margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .data-grid {
@@ -1061,7 +1100,7 @@ h1 {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .data-item:last-child {
@@ -1070,13 +1109,13 @@ h1 {
 
 .data-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
 .data-value {
     font-size: 16px;
-    color: #000;
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -1107,13 +1146,13 @@ h1 {
 
 .macro-name {
     font-size: 12px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
 .macro-value {
     font-size: 16px;
-    color: #000;
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -1124,9 +1163,9 @@ h1 {
 .settings-btn {
     width: 100%;
     padding: 16px;
-    background: #fff;
-    color: #000;
-    border: 2px solid #000;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 2px solid var(--text-primary);
     border-radius: 30px;
     font-size: 16px;
     font-weight: 700;
@@ -1135,8 +1174,8 @@ h1 {
 }
 
 .settings-btn:hover {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
 }
 
 .grid-line {
@@ -1198,7 +1237,7 @@ h1 {
     gap: 6px;
     font-size: 12px;
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .legend-item .dot {
@@ -1214,9 +1253,9 @@ h1 {
 .settings-btn {
     width: 100%;
     padding: 16px;
-    background: #fff;
-    color: #000;
-    border: 2px solid #000;
+    background: var(--bg-background);
+    color: var(--text-primary);
+    border: 2px solid var(--text-primary);
     border-radius: 30px;
     font-size: 16px;
     font-weight: 700;
@@ -1225,8 +1264,8 @@ h1 {
 }
 
 .settings-btn:hover {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
 }
 
 
@@ -1242,18 +1281,19 @@ h1 {
     margin: 0;
     font-size: 18px;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .help-icon {
     width: 20px;
     height: 20px;
-    border: 1.5px solid #eee;
+    border: 1.5px solid var(--border-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    color: #ccc;
+    color: var(--text-secondary);
     font-weight: 800;
 }
 
@@ -1267,7 +1307,7 @@ h1 {
 .bmi-number {
     font-size: 42px;
     font-weight: 800;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .bmi-status-box {
@@ -1278,7 +1318,7 @@ h1 {
 
 .bmi-status-box span:first-child {
     font-size: 12px;
-    color: #999;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
@@ -1315,7 +1355,7 @@ h1 {
     left: 50%;
     width: 2px;
     height: 12px;
-    background: #000;
+    background: var(--text-primary);
     transform: translateX(-50%);
     transition: left 0.5s ease;
 }
@@ -1332,7 +1372,7 @@ h1 {
     gap: 8px;
     font-size: 11px;
     font-weight: 600;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .bmi-labels .dot {
@@ -1522,7 +1562,7 @@ h1 {
 }
 
 #analysis-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 28px;
     padding: 32px 24px;
     width: 280px;
@@ -1539,14 +1579,14 @@ h1 {
 }
 
 #analysis-card h3 {
-    color: #000;
+    color: var(--text-primary);
     font-size: 22px;
     font-weight: 700;
     margin: 0 0 20px 0;
 }
 
 .analysis-status {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 20px 0 0 0;
     line-height: 1.4;
@@ -1568,7 +1608,7 @@ h1 {
 .progress-ring__circle--progress {
     transition: stroke-dashoffset 0.3s ease-out;
     stroke-linecap: round;
-    stroke: #000000 !important;
+    stroke: var(--text-primary) !important;
 }
 
 .progress-text-container {
@@ -1578,7 +1618,7 @@ h1 {
     transform: translate(-50%, -50%);
     display: flex;
     align-items: baseline;
-    color: #000000 !important;
+    color: var(--text-primary) !important;
     font-weight: 800;
 }
 
@@ -1594,7 +1634,7 @@ h1 {
 /* Food Item Refined (Screenshot 4) */
 .food-item {
     display: flex;
-    background: #fff;
+    background: var(--bg-card);
     padding: 12px;
     border-radius: 24px;
     margin-bottom: 12px;
@@ -1621,7 +1661,7 @@ h1 {
     margin: 0;
     font-size: 15px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1654,7 +1694,7 @@ h1 {
 
 .food-time {
     font-size: 11px;
-    color: #bbb;
+    color: var(--text-secondary);
     font-weight: 500;
     margin-bottom: 5px;
 }
@@ -1665,7 +1705,7 @@ h1 {
     gap: 6px;
     font-size: 16px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .food-calories span.fire-icon {
@@ -1683,7 +1723,7 @@ h1 {
     gap: 4px;
     font-size: 11px;
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -1699,9 +1739,9 @@ h1 {
     font-size: 14px;
     text-align: center;
     padding: 30px 20px;
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 24px;
-    border: 2px dashed #f0f0f5;
+    border: 2px dashed var(--border-color);
     margin-top: 10px;
 }
 
@@ -1712,7 +1752,7 @@ h1 {
     flex-shrink: 0;
     font-size: 26px;
     font-weight: 800;
-    color: #000;
+    color: var(--text-primary);
     line-height: 1.2;
 }
 
@@ -1759,11 +1799,12 @@ h1 {
     font-size: 22px;
     font-weight: 800;
     margin: 0 0 5px 0;
+    color: var(--text-primary);
 }
 
 .user-status-badge {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
     font-size: 12px;
     padding: 4px 12px;
     border-radius: 12px;
@@ -1774,14 +1815,14 @@ h1 {
 .settings-group-label {
     font-size: 14px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
     margin-bottom: 10px;
     padding-left: 10px;
 }
 
 /* Белый блок со списком */
 .settings-list-container {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 0 20px;
     box-shadow: 0 2px 20px rgba(0,0,0,0.03);
@@ -1793,7 +1834,7 @@ h1 {
     justify-content: space-between;
     align-items: center;
     padding: 18px 0;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
 }
 
@@ -1803,7 +1844,7 @@ h1 {
 
 .row-label {
     font-size: 15px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -1816,7 +1857,7 @@ h1 {
 .row-value-group span {
     font-size: 15px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
 }
 
 .chevron-icon {
@@ -1827,8 +1868,8 @@ h1 {
 
 /* Реферальная карточка */
 .referral-box {
-    background: #fff;
-    border: 2px solid #000;
+    background: var(--bg-card);
+    border: 2px solid var(--text-primary);
     border-radius: 20px;
     padding: 20px;
     text-align: center;
@@ -1845,23 +1886,75 @@ h1 {
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .referral-box p {
     margin: 0 0 15px 0;
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
     line-height: 1.4;
 }
 
 .referral-btn {
     background: transparent;
-    color: #000;
+    color: var(--text-primary);
     border: none;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     text-decoration: underline;
+}
+
+/* iOS Toggle Switch */
+.ios-switch {
+    position: relative;
+    display: inline-block;
+    width: 51px;
+    height: 31px;
+}
+
+.ios-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e5e5ea;
+    transition: .4s;
+    border-radius: 31px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 27px;
+    width: 27px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+input:checked + .slider {
+    background-color: #34c759;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+[data-theme="dark"] .slider {
+    background-color: #38383a;
 }
 
 /* Кнопка сброса */
@@ -1933,7 +2026,7 @@ h1 {
 }
 
 .modal-content {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 24px;
     padding: 32px 24px;
     width: 92%;
@@ -2024,6 +2117,10 @@ h1 {
     margin-bottom: 16px;
 }
 
+[data-theme="dark"] #bmi-modal .formula-box {
+    background: #1a191e;
+}
+
 .formula-box {
     background: #f5f5f7;
     border-radius: 16px;
@@ -2031,10 +2128,18 @@ h1 {
     margin-bottom: 16px;
 }
 
+[data-theme="dark"] .formula-box {
+    background: #1a191e;
+}
+
 .formula-text {
     font-weight: 800; /* Более жирный шрифт для формулы */
     font-size: 16px;
     color: #000;
+}
+
+[data-theme="dark"] .formula-text {
+    color: #fff;
 }
 
 .modal-desc {
@@ -2103,7 +2208,14 @@ h1 {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, background-color 0.2s;
+}
+
+[data-theme="dark"] .option-icon {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .menu-option-btn:active .option-icon {
@@ -2119,6 +2231,14 @@ h1 {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     color: #000;
     white-space: nowrap;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+[data-theme="dark"] .option-label {
+    background: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 /* General Modal centering */
@@ -2274,7 +2394,7 @@ h1 {
 }
 
 #manual-add-modal .modal-content {
-    background: white;
+    background: var(--bg-card);
     padding: 35px;
     border-radius: 24px;
     width: 85%;
@@ -2291,8 +2411,8 @@ h1 {
 }
 
 #manual-add-modal .primary-btn {
-    background: #000;
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-card);
     width: 100%;
     padding: 15px;
     border-radius: 30px;
@@ -2309,14 +2429,20 @@ h1 {
 
 #manual-add-modal .secondary-btn {
     background-color: transparent;
-    border: 2px solid #000000;
-    color: #000000;
+    border: 2px solid var(--text-primary);
+    color: var(--text-primary);
     padding: 15px;
     border-radius: 30px;
     font-weight: bold;
     font-size: 16px;
     cursor: pointer;
     width: 100%;
+}
+
+[data-theme="dark"] #manual-add-modal .modal-input {
+    background-color: #1a191e;
+    border-color: #2c2b30;
+    color: #ffffff;
 }
 
 /* AI Loader */
@@ -2326,8 +2452,9 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -2353,31 +2480,33 @@ h1 {
 
 #loader-title {
     margin: 0;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 800;
-    color: #000;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
 }
 
 .progress-container {
     width: 100%;
     height: 6px;
-    background: #e0e0e0;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    margin: 15px 0;
+    margin: 20px 0;
     overflow: hidden;
 }
 
 .progress-bar-fill {
     height: 100%;
-    background: #000;
+    background: #FFFFFF;
     width: 0%;
     transition: width 0.3s ease;
     border-radius: 10px;
 }
 
 #loader-status {
-    color: #666;
-    font-size: 14px;
+    color: #AEAEB2;
+    font-size: 15px;
+    font-weight: 500;
     margin: 0;
 }
 
@@ -2415,7 +2544,7 @@ h1 {
     max-width: 400px;
     height: 80vh;
     max-height: 800px;
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 30px;
     padding: 0;
     overflow: hidden;
@@ -2429,6 +2558,7 @@ h1 {
     flex-shrink: 0;
     font-size: 24px;
     font-weight: 800;
+    color: var(--text-primary);
 }
 
 .recipe-macros {
@@ -2455,19 +2585,25 @@ h1 {
 
 .recipe-text::-webkit-scrollbar { width: 4px; }
 .recipe-text::-webkit-scrollbar-track { background: transparent; }
-.recipe-text::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+.recipe-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
 .recipe-step-item {
-    background: #f8f8fa;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-left: 3px solid #FF9F0A;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 18px 20px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    color: #FFFFFF;
+    margin-bottom: 16px;
+    border-left: 4px solid #FF9F0A;
+    text-align: left;
+    line-height: 1.4;
 }
 
 .modal-actions {
     padding: 20px 20px 25px 20px;
-    background: #fff;
+    background: var(--bg-card);
     border-top: none;
     flex-shrink: 0;
     display: flex;
@@ -2475,9 +2611,21 @@ h1 {
     gap: 10px;
 }
 
+#recipe-modal .secondary-btn {
+    background-color: transparent;
+    border: 2px solid var(--text-primary);
+    color: var(--text-primary);
+    padding: 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}
+
 #save-recipe-btn {
-    background-color: #000;
-    color: #fff;
+    background-color: #FFFFFF;
+    color: #000000;
     border: none;
     border-radius: 30px;
     padding: 16px;
@@ -2494,9 +2642,9 @@ h1 {
 }
 
 #cancel-recipe-btn {
-    background-color: #fff;
-    color: #000;
-    border: 2px solid #000;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
     border-radius: 30px;
     padding: 16px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -2542,6 +2690,9 @@ h1 {
 
 #close-check-btn {
     margin-top: 0px !important;
+    background: transparent !important;
+    border: 2px solid #000 !important;
+    color: #000 !important;
 }
 
 /* Специфичный стиль для окна проверки продукта, чтобы оно облегало контент */
@@ -2642,7 +2793,7 @@ h1 {
     font-size: 16px;       /* Readable size */
     font-weight: 500;      /* Medium density */
     line-height: 1.5;      /* Good breathing room */
-    color: #000000;        /* Contrast black */
+    color: #FFFFFF;        /* Contrast white for dark theme */
     letter-spacing: -0.01em; /* Tight like iOS */
 }
 
@@ -2677,4 +2828,50 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
+}
+
+/* Dark theme for product check card */
+[data-theme="dark"] .score-value {
+    color: #FFFFFF;
+}
+
+[data-theme="dark"] .score-bar-wrapper {
+    background: #1a191e;
+}
+
+[data-theme="dark"] #check-result-modal .secondary-btn {
+    border-color: #FFFFFF !important;
+    color: #FFFFFF !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="dark"] #check-result-modal .main-btn {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+[data-theme="dark"] #check-summary {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .analysis-card-item {
+    background-color: #1a191e;
+}
+
+[data-theme="dark"] .analysis-card-text {
+    color: #FFFFFF;
+}
+
+[data-theme="dark"] .analysis-card-title {
+    color: #AEAEB2;
+}
+
+[data-theme="dark"] #check-summary::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .fade-out-overlay {
+    background: linear-gradient(to bottom, rgba(34, 33, 38, 0), rgba(34, 33, 38, 1));
 }

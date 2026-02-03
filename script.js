@@ -119,8 +119,30 @@ window.addEventListener('DOMContentLoaded', () => {
     initAddMenu();
     initRecipeModal();
     initCheckModal();
-    initSwipeNavigation();
+    initTheme();
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        if (themeToggle) themeToggle.checked = true;
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
+}
 
 let loaderInterval = null;
 
@@ -687,13 +709,13 @@ function renderWeeklyCalendar() {
             <span class="day-name">${dayName}</span>
             <div class="day-ring-wrapper">
                 <svg width="48" height="48" viewBox="0 0 48 48">
-                    <circle class="ring-track" cx="24" cy="24" r="${radius}" fill="transparent" stroke="#eee" stroke-width="4"></circle>
-                    <circle class="ring-progress" cx="24" cy="24" r="${radius}" fill="transparent" stroke="#000" stroke-width="4"
+                    <circle class="ring-track" cx="24" cy="24" r="${radius}" fill="transparent" stroke-width="3"></circle>
+                    <circle class="ring-progress" cx="24" cy="24" r="${radius}" fill="transparent" stroke-width="3"
                         stroke-dasharray="${circumference} ${circumference}"
                         stroke-dashoffset="${offset}"
                         stroke-linecap="round"
                         transform="rotate(-90 24 24)"></circle>
-                    <text x="24" y="24" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="${isActive ? '#000' : '#333'}">${dayNumber}</text>
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="currentColor">${dayNumber}</text>
                 </svg>
             </div>
         `;
@@ -704,33 +726,13 @@ function renderWeeklyCalendar() {
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-function nextStep(stepNumber, direction = null) {
-    const currentStepEl = document.querySelector('.step.active');
+function nextStep(stepNumber) {
     const targetStepEl = document.getElementById(`step-${stepNumber}`);
     
     if (!targetStepEl) return;
 
-    if (direction && currentStepEl) {
-        // Animation logic
-        currentStepEl.classList.remove('active');
-        currentStepEl.classList.add('slide-exit');
-        
-        targetStepEl.classList.add(direction === 'left' ? 'slide-left-enter' : 'slide-right-enter');
-        
-        // Trigger reflow
-        targetStepEl.offsetHeight;
-        
-        targetStepEl.classList.add(direction === 'left' ? 'slide-left-active' : 'slide-right-active');
-        targetStepEl.classList.add('active');
-
-        setTimeout(() => {
-            currentStepEl.classList.remove('slide-exit');
-            targetStepEl.classList.remove('slide-left-enter', 'slide-left-active', 'slide-right-enter', 'slide-right-active');
-        }, 300);
-    } else {
-        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-        targetStepEl.classList.add('active');
-    }
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    targetStepEl.classList.add('active');
     
     const globalTabBar = document.getElementById('global-tab-bar');
     if (globalTabBar) {
@@ -1430,7 +1432,7 @@ function updateCalendarDates() {
     });
 }
 
-function updateProgressPage(direction = null) {
+function updateProgressPage() {
     const today = new Date().toISOString().split('T')[0];
     
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
@@ -1449,7 +1451,7 @@ function updateProgressPage(direction = null) {
 
     renderProgressChart();
     updateBMI();
-    nextStep(15, direction);
+    nextStep(15);
 }
 
 function renderProgressChart() {
@@ -1700,8 +1702,8 @@ function updateBMI() {
     pointerEl.style.left = `${pointerPos}%`;
 }
 
-function openSettings(direction = null) {
-    nextStep(16, direction);
+function openSettings() {
+    nextStep(16);
     loadSettingsData();
 }
 
@@ -2047,60 +2049,4 @@ function animateScore(targetScore) {
     }
 
     requestAnimationFrame(update);
-}
-
-function initSwipeNavigation() {
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const swipeThreshold = 50;
-
-    const tabsOrder = [15, 12, 16]; // Progress, Home, Settings
-
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, { passive: true });
-
-    function handleSwipe() {
-        // Only allow swipe if the global tab bar is visible (meaning we are in the main app, not registration)
-        const globalTabBar = document.getElementById('global-tab-bar');
-        if (!globalTabBar || globalTabBar.style.display === 'none') return;
-
-        const diffX = touchEndX - touchStartX;
-        
-        if (Math.abs(diffX) > swipeThreshold) {
-            const currentStep = parseInt(document.querySelector('.step.active')?.id.split('-')[1]);
-            const currentIndex = tabsOrder.indexOf(currentStep);
-
-            if (currentIndex === -1) return;
-
-            if (diffX < 0) {
-                // Swipe Left -> Next Tab (Right)
-                if (currentIndex < tabsOrder.length - 1) {
-                    const nextTab = tabsOrder[currentIndex + 1];
-                    navigateToTab(nextTab, 'left');
-                }
-            } else {
-                // Swipe Right -> Previous Tab (Left)
-                if (currentIndex > 0) {
-                    const prevTab = tabsOrder[currentIndex - 1];
-                    navigateToTab(prevTab, 'right');
-                }
-            }
-        }
-    }
-
-    function navigateToTab(tabId, direction) {
-        if (tabId === 12) {
-            nextStep(12, direction);
-        } else if (tabId === 15) {
-            updateProgressPage(direction);
-        } else if (tabId === 16) {
-            openSettings(direction);
-        }
-    }
 }

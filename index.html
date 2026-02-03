@@ -307,8 +307,8 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-calories" class="progress-ring__circle" stroke="#000" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-calories" class="progress-ring__circle ring-progress" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-calories">2062</div>
                         </div>
@@ -321,7 +321,7 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                                 <circle id="ring-carbs" class="progress-ring__circle" stroke="#e5b68b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-carbs">234г</div>
@@ -335,7 +335,7 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                                 <circle id="ring-protein" class="progress-ring__circle" stroke="#e58b8b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-protein">152г</div>
@@ -349,7 +349,7 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                                 <circle id="ring-fats" class="progress-ring__circle" stroke="#8bb6e5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-fats">57г</div>
@@ -395,8 +395,8 @@
                 </div>
                 <div class="calorie-ring-container">
                     <svg viewBox="0 0 100 100" class="large-ring">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#f0f0f5" stroke-width="8"></circle>
-                        <circle id="home-ring-calories" cx="50" cy="50" r="45" fill="none" stroke="#000" stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7" stroke-linecap="round"></circle>
+                        <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="8"></circle>
+                        <circle id="home-ring-calories" class="ring-progress" cx="50" cy="50" r="45" fill="none" stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7" stroke-linecap="round"></circle>
                     </svg>
                     <div class="ring-icon" style="filter: grayscale(1) brightness(0);">🔥</div>
                 </div>
@@ -410,7 +410,7 @@
                     </div>
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
                             <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#e58b8b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🥩</div>
@@ -423,7 +423,7 @@
                     </div>
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
                             <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#e5b68b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🌾</div>
@@ -436,7 +436,7 @@
                     </div>
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
                             <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#8bb6e5" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🥑</div>
@@ -466,8 +466,8 @@
                     <h3>Анализируем...</h3>
                     <div class="progress-ring-container">
                         <svg class="progress-ring" width="120" height="120">
-                            <circle class="progress-ring__circle--track" stroke="#e6e6e9" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
-                            <circle class="progress-ring__circle--progress" stroke="#000000" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" id="analysis-progress-circle"/>
+                            <circle class="progress-ring__circle--track ring-track" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                            <circle class="progress-ring__circle--progress ring-progress" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" id="analysis-progress-circle"/>
                         </svg>
                         <div class="progress-text-container">
                             <span id="analysis-percent-val">0</span><span>%</span>
@@ -604,6 +604,19 @@
                     </div>
                 </div>
 
+                <div class="settings-group-label">Приложение</div>
+                <div class="settings-list-container">
+                    <div class="settings-row no-border">
+                        <span class="row-label">Темная тема</span>
+                        <div class="row-value-group">
+                            <label class="ios-switch">
+                                <input type="checkbox" id="theme-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="settings-group-label">Бонусы</div>
                 <div class="referral-box">
                     <div class="referral-icon">🎁</div>
@@ -640,7 +653,7 @@
         <div id="add-options-menu" class="hidden">
             <button id="option-check-btn" class="menu-option-btn">
                 <span class="option-label">Проверка</span>
-                <div class="option-icon" style="background: #000;">
+                <div class="option-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M8 7v10M12 7v10M16 7v10"/>
                     </svg>
@@ -648,7 +661,7 @@
             </button>
             <button id="option-cooking-btn" class="menu-option-btn">
                 <span class="option-label">Готовка</span>
-                <div class="option-icon" style="background: #000000;">
+                <div class="option-icon">
                     <i class="fa-solid fa-kitchen-set" style="color: white; font-size: 20px;"></i>
                 </div>
             </button>
@@ -680,8 +693,8 @@
             </button>
         </div>
         <div id="add-btn-main" class="add-btn-main">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4V20M4 12H20" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="add-btn-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
         <div id="app-version-label" style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.2.0</div>
@@ -772,7 +785,7 @@
                 </div>
                 <div class="modal-actions" style="flex-shrink: 0;">
                     <button id="recheck-btn" class="main-btn" style="margin-top: 0;">Проверить снова</button>
-                    <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border: 2px solid #000; color: #000; border-radius: 30px; padding: 16px;">Закрыть</button>
+                    <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border-radius: 30px; padding: 16px;">Закрыть</button>
                 </div>
             </div>
         </div>
