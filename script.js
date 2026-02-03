@@ -2,6 +2,48 @@ const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
+/**
+ * Helper function to get emoji based on food name
+ * @param {string} foodName
+ * @returns {string} emoji
+ */
+function getEmojiForFood(foodName) {
+    if (!foodName) return '🥗';
+    const name = foodName.toLowerCase();
+
+    const emojiMap = {
+        'яблоко': '🍎', 'apple': '🍎',
+        'банан': '🍌', 'banana': '🍌',
+        'суп': '🥣', 'борщ': '🥣', 'солянка': '🥣', 'бульон': '🥣', 'soup': '🥣',
+        'пицца': '🍕', 'pizza': '🍕',
+        'бургер': '🍔', 'бутерброд': '🍔', 'сэндвич': '🍔', 'burger': '🍔', 'sandwich': '🍔',
+        'кофе': '☕', 'латте': '☕', 'coffee': '☕', 'latte': '☕',
+        'чай': '🍵', 'tea': '🍵',
+        'курица': '🥩', 'мясо': '🥩', 'стейк': '🥩', 'chicken': '🥩', 'meat': '🥩', 'steak': '🥩',
+        'рыба': '🍣', 'суши': '🍣', 'роллы': '🍣', 'fish': '🍣', 'sushi': '🍣',
+        'каша': '🍚', 'овсянка': '🍚', 'рис': '🍚', 'porridge': '🍚', 'rice': '🍚',
+        'торт': '🍰', 'пирожное': '🍰', 'шоколад': '🍰', 'cake': '🍰', 'chocolate': '🍰',
+        'яйца': '🥚', 'омлет': '🥚', 'eggs': '🥚', 'omelette': '🥚',
+        'хлеб': '🍞', 'булка': '🍞', 'bread': '🍞',
+        'овощи': '🥦', 'салат': '🥗', 'vegetables': '🥦', 'salad': '🥗',
+        'фрукты': '🍎', 'ягода': '🍓', 'fruits': '🍎', 'berries': '🍓',
+        'молоко': '🥛', 'йогурт': '🥛', 'milk': '🥛', 'yogurt': '🥛',
+        'сыр': '🧀', 'cheese': '🧀',
+        'печенье': '🍪', 'cookie': '🍪',
+        'мороженое': '🍦', 'ice cream': '🍦',
+        'вино': '🍷', 'пиво': '🍺', 'wine': '🍷', 'beer': '🍺',
+        'вода': '💧', 'water': '💧'
+    };
+
+    for (const [key, emoji] of Object.entries(emojiMap)) {
+        if (name.includes(key)) {
+            return emoji;
+        }
+    }
+
+    return '🥗';
+}
+
 const imageAnalysisCache = {};
 
 function getImageHash(base64String) {
@@ -39,6 +81,7 @@ let isCameraPermissionGranted = false;
 let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes, 'check' for product check
 let currentRecipeData = null;
 let thumbnailDataUrl = null; // Global storage for current photo
+let caloriesChart = null;
 
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
@@ -556,7 +599,7 @@ function initHomeScreenFromSaved() {
             
             const foodIcon = food.thumbnail
                 ? `<div class="food-img-placeholder"><img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды"></div>`
-                : `<div class="food-img-placeholder">🥗</div>`;
+                : `<div class="food-img-placeholder">${getEmojiForFood(food.name)}</div>`;
 
             div.innerHTML = `
                 ${foodIcon}
@@ -566,9 +609,9 @@ function initHomeScreenFromSaved() {
                     </div>
                     <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
                     <div class="food-macros-mini">
-                        <span><div class="macro-mini-dot" style="background: #ff8a80;"></div> Б: ${Math.round(food.protein)}г</span>
-                        <span><div class="macro-mini-dot" style="background: #ffcc80;"></div> У: ${Math.round(food.carbs)}г</span>
-                        <span><div class="macro-mini-dot" style="background: #81d4fa;"></div> Ж: ${Math.round(food.fats)}г</span>
+                        <span><div class="macro-mini-dot dot-protein"></div> Б: ${Math.round(food.protein)}г</span>
+                        <span><div class="macro-mini-dot dot-carbs"></div> У: ${Math.round(food.carbs)}г</span>
+                        <span><div class="macro-mini-dot dot-fats"></div> Ж: ${Math.round(food.fats)}г</span>
                     </div>
                 </div>
                 <div class="food-item-right">
@@ -1018,15 +1061,29 @@ function takePhoto() {
     const canvas = document.getElementById('camera-canvas');
     const context = canvas.getContext('2d');
     
-    // Set canvas dimensions to match video stream
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Resize for AI: max 1000px width/height while maintaining aspect ratio
+    let targetWidth = video.videoWidth;
+    let targetHeight = video.videoHeight;
+    const maxDim = 1000;
     
-    // Draw the current frame from the video onto the canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (targetWidth > maxDim || targetHeight > maxDim) {
+        if (targetWidth > targetHeight) {
+            targetHeight = (maxDim / targetWidth) * targetHeight;
+            targetWidth = maxDim;
+        } else {
+            targetWidth = (maxDim / targetHeight) * targetWidth;
+            targetHeight = maxDim;
+        }
+    }
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     
-    // Convert to JPEG
-    const imageData = canvas.toDataURL('image/jpeg');
+    // Draw the current frame from the video onto the canvas with resizing
+    context.drawImage(video, 0, 0, targetWidth, targetHeight);
+    
+    // Convert to JPEG with quality 0.8 to reduce size
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
     // Create thumbnail
     const smallCanvas = document.createElement('canvas');
@@ -1113,17 +1170,23 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
 
     let prompt;
     if (cameraMode === 'cook') {
-        prompt = "Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions). Use \\n for new lines between steps in instructions. Return ONLY a JSON object: { \"recipeName\": \"Название блюда\", \"calories\": 500, \"protein\": 20, \"fat\": 15, \"carbs\": 60, \"instructions\": \"Шаг 1: ...\\nШаг 2: ...\" }";
+        prompt = `Analyze the image for available ingredients. Suggest ONE simple, appetizing recipe in RUSSIAN language (name and instructions).
+        If the image is blurry, make your best guess based on colors and shapes.
+        Return ONLY a JSON object: { "recipeName": "Название блюда", "calories": 500, "protein": 20, "fat": 15, "carbs": 60, "instructions": "Шаг 1: ...\\nШаг 2: ..." }`;
     } else if (cameraMode === 'check') {
-        prompt = "Ты — эксперт по питанию. Проанализируй фото состава продукта. Верни ответ СТРОГО в формате JSON: { \"product_name\": \"...\", \"score\": 50, \"pros\": \"...\", \"cons\": \"...\", \"verdict\": \"...\" } Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). score: Оценка полезности от 0 до 100 (целое число). pros: Плюсы состава (Что хорошего в продукте). cons: Минусы состава (Вредные добавки, сахар и т.д.). verdict: Краткий итог (стоит брать или нет). Весь текст должен быть на русском языке.";
+        prompt = `Ты — эксперт по питанию. Проанализируй фото состава продукта.
+        Если текст размыт, попробуй распознать ключевые слова или сделай предположение на основе бренда/вида продукта.
+        Верни ответ СТРОГО в формате JSON: { "product_name": "...", "score": 50, "pros": "...", "cons": "...", "verdict": "..." }
+        Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). score: Оценка полезности от 0 до 100. Весь текст должен быть на русском языке.`;
     } else {
-        prompt = `You are a strict, professional nutritionist.
-        Analyze this food image. Analyze the portion size realistically. Do not overestimate.
+        prompt = `You are a helpful nutritionist AI.
+        Analyze this food image. If the image is blurry or unclear, MAKE A BEST GUESS based on visible colors and shapes.
+        Do NOT return an error unless it is absolutely clearly not food (like a photo of a car or a wall).
         Provide a single, definitive estimate based on visual evidence.
         1. Краткое название продукта (1-2 слова) на русском, в поле "product_name".
         2. Калории (ккал), белки (г), жиры (г), углеводы (г).
         3. Общее описание (короткий текст до 150 символов), в поле "description".
-        Верни ТОЛЬКО JSON: {"product_name": "Название", "calories": 100, "protein": 10, "carbs": 10, "fats": 10, "description": "Описание"}`;
+        Always return JSON: {"product_name": "Название", "calories": 100, "protein": 10, "carbs": 10, "fats": 10, "description": "Описание"}`;
     }
     
     try {
@@ -1158,7 +1221,14 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         }
 
         let text = data.candidates[0].content.parts[0].text;
-        text = text.replace(/```json|```/g, '').trim();
+        
+        // Use regex to find JSON if the response contains extra text
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            text = jsonMatch[0];
+        } else {
+            text = text.replace(/```json|```/g, '').trim();
+        }
         
         const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
@@ -1169,12 +1239,12 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         } else {
             // Now map the received JSON keys to expected food entry keys
             const foodResult = {
-                id: food.id || Date.now().toString(),
-                name: result.product_name || result.name, // Use product_name if present
-                calories: result.calories,
-                protein: result.protein,
-                carbs: result.carbs,
-                fats: result.fats,
+                id: Date.now().toString(),
+                name: result.product_name || result.name || "Еда",
+                calories: Number(result.calories) || 0,
+                protein: Number(result.protein) || 0,
+                carbs: Number(result.carbs) || 0,
+                fats: Number(result.fats) || 0,
             };
             addFoodToHome(foodResult, thumbnailDataUrl); // Всё ок
         }
@@ -1315,7 +1385,9 @@ function goToHome() {
 function setHomeProgress(id, percent, circumference) {
     const circle = document.getElementById(id);
     if (!circle) return;
-    const offset = circumference - (percent / 100 * circumference);
+    // Ограничиваем визуальное заполнение максимум на 100%
+    const visualPercent = Math.min(percent, 100);
+    const offset = circumference - (visualPercent / 100 * circumference);
     circle.style.strokeDasharray = `${circumference} ${circumference}`;
     circle.style.strokeDashoffset = offset;
 }
@@ -1367,45 +1439,211 @@ function updateProgressPage(direction = null) {
 }
 
 function renderProgressChart() {
-    const container = document.getElementById('chart-bars-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const ctx = document.getElementById('totalCaloriesChart');
+    if (!ctx) return;
+
+    const daysShortRu = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
     
+    // Get Monday of current week
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
     monday.setDate(now.getDate() + diff);
+
+    const labels = [];
+    const proteinData = [];
+    const carbsData = [];
+    const fatsData = [];
+    let totalWeekCalories = 0;
 
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
-        const dayLabel = daysShort[date.getDay()];
+        
+        labels.push(daysShortRu[date.getDay()]);
         
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
         
-        const maxVal = 3000;
-        const totalCals = data.calories || ((data.protein * 4) + (data.carbs * 4) + (data.fats * 9));
-        const scaleFactor = Math.min(1, totalCals / maxVal);
+        const pCals = data.protein * 4;
+        const cCals = data.carbs * 4;
+        const fCals = data.fats * 9;
         
-        // Scale segments proportionally to fill the bar up to 100% (150px)
-        const pHeight = totalCals > 0 ? ((data.protein * 4) / totalCals) * (scaleFactor * 150) : 0;
-        const cHeight = totalCals > 0 ? ((data.carbs * 4) / totalCals) * (scaleFactor * 150) : 0;
-        const fHeight = totalCals > 0 ? ((data.fats * 9) / totalCals) * (scaleFactor * 150) : 0;
+        proteinData.push(pCals);
+        carbsData.push(cCals);
+        fatsData.push(fCals);
 
-        const barHtml = `
-            <div class="bar-column">
-                <div class="bar-stack">
-                    <div class="segment fats" style="height: ${fHeight}px"></div>
-                    <div class="segment carbs" style="height: ${cHeight}px"></div>
-                    <div class="segment protein" style="height: ${pHeight}px"></div>
-                </div>
-                <span class="day-label">${dayLabel}</span>
-            </div>
-        `;
-        container.innerHTML += barHtml;
+        // If it's today, update the large display
+        if (dateStr === now.toISOString().split('T')[0]) {
+            const todayCals = data.calories || (pCals + cCals + fCals);
+            document.getElementById('progress-total-calories').innerText = Math.round(todayCals);
+        }
+    }
+
+    // Calculate dynamic scale
+    let maxWeekVal = 0;
+    for (let i = 0; i < 7; i++) {
+        const total = proteinData[i] + carbsData[i] + fatsData[i];
+        if (total > maxWeekVal) maxWeekVal = total;
+    }
+    
+    let suggestedMax = 600;
+    if (maxWeekVal * 1.1 > 600) {
+        suggestedMax = Math.ceil((maxWeekVal * 1.1) / 600) * 600;
+    }
+    const stepSize = suggestedMax / 3;
+
+    if (caloriesChart) {
+        caloriesChart.data.labels = labels;
+        caloriesChart.data.datasets[0].label = 'Жиры';
+        caloriesChart.data.datasets[0].data = fatsData;
+        caloriesChart.data.datasets[1].label = 'Углеводы';
+        caloriesChart.data.datasets[1].data = carbsData;
+        caloriesChart.data.datasets[2].label = 'Белки';
+        caloriesChart.data.datasets[2].data = proteinData;
+        
+        // Update scales dynamically
+        caloriesChart.options.scales.y.suggestedMax = suggestedMax;
+        caloriesChart.options.scales.y.ticks.stepSize = stepSize;
+        
+        caloriesChart.update();
+    } else {
+        caloriesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Жиры',
+                        data: fatsData,
+                        backgroundColor: '#8bb6e5',
+                        borderRadius: (ctx) => {
+                            const val = ctx.raw;
+                            const idx = ctx.dataIndex;
+                            const hasCarbs = carbsData[idx] > 0;
+                            const hasProtein = proteinData[idx] > 0;
+                            if (!hasCarbs && !hasProtein && val > 0) return { topLeft: 5, topRight: 5, bottomLeft: 0, bottomRight: 0 };
+                            return 0;
+                        },
+                        borderSkipped: false,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8,
+                        borderWidth: 0
+                    },
+                    {
+                        label: 'Углеводы',
+                        data: carbsData,
+                        backgroundColor: '#e5b68b',
+                        borderRadius: (ctx) => {
+                            const val = ctx.raw;
+                            const idx = ctx.dataIndex;
+                            const hasProtein = proteinData[idx] > 0;
+                            if (!hasProtein && val > 0) return { topLeft: 5, topRight: 5, bottomLeft: 0, bottomRight: 0 };
+                            return 0;
+                        },
+                        borderSkipped: false,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8,
+                        borderWidth: 0
+                    },
+                    {
+                        label: 'Белки',
+                        data: proteinData,
+                        backgroundColor: '#e58b8b',
+                        borderRadius: {
+                            topLeft: 5,
+                            topRight: 5,
+                            bottomLeft: 0,
+                            bottomRight: 0
+                        },
+                        borderSkipped: false,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8,
+                        borderWidth: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        titleColor: '#000',
+                        bodyColor: '#666',
+                        borderColor: '#eee',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label}: ${Math.round(context.raw)} ккал`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#aaa',
+                            font: {
+                                size: 11,
+                                family: "'Inter', sans-serif"
+                            }
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        min: 0,
+                        suggestedMax: suggestedMax,
+                        ticks: {
+                            stepSize: stepSize,
+                            color: '#aaa',
+                            font: {
+                                size: 11,
+                                family: "'Inter', sans-serif"
+                            },
+                            padding: 10
+                        },
+                        grid: {
+                            color: '#f0f0f0',
+                            borderDash: [4, 4],
+                            drawBorder: false,
+                            drawTicks: false
+                        },
+                        border: {
+                            display: false,
+                            dash: [4, 4]
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 5,
+                        right: 5,
+                        bottom: 0,
+                        left: 0
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -1515,7 +1753,9 @@ function setProgress(id, percent) {
         const radius = 40;
         const circumference = 2 * Math.PI * radius;
         
-        const offset = circumference - (percent / 100 * circumference);
+        // Ограничиваем визуальное заполнение максимум на 100%
+        const visualPercent = Math.min(percent, 100);
+        const offset = circumference - (visualPercent / 100 * circumference);
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
         circle.style.strokeDashoffset = offset;
     }

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css?v=1.1.28">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -321,7 +322,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-carbs" class="progress-ring__circle" stroke="#ffcc80" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-carbs" class="progress-ring__circle" stroke="#e5b68b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-carbs">234г</div>
                         </div>
@@ -335,7 +336,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-protein" class="progress-ring__circle" stroke="#ff8a80" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-protein" class="progress-ring__circle" stroke="#e58b8b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-protein">152г</div>
                         </div>
@@ -349,7 +350,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg" stroke="#f0f0f5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-fats" class="progress-ring__circle" stroke="#81d4fa" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-fats" class="progress-ring__circle" stroke="#8bb6e5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-fats">57г</div>
                         </div>
@@ -410,7 +411,7 @@
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
-                            <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#ff8a80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                            <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#e58b8b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🥩</div>
                     </div>
@@ -423,7 +424,7 @@
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
-                            <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#ffcc80" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                            <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#e5b68b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🌾</div>
                     </div>
@@ -436,7 +437,7 @@
                     <div class="macro-home-ring">
                         <svg viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f5" stroke-width="3"></circle>
-                            <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#81d4fa" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                            <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#8bb6e5" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
                         <div class="macro-mini-icon">🥑</div>
                     </div>
@@ -494,47 +495,31 @@
 
         <div id="step-15" class="step">
             <div class="progress-page">
-                <div class="progress-card">
-                    <div class="card-header-top">
-                        <span class="card-title-small">Всего калорий</span>
-                        <div class="card-value-large">
+                <div class="progress-card chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Калории</div>
+                        <div class="chart-main-value">
                             <span id="progress-total-calories">0</span>
-                            <span class="unit-text">ккал</span>
+                            <span class="chart-unit">ккал</span>
                         </div>
                     </div>
                     
-                    <div class="chart-container">
-                        <div class="y-axis">
-                            <span>3000</span>
-                            <span>2000</span>
-                            <span>1000</span>
-                            <span>0</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-grid">
-                                <div class="grid-line"></div>
-                                <div class="grid-line"></div>
-                                <div class="grid-line"></div>
-                                <div class="grid-line"></div>
-                            </div>
-                            <div id="chart-bars-container" class="bars-wrapper">
-                                <!-- Bars will be injected here -->
-                            </div>
-                        </div>
+                    <div class="chart-canvas-container">
+                        <canvas id="totalCaloriesChart"></canvas>
                     </div>
 
-                    <div class="chart-legend">
+                    <div class="chart-legend-custom">
                         <div class="legend-item">
-                            <span class="dot protein"></span>
-                            <span>Белки</span>
+                            <span class="legend-dot protein"></span>
+                            <span class="legend-label">Белки</span>
                         </div>
                         <div class="legend-item">
-                            <span class="dot carbs"></span>
-                            <span>Углеводы</span>
+                            <span class="legend-dot carbs"></span>
+                            <span class="legend-label">Углеводы</span>
                         </div>
                         <div class="legend-item">
-                            <span class="dot fats"></span>
-                            <span>Жиры</span>
+                            <span class="legend-dot fats"></span>
+                            <span class="legend-label">Жиры</span>
                         </div>
                     </div>
                 </div>
