@@ -916,38 +916,56 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
     }
 }
 
-function showResults() {
-    const heightInput = document.getElementById('height');
-    const weightInput = document.getElementById('weight');
-
-    if (!heightInput || !weightInput) return;
-
-    const height = parseFloat(heightInput.value);
-    const weight = parseFloat(weightInput.value);
+function calculateNorms() {
+    const { weight, height, age, gender, activity, goal } = userData;
     
-    userData.height = height;
-    userData.weight = weight;
-    
-    // Расчет калорий
     let bmr;
-    if (userData.gender === 'male') {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) + 5;
+    if (gender === 'male') {
+        bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
     } else {
-        bmr = (10 * weight) + (6.25 * height) - (5 * userData.age) - 161;
+        bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
-    const calories = Math.round(bmr * userData.activity);
+    
+    let calories = Math.round(bmr * activity);
+    
+    // Корректировка по цели
+    if (goal === 'lose') {
+        calories -= 500; // Дефицит для похудения
+    } else if (goal === 'gain') {
+        calories += 500; // Профицит для набора массы
+    }
     
     // Расчет БЖУ
     const protein = Math.round((calories * 0.3) / 4);
     const fats = Math.round((calories * 0.3) / 9);
     const carbs = Math.round((calories * 0.4) / 4);
 
+    currentMacros.totalCalories = calories;
+    currentMacros.totalProtein = protein;
+    currentMacros.totalCarbs = carbs;
+    currentMacros.totalFats = fats;
+
+    return { calories, protein, fats, carbs };
+}
+
+function showResults() {
+    const heightInput = document.getElementById('height');
+    const weightInput = document.getElementById('weight');
+
+    if (!heightInput || !weightInput) return;
+
+    userData.height = parseFloat(heightInput.value);
+    userData.weight = parseFloat(weightInput.value);
+    
+    const norms = calculateNorms();
+    const { calories, protein, fats, carbs } = norms;
+
     // Обновление UI
     document.getElementById('res-calories').innerText = calories;
     document.getElementById('res-carbs').innerText = carbs + 'г';
     document.getElementById('res-protein').innerText = protein + 'г';
     document.getElementById('res-fats').innerText = fats + 'г';
-    document.getElementById('target-weight').innerText = weight + ' кг';
+    document.getElementById('target-weight').innerText = userData.weight + ' кг';
     
     const goalMap = {
         'lose': 'Похудение',
@@ -1348,11 +1366,7 @@ function openEditModal(id) {
 }
 
 function goToHome() {
-    currentMacros.totalCalories = parseInt(document.getElementById('res-calories').innerText);
-    currentMacros.totalProtein = parseInt(document.getElementById('res-protein').innerText.replace('г', ''));
-    currentMacros.totalCarbs = parseInt(document.getElementById('res-carbs').innerText.replace('г', ''));
-    currentMacros.totalFats = parseInt(document.getElementById('res-fats').innerText.replace('г', ''));
-    
+    // Norms are already in currentMacros thanks to calculateNorms
     currentMacros.calories = 0;
     currentMacros.protein = 0;
     currentMacros.carbs = 0;
@@ -1689,6 +1703,116 @@ function updateBMI() {
 function openSettings(direction = null) {
     nextStep(16, direction);
     loadSettingsData();
+}
+
+function updateAllUINorms() {
+    // Update home screen norms
+    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
+    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
+    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
+    const fatsLeft = Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats));
+
+    const elCalories = document.getElementById('home-calories-left');
+    const elProtein = document.getElementById('home-protein-eaten');
+    const elCarbs = document.getElementById('home-carbs-eaten');
+    const elFats = document.getElementById('home-fats-eaten');
+
+    if (elCalories) elCalories.innerText = caloriesLeft;
+    if (elProtein) elProtein.innerText = proteinLeft;
+    if (elCarbs) elCarbs.innerText = carbsLeft;
+    if (elFats) elFats.innerText = fatsLeft;
+
+    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
+    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
+    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
+    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
+
+    // Update settings display
+    loadSettingsData();
+}
+
+function editSetting(type) {
+    const modal = document.getElementById('settings-edit-modal');
+    const title = document.getElementById('edit-modal-title');
+    const container = document.getElementById('edit-input-container');
+    const saveBtn = document.getElementById('save-edit-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+
+    const goalMap = { 'lose': 'Похудение', 'maintain': 'Норма', 'gain': 'Масса' };
+    const activityMap = {
+        1.2: 'Сидячий (0-2)',
+        1.375: 'Лёгкий (2-3)',
+        1.55: 'Умеренный (3-5)',
+        1.725: 'Высокая (6+)',
+        1.9: 'Экстремальная'
+    };
+
+    let content = '';
+    let currentTitle = '';
+
+    switch (type) {
+        case 'weight':
+            currentTitle = 'Вес';
+            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.weight}" style="width: 100%; text-align: center; font-size: 20px; font-weight: bold; border-radius: 12px; border: 1px solid #eee; padding: 12px;">`;
+            break;
+        case 'height':
+            currentTitle = 'Рост';
+            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.height}" style="width: 100%; text-align: center; font-size: 20px; font-weight: bold; border-radius: 12px; border: 1px solid #eee; padding: 12px;">`;
+            break;
+        case 'activity':
+            currentTitle = 'Активность';
+            content = `<select id="edit-value-input" class="modal-input" style="width: 100%; font-size: 16px; border-radius: 12px; border: 1px solid #eee; padding: 12px; appearance: none; background: white; text-align: center; text-align-last: center;">`;
+            for (const [val, label] of Object.entries(activityMap)) {
+                content += `<option value="${val}" ${userData.activity == val ? 'selected' : ''}>${label}</option>`;
+            }
+            content += `</select>`;
+            break;
+        case 'goal':
+            currentTitle = 'Цель';
+            content = `<select id="edit-value-input" class="modal-input" style="width: 100%; font-size: 16px; border-radius: 12px; border: 1px solid #eee; padding: 12px; appearance: none; background: white; text-align: center; text-align-last: center;">`;
+            for (const [val, label] of Object.entries(goalMap)) {
+                content += `<option value="${val}" ${userData.goal == val ? 'selected' : ''}>${label}</option>`;
+            }
+            content += `</select>`;
+            break;
+    }
+
+    title.innerText = currentTitle;
+    container.innerHTML = content;
+    modal.classList.remove('hidden');
+
+    const handleSave = () => {
+        const input = document.getElementById('edit-value-input');
+        const val = input.value;
+
+        if (type === 'weight' || type === 'height') {
+            if (val && !isNaN(val)) {
+                userData[type] = parseFloat(val);
+            }
+        } else if (type === 'activity') {
+            userData.activity = parseFloat(val);
+        } else if (type === 'goal') {
+            userData.goal = val;
+        }
+
+        calculateNorms();
+        saveAllData();
+        updateAllUINorms();
+        closeModal();
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        saveBtn.removeEventListener('click', handleSave);
+        cancelBtn.removeEventListener('click', closeModal);
+    };
+
+    saveBtn.onclick = handleSave;
+    cancelBtn.onclick = closeModal;
+
+    // Change button text to "Добавить" for weight/height and "Изменить" for others if needed
+    // or keep "Добавить" as requested in the latest message
+    saveBtn.innerText = "Добавить";
 }
 
 function loadSettingsData() {
