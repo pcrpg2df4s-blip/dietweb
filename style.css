@@ -121,8 +121,9 @@ h1 {
     margin-bottom: 12px;
     border: none;
     border-radius: 12px;
-    background-color: var(--bg-background);
+    background-color: var(--bg-card);
     color: var(--text-primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -453,6 +454,10 @@ h1 {
     stroke: var(--text-primary);
 }
 
+.progress-ring__circle.protein { stroke: #e58b8b; }
+.progress-ring__circle.carbs { stroke: #e5b68b; }
+.progress-ring__circle.fats { stroke: #8bb6e5; }
+
 .macro-value {
     position: absolute;
     font-size: 18px;
@@ -512,26 +517,26 @@ h1 {
 }
 
 .streak-badge {
-    background-color: #FFFFFF;
-    border-radius: 20px;
-    padding: 5px 12px;
+    background-color: transparent;
+    border-radius: 0;
+    padding: 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     font-weight: 700;
     font-size: 16px;
-    color: #000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    color: var(--text-primary);
+    box-shadow: none;
     position: absolute;
-    right:6px;
-    top: 5px;
+    right: 16px;
+    top: 12px;
     z-index: 10;
 }
 
 [data-theme="dark"] .streak-badge {
-    background-color: #222126;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    background-color: transparent;
+    color: var(--text-primary);
+    box-shadow: none;
 }
 
 .streak-icon {
@@ -1998,7 +2003,169 @@ input:checked + .slider:before {
 
 .danger-btn:hover, .danger-btn:active {
     background-color: #ff3b30 !important;
-    color: #ffffff !important;
+}
+
+/* New Weight & Progress Widgets */
+.weight-progress-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.widget-card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.weight-card, .streak-card {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+}
+
+.weight-card .widget-header,
+.streak-card .widget-header {
+    padding: 16px 16px 4px 16px;
+}
+
+.dynamics-card {
+    grid-column: 1 / span 2;
+    height: 180px;
+}
+
+.widget-header {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.widget-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex: 1;
+}
+
+.weight-card .widget-main.weight-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0 16px;
+    margin-top: 10px;
+    height: 50px;
+}
+
+.weight-card .widget-main span:first-child {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.widget-action-btn {
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    transition: opacity 0.2s;
+    border-radius: 0 0 24px 24px;
+    margin-top: auto;
+}
+
+[data-theme="dark"] .widget-action-btn {
+    background: #fff;
+    color: #000;
+}
+
+.widget-action-btn:active {
+    opacity: 0.8;
+}
+
+.action-arrow {
+    font-size: 16px;
+}
+
+.streak-card .widget-main span:first-child {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    height: 50px;
+    margin-top: 10px;
+    line-height: 1;
+}
+
+.widget-unit {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+.widget-footer {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 500;
+}
+
+.streak-dots {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+    padding: 0 12px 12px 12px;
+    box-sizing: border-box;
+}
+
+.day-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.day-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.streak-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-color);
+}
+
+.streak-dot.active {
+    background: #FF9500;
+}
+
+.weight-chart-container {
+    height: 250px;
+    width: 100%;
+    margin-top: 5px;
 }
 
 .food-img-placeholder {
@@ -2947,4 +3114,113 @@ input:checked + .slider:before {
 
 [data-theme="dark"] .food-img-placeholder {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Weight Ruler Modal */
+.full-screen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-background);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+.weight-picker-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.current-weight-display {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 40px;
+}
+
+.current-weight-display .unit {
+    font-size: 24px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+/* Ruler Styles */
+.ruler-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    overflow: hidden;
+}
+
+.center-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 60px;
+    width: 4px;
+    background: #FF9F0A;
+    transform: translateX(-50%);
+    z-index: 10;
+    border-radius: 2px;
+}
+
+.ruler-scroll-area {
+    width: 100%;
+    height: 100%;
+    overflow-x: scroll;
+    display: flex;
+    align-items: flex-start;
+    scroll-behavior: auto;
+}
+
+.ruler-scroll-area::-webkit-scrollbar {
+    display: none;
+}
+
+.ruler-ticks {
+    display: flex;
+    height: 50px;
+    padding: 0 50vw;
+}
+
+.tick {
+    width: 2px;
+    background: var(--text-secondary);
+    margin-right: 18px;
+    flex-shrink: 0;
+}
+
+.tick.major {
+    height: 40px;
+    background: var(--text-primary);
+    width: 3px;
+}
+
+.tick.minor {
+    height: 20px;
+    opacity: 0.5;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 10px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 18px;
 }

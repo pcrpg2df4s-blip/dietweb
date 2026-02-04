@@ -13,6 +13,8 @@ function triggerHaptic(style) {
             haptic.impactOccurred(style);
         } else if (['success', 'error', 'warning'].includes(style)) {
             haptic.notificationOccurred(style);
+        } else if (style === 'selection') {
+            haptic.selectionChanged();
         }
     } else if (navigator.vibrate) {
         switch (style) {
@@ -112,6 +114,7 @@ let cameraMode = 'log'; // 'log' for logging, 'cook' for recipes, 'check' for pr
 let currentRecipeData = null;
 let thumbnailDataUrl = null; // Global storage for current photo
 let caloriesChart = null;
+let weightChart = null;
 
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
@@ -151,7 +154,125 @@ window.addEventListener('DOMContentLoaded', () => {
     initCheckModal();
     initTheme();
     checkStreakOnLoad();
+    initRuler();
+    initWeightModal();
 });
+
+function initRuler() {
+    const rulerTicks = document.getElementById('ruler-ticks');
+    if (!rulerTicks) return;
+
+    rulerTicks.innerHTML = '';
+    const minWeight = 30;
+    const maxWeight = 150;
+
+    for (let i = minWeight * 10; i <= maxWeight * 10; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        if (i % 10 === 0) {
+            tick.classList.add('major');
+        } else if (i % 5 === 0) {
+            // Optional: semi-major for .5 values
+        } else {
+            tick.classList.add('minor');
+        }
+        rulerTicks.appendChild(tick);
+    }
+
+    const scrollArea = document.getElementById('ruler-scroll-area');
+    const pickerVal = document.getElementById('picker-val');
+    const pixelsPerTick = 20; // 2px width + 18px margin-right
+
+    let lastIntegerWeight = -1;
+
+    scrollArea.addEventListener('scroll', () => {
+        const scrollLeft = scrollArea.scrollLeft;
+        const weight = minWeight + (scrollLeft / pixelsPerTick) / 10;
+        const displayWeight = weight.toFixed(1);
+        pickerVal.innerText = displayWeight;
+
+        // Haptic on integer change
+        const currentIntegerWeight = Math.floor(weight);
+        if (currentIntegerWeight !== lastIntegerWeight) {
+            triggerHaptic('selection'); // Using Telegram style or fallback if defined
+            lastIntegerWeight = currentIntegerWeight;
+        }
+    });
+}
+
+function initWeightModal() {
+    const modal = document.getElementById('weight-modal');
+    const closeBtn = document.getElementById('close-weight-modal');
+    const saveBtn = document.getElementById('save-weight-btn');
+    const scrollArea = document.getElementById('ruler-scroll-area');
+    const pixelsPerTick = 20;
+    const minWeight = 30;
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const weightVal = parseFloat(document.getElementById('picker-val').innerText);
+            if (!isNaN(weightVal)) {
+                userData.weight = weightVal;
+                
+                // Add to history
+                if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
+                currentMacros.weightHistory.push({
+                    date: new Date().toISOString(),
+                    weight: weightVal
+                });
+
+                // Full recalculation of goals
+                calculateNorms();
+                
+                // Save and sync everything
+                saveAllData();
+                
+                // Update all UI components
+                updateAllUINorms();
+                updateWeightWidgets();
+                updateBMI();
+                initHomeScreenFromSaved(); // Refreshes rings and "Left" values on dashboard
+                
+                triggerHaptic('success');
+                modal.classList.add('hidden');
+            }
+        });
+    }
+
+    // Intercept clicks on weight card in Progress page
+    const weightCard = document.querySelector('.weight-card');
+    if (weightCard) {
+        weightCard.onclick = (e) => {
+            e.stopPropagation();
+            openWeightRuler();
+        };
+    }
+}
+
+function openWeightRuler() {
+    const modal = document.getElementById('weight-modal');
+    const scrollArea = document.getElementById('ruler-scroll-area');
+    const pixelsPerTick = 20;
+    const minWeight = 30;
+
+    modal.classList.remove('hidden');
+
+    // Scroll to current weight
+    const currentWeight = userData.weight || 75;
+    const scrollTarget = (currentWeight - minWeight) * 10 * pixelsPerTick;
+    
+    // We need a small timeout to ensure modal is rendered for scrollLeft to work correctly
+    setTimeout(() => {
+        scrollArea.scrollLeft = scrollTarget;
+        document.getElementById('picker-val').innerText = currentWeight.toFixed(1);
+    }, 10);
+}
 
 /**
  * Streak logic
@@ -224,6 +345,15 @@ function initTheme() {
             } else {
                 document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
+            }
+            
+            // Re-render weight chart with new theme colors
+            if (typeof renderWeightChart === 'function') {
+                if (weightChart) {
+                    weightChart.destroy();
+                    weightChart = null;
+                }
+                renderWeightChart();
             }
         });
     }
@@ -914,6 +1044,17 @@ function startLoadingAnimation() {
             percentageEl.innerText = `${currentPercent}%`;
             progressBar.style.width = `${currentPercent}%`;
 
+            // Haptic Feedback for progress bar (every 4%)
+            if (currentPercent % 4 === 0) {
+                if (currentPercent < 60) {
+                    triggerHaptic('light');
+                } else if (currentPercent < 90) {
+                    triggerHaptic('medium');
+                } else if (currentPercent < 100) {
+                    triggerHaptic('heavy');
+                }
+            }
+
             if (stepIndex < steps.length && currentPercent >= steps[stepIndex].percent) {
                 statusEl.innerText = steps[stepIndex].status;
                 const checkItem = document.getElementById(steps[stepIndex].check);
@@ -924,11 +1065,10 @@ function startLoadingAnimation() {
             }
         } else {
             clearInterval(interval);
-            setTimeout(() => {
-                document.getElementById('loading-title').innerText = "План успешно составлен!";
-                statusEl.style.display = 'none';
-                finalBtn.style.display = 'block';
-            }, 500);
+            triggerHaptic('success');
+            document.getElementById('loading-title').innerText = "План успешно составлен!";
+            statusEl.style.display = 'none';
+            finalBtn.style.display = 'block';
         }
     }, 40);
 }
@@ -1071,11 +1211,14 @@ function showResults() {
 
     // Анимация
     setProgress('ring-calories', 100);
-    setProgress('ring-carbs', 85);
-    setProgress('ring-protein', 90);
-    setProgress('ring-fats', 70);
+    setProgress('ring-carbs', 100);
+    setProgress('ring-protein', 100);
+    setProgress('ring-fats', 100);
     
-    // Загрузка советов
+    // Переход сразу
+    nextStep(11);
+
+    // Загрузка советов в фоновом режиме
     fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
         const container = document.getElementById('ai-tips');
         if (container) {
@@ -1089,10 +1232,8 @@ function showResults() {
                 `;
             });
         }
-        nextStep(11);
     }).catch(error => {
         console.error("Tips error", error);
-        nextStep(11);
     });
 }
 
@@ -1545,6 +1686,7 @@ function updateProgressPage() {
     }
 
     renderProgressChart();
+    updateWeightWidgets();
     updateBMI();
     nextStep(15);
 }
@@ -1795,6 +1937,205 @@ function updateBMI() {
     statusTextEl.innerText = status;
     statusTextEl.className = `status-badge ${statusClass}`;
     pointerEl.style.left = `${pointerPos}%`;
+}
+
+/**
+ * Weight and Progress Widgets Logic
+ */
+function logNewWeight() {
+    const newWeight = prompt("Введите ваш текущий вес (кг):", userData.weight);
+    if (newWeight !== null && !isNaN(newWeight) && newWeight > 0) {
+        const weight = parseFloat(newWeight);
+        userData.weight = weight;
+        
+        // Save to history
+        if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
+        currentMacros.weightHistory.push({
+            date: new Date().toISOString(),
+            weight: weight
+        });
+        
+        saveAllData();
+        updateWeightWidgets();
+        updateBMI();
+        triggerHaptic('success');
+    }
+}
+
+function updateWeightWidgets() {
+    const currentWeightEl = document.getElementById('stats-current-weight');
+    const goalWeightEl = document.getElementById('stats-goal-weight');
+    const streakCountEl = document.getElementById('stats-streak-count');
+    
+    if (currentWeightEl) currentWeightEl.innerText = userData.weight || '--';
+    if (goalWeightEl) {
+        // Calculate a simple goal if not set, or use weight as fallback
+        // In this app, we don't have a separate target weight field in userData yet,
+        // but we can infer it from the goal (lose/gain).
+        let targetWeight = userData.weight;
+        if (userData.goal === 'lose') targetWeight -= 5;
+        else if (userData.goal === 'gain') targetWeight += 5;
+        goalWeightEl.innerText = targetWeight;
+    }
+    
+    // Update streak from existing logic
+    const streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
+    if (streakCountEl) streakCountEl.innerText = streakCount;
+    
+    updateStreakDots(streakCount);
+    renderWeightChart();
+}
+
+function updateStreakDots(count) {
+    const dotsContainer = document.getElementById('stats-streak-dots');
+    if (!dotsContainer) return;
+    
+    const dayLabels = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В'];
+    dotsContainer.innerHTML = '';
+    
+    // Get current day of week (0 for Sunday, 1 for Monday, etc.)
+    const now = new Date();
+    let currentDay = now.getDay();
+    // Adjust to our array: 0=Mon, 1=Tue, ..., 6=Sun
+    // JS: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    let todayIdx = currentDay === 0 ? 6 : currentDay - 1;
+
+    for (let i = 0; i < 7; i++) {
+        const dayColumn = document.createElement('div');
+        dayColumn.className = 'day-column';
+        
+        const dot = document.createElement('div');
+        dot.className = 'streak-dot circle-day';
+        
+        // Highlight logic:
+        // 1. Current day is always highlighted (orange/active)
+        // 2. Previous days are highlighted if streak count covers them
+        // For simplicity: if it's today, it's active.
+        // If it's before today and (todayIdx - i) < count, it's active.
+        if (i === todayIdx) {
+            dot.classList.add('active');
+        } else if (i < todayIdx && (todayIdx - i) < count) {
+            dot.classList.add('active');
+        }
+        
+        const label = document.createElement('span');
+        label.className = 'day-label';
+        label.innerText = dayLabels[i];
+        if (i === todayIdx) {
+            label.style.color = '#ff9500'; // Highlight current day label
+            label.style.fontWeight = 'bold';
+        }
+        
+        dayColumn.appendChild(dot);
+        dayColumn.appendChild(label);
+        dotsContainer.appendChild(dayColumn);
+    }
+}
+
+function renderWeightChart() {
+    const canvas = document.getElementById('weightHistoryChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const style = getComputedStyle(document.body);
+    const gridColor = style.getPropertyValue('--border-color').trim() || '#e5e5ea';
+    const textColor = style.getPropertyValue('--text-secondary').trim() || '#8e8e93';
+    const cardBg = style.getPropertyValue('--bg-card').trim() || '#ffffff';
+    
+    // Get primary text color for points and lines (Black in Light, White in Dark)
+    const primaryColor = style.getPropertyValue('--text-primary').trim() || '#000000';
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const accentColor = isDark ? '#ffffff' : '#000000';
+
+    // Create gradient based on theme
+    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+    if (isDark) {
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+    } else {
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+    }
+
+    const history = currentMacros.weightHistory || [];
+    // Get last 7 entries or all if less
+    const lastEntries = history.slice(-7);
+    
+    const labels = lastEntries.map(e => {
+        const d = new Date(e.date);
+        const day = d.getDate();
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        return `${day}.${month}`;
+    });
+    const data = lastEntries.map(e => e.weight);
+
+    // If no history, add current weight as first point
+    if (data.length === 0) {
+        labels.push('Сегодня');
+        data.push(userData.weight);
+    }
+
+    if (weightChart) {
+        weightChart.data.labels = labels;
+        weightChart.data.datasets[0].data = data;
+        weightChart.data.datasets[0].backgroundColor = gradient;
+        weightChart.data.datasets[0].borderColor = accentColor;
+        weightChart.data.datasets[0].pointBackgroundColor = accentColor;
+        weightChart.data.datasets[0].pointBorderColor = cardBg;
+        weightChart.options.scales.y.grid.color = 'rgba(128, 128, 128, 0.15)';
+        weightChart.options.scales.y.ticks.color = textColor;
+        weightChart.options.scales.x.ticks.color = textColor;
+        weightChart.update();
+    } else {
+        weightChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    borderColor: accentColor,
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: accentColor,
+                    pointBorderColor: cardBg,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: textColor }
+                    },
+                    y: {
+                        suggestedMin: Math.min(...data) - 2,
+                        suggestedMax: Math.max(...data) + 2,
+                        grid: {
+                            color: 'rgba(128, 128, 128, 0.15)',
+                            borderDash: [8, 4],
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function openSettings() {

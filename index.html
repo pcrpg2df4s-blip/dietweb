@@ -203,12 +203,6 @@
                         <h3>Вегетарианство</h3>
                     </div>
                 </div>
-                <div class="card" onclick="selectDiet('vegan')">
-                    <div class="icon">🌱</div>
-                    <div class="text">
-                        <h3>Веганство</h3>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -322,7 +316,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-carbs" class="progress-ring__circle" stroke="#e5b68b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-carbs" class="progress-ring__circle carbs" stroke="#e5b68b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-carbs">234г</div>
                         </div>
@@ -336,7 +330,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-protein" class="progress-ring__circle" stroke="#e58b8b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-protein" class="progress-ring__circle protein" stroke="#e58b8b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-protein">152г</div>
                         </div>
@@ -350,7 +344,7 @@
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
                                 <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
-                                <circle id="ring-fats" class="progress-ring__circle" stroke="#8bb6e5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-fats" class="progress-ring__circle fats" stroke="#8bb6e5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-fats">57г</div>
                         </div>
@@ -496,6 +490,48 @@
 
         <div id="step-15" class="step">
             <div class="progress-page">
+                <!-- Новый блок управления весом и прогрессом -->
+                <div class="weight-progress-grid">
+                    <!-- Карточка 1: Мой вес -->
+                    <div class="weight-card widget-card">
+                        <div class="widget-header">Мой вес</div>
+                        <div class="widget-main weight-display">
+                            <span id="stats-current-weight">--</span>
+                            <span class="widget-unit">кг</span>
+                        </div>
+                        <div class="widget-action-btn" onclick="logNewWeight()">
+                            <span>Указать вес</span>
+                            <span class="action-arrow">→</span>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 2: Стрик -->
+                    <div class="streak-card widget-card">
+                        <div class="widget-header">🔥 Стрик</div>
+                        <div class="widget-main">
+                            <span id="stats-streak-count">0</span>
+                        </div>
+                        <div class="streak-dots" id="stats-streak-dots">
+                            <!-- 7 кружочков -->
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                            <div class="streak-dot"></div>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 3: Динамика -->
+                    <div class="dynamics-card widget-card">
+                        <div class="widget-header">Динамика</div>
+                        <div class="weight-chart-container">
+                            <canvas id="weightHistoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="progress-card chart-card">
                     <div class="chart-header">
                         <div class="chart-title">Калории</div>
@@ -582,7 +618,7 @@
                             <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
-                    <div class="settings-row" onclick="editSetting('weight')">
+                    <div class="settings-row" onclick="openWeightRuler()">
                         <span class="row-label">Вес</span>
                         <div class="row-value-group">
                             <span id="set-weight-text">-</span>
@@ -804,6 +840,31 @@
                 <button id="cancel-edit-btn" style="background: transparent; border: 2px solid #000; color: #000; border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Отмена</button>
             </div>
         </div>
+    </div>
+
+    <div id="weight-modal" class="full-screen-modal hidden">
+        <div class="modal-header">
+            <button id="close-weight-modal" class="icon-btn">✕</button>
+            <span>Изменить вес</span>
+            <div style="width: 24px"></div>
+        </div>
+        
+        <div class="weight-picker-content">
+            <div class="current-weight-display">
+                <span id="picker-val">75.0</span> <span class="unit">кг</span>
+            </div>
+            
+            <div class="ruler-wrapper">
+                <div class="center-line"></div>
+                <div id="ruler-scroll-area" class="ruler-scroll-area">
+                    <div id="ruler-ticks" class="ruler-ticks">
+                        <!-- Ticks generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="save-weight-btn" class="main-btn" style="margin: 20px; width: calc(100% - 40px);">Сохранить изменения</button>
     </div>
 
     <script src="config.js"></script>
