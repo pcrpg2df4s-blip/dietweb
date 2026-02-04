@@ -1,3 +1,21 @@
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.step.active,
+#camera-screen:not(.hidden),
+.modal-overlay:not(.hidden),
+.modal:not(.hidden) {
+    animation: fadeInUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 :root {
     --bg-background: #F2F2F7;
     --bg-card: #FFFFFF;
@@ -505,8 +523,8 @@ h1 {
     color: #000;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     position: absolute;
-    right: 20px;
-    top: 18px;
+    right:6px;
+    top: 5px;
     z-index: 10;
 }
 
@@ -654,6 +672,7 @@ h1 {
     align-items: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     margin-bottom: 20px;
+    position: relative;
 }
 
 .calorie-left h2 {
@@ -2626,13 +2645,13 @@ input:checked + .slider:before {
 .recipe-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
 .recipe-step-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-background);
     padding: 18px 20px;
     border-radius: 16px;
     font-size: 15px;
     font-weight: 600;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    color: #FFFFFF;
+    color: var(--text-primary);
     margin-bottom: 16px;
     border-left: 4px solid #FF9F0A;
     text-align: left;
@@ -2662,8 +2681,8 @@ input:checked + .slider:before {
 }
 
 #save-recipe-btn {
-    background-color: #FFFFFF;
-    color: #000000;
+    background-color: var(--text-primary);
+    color: var(--bg-card);
     border: none;
     border-radius: 30px;
     padding: 16px;
@@ -2681,8 +2700,8 @@ input:checked + .slider:before {
 
 #cancel-recipe-btn {
     background-color: transparent;
-    color: #FFFFFF;
-    border: 2px solid #FFFFFF;
+    color: var(--text-primary);
+    border: 2px solid var(--text-primary);
     border-radius: 30px;
     padding: 16px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -2831,7 +2850,7 @@ input:checked + .slider:before {
     font-size: 16px;       /* Readable size */
     font-weight: 500;      /* Medium density */
     line-height: 1.5;      /* Good breathing room */
-    color: #FFFFFF;        /* Contrast white for dark theme */
+    color: var(--text-primary);
     letter-spacing: -0.01em; /* Tight like iOS */
 }
 
@@ -2888,6 +2907,7 @@ input:checked + .slider:before {
     -webkit-backdrop-filter: none !important;
 }
 
+[data-theme="dark"] #save-recipe-btn,
 [data-theme="dark"] #recipe-modal .primary-btn,
 [data-theme="dark"] #error-modal .primary-btn,
 [data-theme="dark"] #manual-add-btn,
