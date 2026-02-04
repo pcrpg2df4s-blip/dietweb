@@ -1755,15 +1755,15 @@ function editSetting(type) {
     switch (type) {
         case 'weight':
             currentTitle = 'Вес';
-            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.weight}" style="width: 100%; text-align: center; font-size: 20px; font-weight: bold; border-radius: 12px; border: 1px solid #eee; padding: 12px;">`;
+            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.weight}">`;
             break;
         case 'height':
             currentTitle = 'Рост';
-            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.height}" style="width: 100%; text-align: center; font-size: 20px; font-weight: bold; border-radius: 12px; border: 1px solid #eee; padding: 12px;">`;
+            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.height}">`;
             break;
         case 'activity':
             currentTitle = 'Активность';
-            content = `<select id="edit-value-input" class="modal-input" style="width: 100%; font-size: 16px; border-radius: 12px; border: 1px solid #eee; padding: 12px; appearance: none; background: white; text-align: center; text-align-last: center;">`;
+            content = `<select id="edit-value-input" class="modal-input">`;
             for (const [val, label] of Object.entries(activityMap)) {
                 content += `<option value="${val}" ${userData.activity == val ? 'selected' : ''}>${label}</option>`;
             }
@@ -1771,7 +1771,7 @@ function editSetting(type) {
             break;
         case 'goal':
             currentTitle = 'Цель';
-            content = `<select id="edit-value-input" class="modal-input" style="width: 100%; font-size: 16px; border-radius: 12px; border: 1px solid #eee; padding: 12px; appearance: none; background: white; text-align: center; text-align-last: center;">`;
+            content = `<select id="edit-value-input" class="modal-input">`;
             for (const [val, label] of Object.entries(goalMap)) {
                 content += `<option value="${val}" ${userData.goal == val ? 'selected' : ''}>${label}</option>`;
             }
