@@ -3,6 +3,36 @@ const CONFIG_LOCAL = {
 };
 
 /**
+ * Triggers haptic feedback using Telegram WebApp API or browser fallback.
+ * @param {string} style - 'light', 'medium', 'heavy', 'success', 'error', 'warning'
+ */
+function triggerHaptic(style) {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+        const haptic = window.Telegram.WebApp.HapticFeedback;
+        if (['light', 'medium', 'heavy'].includes(style)) {
+            haptic.impactOccurred(style);
+        } else if (['success', 'error', 'warning'].includes(style)) {
+            haptic.notificationOccurred(style);
+        }
+    } else if (navigator.vibrate) {
+        switch (style) {
+            case 'light':
+                navigator.vibrate(10);
+                break;
+            case 'medium':
+                navigator.vibrate(20);
+                break;
+            case 'success':
+                navigator.vibrate([50, 30, 50]);
+                break;
+            case 'error':
+                navigator.vibrate([50, 100, 50]);
+                break;
+        }
+    }
+}
+
+/**
  * Helper function to get emoji based on food name
  * @param {string} foodName
  * @returns {string} emoji
@@ -279,6 +309,7 @@ function initAddMenu() {
 
     if (addBtn && menu) {
         addBtn.addEventListener('click', (e) => {
+            triggerHaptic('light');
             e.stopPropagation();
             menu.classList.toggle('hidden');
             addBtn.style.transform = menu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(45deg)';
@@ -291,6 +322,7 @@ function initAddMenu() {
         };
 
         cameraBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             cameraMode = 'log';
             updateCameraHint("Сфоткай еду — определим КБЖУ");
             menu.classList.add('hidden');
@@ -299,6 +331,7 @@ function initAddMenu() {
         });
 
         textBtn.addEventListener('click', () => {
+            triggerHaptic('light');
             cameraMode = 'log';
             menu.classList.add('hidden');
             addBtn.style.transform = 'rotate(0deg)';
@@ -308,6 +341,7 @@ function initAddMenu() {
 
         if (cookingBtn) {
             cookingBtn.addEventListener('click', () => {
+                triggerHaptic('light');
                 cameraMode = 'cook';
                 updateCameraHint("Сфоткай свои продукты");
                 menu.classList.add('hidden');
@@ -318,6 +352,7 @@ function initAddMenu() {
 
         if (checkBtn) {
             checkBtn.addEventListener('click', () => {
+                triggerHaptic('light');
                 cameraMode = 'check';
                 updateCameraHint("Сфоткай состав на упаковке");
                 menu.classList.add('hidden');
@@ -448,6 +483,7 @@ function initManualAddModal() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
+            triggerHaptic('success');
             const id = document.getElementById('edit-food-id').value;
             const name = document.getElementById('manual-name').value.trim();
             const cals = document.getElementById('manual-calories').value.trim();
@@ -782,6 +818,7 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 
 function nextStep(stepNumber) {
+    triggerHaptic('light');
     const targetStepEl = document.getElementById(`step-${stepNumber}`);
     
     if (!targetStepEl) return;
@@ -1398,6 +1435,7 @@ function recalculateMacros() {
 
 function deleteFood(index) {
     if (confirm("Удалить это блюдо?")) {
+        triggerHaptic('medium');
         if (currentMacros.foodHistory && currentMacros.foodHistory[index]) {
             currentMacros.foodHistory.splice(index, 1);
             recalculateMacros();
@@ -1489,6 +1527,7 @@ function updateCalendarDates() {
 }
 
 function updateProgressPage() {
+    triggerHaptic('light');
     const today = new Date().toISOString().split('T')[0];
     
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
@@ -1759,6 +1798,7 @@ function updateBMI() {
 }
 
 function openSettings() {
+    triggerHaptic('light');
     nextStep(16);
     loadSettingsData();
 }
