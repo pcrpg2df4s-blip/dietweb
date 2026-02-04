@@ -494,19 +494,30 @@ h1 {
 }
 
 .streak-badge {
-    background: var(--bg-card);
-    padding: 6px 16px;
+    background-color: #FFFFFF;
     border-radius: 20px;
-    display: flex;
+    padding: 5px 12px;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     font-weight: 700;
-    font-size: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    font-size: 16px;
+    color: #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: absolute;
+    right: 20px;
+    top: 18px;
+    z-index: 10;
 }
 
-.streak-badge span {
-    font-size: 16px;
+[data-theme="dark"] .streak-badge {
+    background-color: #222126;
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.streak-icon {
+    font-size: 18px;
 }
 
 .calendar-header {
@@ -1976,7 +1987,7 @@ input:checked + .slider:before {
     height: 70px; /* Должен быть квадрат */
     min-width: 70px; /* Чтобы не сплющило в flex-контейнере */
     border-radius: 18px;
-    background: #f0f0f5;
+    background: var(--bg-background);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2912,4 +2923,8 @@ input:checked + .slider:before {
 
 [data-theme="dark"] .fade-out-overlay {
     background: linear-gradient(to bottom, rgba(34, 33, 38, 0), rgba(34, 33, 38, 1));
+}
+
+[data-theme="dark"] .food-img-placeholder {
+    background: rgba(255, 255, 255, 0.1);
 }

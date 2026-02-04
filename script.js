@@ -120,7 +120,62 @@ window.addEventListener('DOMContentLoaded', () => {
     initRecipeModal();
     initCheckModal();
     initTheme();
+    checkStreakOnLoad();
 });
+
+/**
+ * Streak logic
+ */
+function checkStreakOnLoad() {
+    let streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
+    const lastLogDate = localStorage.getItem('lastLogDate');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (lastLogDate) {
+        const lastDate = new Date(lastLogDate);
+        const currentDate = new Date(today);
+        const diffTime = Math.abs(currentDate - lastDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 1) {
+            streakCount = 0;
+            localStorage.setItem('streakCount', streakCount);
+        }
+    }
+
+    updateStreakUI(streakCount);
+}
+
+function updateStreak() {
+    let streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
+    const lastLogDate = localStorage.getItem('lastLogDate');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (lastLogDate === today) {
+        return; // Already logged today
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayISO = yesterday.toISOString().split('T')[0];
+
+    if (lastLogDate === yesterdayISO) {
+        streakCount++;
+    } else {
+        streakCount = 1;
+    }
+
+    localStorage.setItem('streakCount', streakCount);
+    localStorage.setItem('lastLogDate', today);
+    updateStreakUI(streakCount);
+}
+
+function updateStreakUI(count) {
+    const streakCountEl = document.getElementById('streak-count');
+    if (streakCountEl) {
+        streakCountEl.innerText = count;
+    }
+}
 
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
@@ -1310,6 +1365,7 @@ function addFoodToHome(food, thumbnail) {
     
     recalculateMacros();
     saveAllData();
+    updateStreak();
     initHomeScreenFromSaved();
     nextStep(12);
 }
