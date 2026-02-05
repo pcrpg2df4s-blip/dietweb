@@ -164,7 +164,62 @@ window.addEventListener('DOMContentLoaded', () => {
     checkStreakOnLoad();
     initRuler();
     initWeightModal();
+    initHeightRuler();
+    initHeightModal();
+    initGalleryButton();
 });
+
+function initGalleryButton() {
+    const galleryBtn = document.getElementById('gallery-btn');
+    const galleryInput = document.getElementById('gallery-input');
+
+    if (galleryBtn && galleryInput) {
+        galleryBtn.addEventListener('click', () => {
+            galleryInput.click();
+        });
+
+        galleryInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                processUploadedFile(file);
+            }
+        });
+    }
+}
+
+function processUploadedFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imageData = e.target.result;
+
+        // Create thumbnail for the uploaded image
+        const img = new Image();
+        img.onload = () => {
+            const smallCanvas = document.createElement('canvas');
+            const shortSide = Math.min(img.width, img.height);
+            const startX = (img.width - shortSide) / 2;
+            const startY = (img.height - shortSide) / 2;
+
+            smallCanvas.width = 256;
+            smallCanvas.height = 256;
+            const smallCtx = smallCanvas.getContext('2d');
+            smallCtx.drawImage(img, startX, startY, shortSide, shortSide, 0, 0, 256, 256);
+            const thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
+
+            // Hide camera controls and show analysis overlay
+            document.querySelector('.camera-controls').classList.add('hidden');
+            const analysisOverlay = document.getElementById('analysis-overlay');
+            analysisOverlay.style.display = 'flex';
+            analysisOverlay.classList.remove('hidden');
+
+            // Start AI analysis
+            showLoader(cameraMode);
+            startAnalysis(imageData, thumbnailDataUrl);
+        };
+        img.src = imageData;
+    };
+    reader.readAsDataURL(file);
+}
 
 function initRuler() {
     const rulerTicks = document.getElementById('ruler-ticks');
@@ -299,6 +354,105 @@ function openWeightRuler() {
     setTimeout(() => {
         scrollArea.scrollLeft = scrollTarget;
         document.getElementById('picker-val').innerText = currentWeight.toFixed(1);
+    }, 10);
+}
+
+function initHeightRuler() {
+    const heightRuler = document.getElementById('height-ruler');
+    if (!heightRuler) return;
+
+    heightRuler.innerHTML = '';
+    const minHeight = 100;
+    const maxHeight = 250;
+
+    for (let i = minHeight; i <= maxHeight; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        if (i % 10 === 0) {
+            tick.classList.add('major');
+        } else if (i % 5 === 0) {
+            // Semi-major
+        } else {
+            tick.classList.add('minor');
+        }
+        heightRuler.appendChild(tick);
+    }
+
+    const scrollArea = document.getElementById('height-ruler-area');
+    const heightVal = document.getElementById('height-val');
+    const pixelsPerCm = 15; // 2px height + 13px margin-bottom
+
+    let lastVibratedHeight = -1;
+
+    scrollArea.addEventListener('scroll', () => {
+        const scrollTop = scrollArea.scrollTop;
+        const height = minHeight + (scrollTop / pixelsPerCm);
+        const displayHeight = Math.round(height);
+        heightVal.innerText = displayHeight;
+
+        if (displayHeight !== lastVibratedHeight) {
+            triggerHaptic('selection');
+            lastVibratedHeight = displayHeight;
+        }
+    });
+}
+
+function initHeightModal() {
+    const modal = document.getElementById('height-modal');
+    const closeBtn = document.getElementById('close-height-modal');
+    const saveBtn = document.getElementById('save-height-btn');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 400);
+    };
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const heightVal = parseInt(document.getElementById('height-val').innerText);
+            if (!isNaN(heightVal)) {
+                userData.height = heightVal;
+                
+                calculateNorms();
+                saveAllData();
+                updateAllUINorms();
+                updateBMI();
+                initHomeScreenFromSaved();
+                
+                // Update settings text if visible
+                const setHeightText = document.getElementById('set-height-text');
+                if (setHeightText) setHeightText.innerText = heightVal + ' см';
+                
+                triggerHaptic('success');
+                closeModal();
+            }
+        });
+    }
+}
+
+function openHeightRuler() {
+    const modal = document.getElementById('height-modal');
+    const scrollArea = document.getElementById('height-ruler-area');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+
+    const pixelsPerCm = 15;
+    const minHeight = 100;
+    const currentHeight = userData.height || 175;
+    const scrollTarget = (currentHeight - minHeight) * pixelsPerCm;
+    
+    setTimeout(() => {
+        scrollArea.scrollTop = scrollTarget;
+        document.getElementById('height-val').innerText = currentHeight;
     }, 10);
 }
 
@@ -2310,9 +2464,9 @@ function editSetting(type) {
             content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.weight}">`;
             break;
         case 'height':
-            currentTitle = 'Рост';
-            content = `<input type="number" id="edit-value-input" class="modal-input" value="${userData.height}">`;
-            break;
+            modal.classList.add('hidden');
+            openHeightRuler();
+            return;
         case 'activity':
             currentTitle = 'Активность';
             content = `<select id="edit-value-input" class="modal-input">`;
@@ -2357,8 +2511,6 @@ function editSetting(type) {
 
     const closeModal = () => {
         modal.classList.add('hidden');
-        saveBtn.removeEventListener('click', handleSave);
-        cancelBtn.removeEventListener('click', closeModal);
     };
 
     saveBtn.onclick = handleSave;

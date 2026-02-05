@@ -1511,11 +1511,11 @@ h1 {
     background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
 }
 
-.camera-close, .camera-help {
+.camera-close, #gallery-btn {
     color: #fff;
     font-size: 28px;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3274,4 +3274,94 @@ input:checked + .slider:before {
     padding: 10px 20px;
     font-weight: 700;
     font-size: 18px;
+}
+
+/* Height Ruler Modal */
+.height-picker-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    position: relative;
+}
+
+.current-height-display {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-top: 40px;
+    margin-bottom: 10px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.current-height-display .unit {
+    font-size: 24px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+.height-ruler-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.center-line-horizontal {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #FF9F0A;
+    transform: translateY(-50%);
+    z-index: 10;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.height-ruler-area {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    display: flex;
+    justify-content: center;
+    scroll-behavior: auto;
+}
+
+.height-ruler-area::-webkit-scrollbar {
+    display: none;
+}
+
+.height-ruler {
+    display: flex;
+    flex-direction: column;
+    width: 50px;
+    padding: 50vh 0;
+}
+
+.height-ruler .tick {
+    height: 2px;
+    background: var(--text-secondary);
+    margin-bottom: 13px; /* ~15px per 1cm */
+    margin-right: 0;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.height-ruler .tick.major {
+    width: 40px;
+    background: var(--text-primary);
+    height: 3px;
+}
+
+.height-ruler .tick.minor {
+    width: 15px;
+    opacity: 0.5;
 }
