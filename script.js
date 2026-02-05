@@ -116,6 +116,13 @@ let thumbnailDataUrl = null; // Global storage for current photo
 let caloriesChart = null;
 let weightChart = null;
 
+let celebratedStatus = {
+    calories: false,
+    protein: false,
+    fats: false,
+    carbs: false
+};
+
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
@@ -152,6 +159,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initAddMenu();
     initRecipeModal();
     initCheckModal();
+    initDeleteConfirmModal();
     initTheme();
     checkStreakOnLoad();
     initRuler();
@@ -277,47 +285,47 @@ function openWeightRuler() {
 /**
  * Streak logic
  */
-function checkStreakOnLoad() {
-    let streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
-    const lastLogDate = localStorage.getItem('lastLogDate');
+function calculateStreak() {
+    if (!currentMacros.dailyHistory) return 0;
+
     const today = new Date().toISOString().split('T')[0];
+    const history = currentMacros.dailyHistory;
+    
+    // Check if today has entries
+    const loggedToday = history[today] && history[today].calories > 0;
+    
+    let streak = 0;
+    let currentDate = new Date();
 
-    if (lastLogDate) {
-        const lastDate = new Date(lastLogDate);
-        const currentDate = new Date(today);
-        const diffTime = Math.abs(currentDate - lastDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays > 1) {
-            streakCount = 0;
-            localStorage.setItem('streakCount', streakCount);
+    if (loggedToday) {
+        streak = 1;
+    }
+    
+    // Start checking from yesterday
+    currentDate.setDate(currentDate.getDate() - 1);
+    
+    while (true) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        if (history[dateStr] && history[dateStr].calories > 0) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+            break;
         }
     }
 
+    return streak;
+}
+
+function checkStreakOnLoad() {
+    const streakCount = calculateStreak();
+    localStorage.setItem('streakCount', streakCount);
     updateStreakUI(streakCount);
 }
 
 function updateStreak() {
-    let streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
-    const lastLogDate = localStorage.getItem('lastLogDate');
-    const today = new Date().toISOString().split('T')[0];
-
-    if (lastLogDate === today) {
-        return; // Already logged today
-    }
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayISO = yesterday.toISOString().split('T')[0];
-
-    if (lastLogDate === yesterdayISO) {
-        streakCount++;
-    } else {
-        streakCount = 1;
-    }
-
+    const streakCount = calculateStreak();
     localStorage.setItem('streakCount', streakCount);
-    localStorage.setItem('lastLogDate', today);
     updateStreakUI(streakCount);
 }
 
@@ -325,6 +333,20 @@ function updateStreakUI(count) {
     const streakCountEl = document.getElementById('streak-count');
     if (streakCountEl) {
         streakCountEl.innerText = count;
+    }
+    
+    const statsStreakCountEl = document.getElementById('stats-streak-count');
+    if (statsStreakCountEl) {
+        statsStreakCountEl.innerText = count;
+    }
+
+    const streakBadge = document.getElementById('streak-badge');
+    if (streakBadge) {
+        if (count > 0) {
+            streakBadge.style.display = 'flex';
+        } else {
+            streakBadge.style.display = 'none';
+        }
     }
 }
 
@@ -512,10 +534,16 @@ async function analyzeTextFood(foodName, userCalories) {
     }
 
     let prompt = "";
+    const cookingRules = `
+    - Assume standard cooking methods: If the user says "Fried eggs" or "Steak", assume oil was used for frying (add fats).
+    - Account for common hidden calories: If the dish implies sauce, marination, or breading (e.g., "Cutlet"), add some carbs and fats even if not explicitly mentioned.
+    - Be realistic, not theoretical: Provide values for the finished dish on the plate, not raw ingredients. For example, a Steak should have 0.5g-2g of carbs for caramelization/spices and more fats from oil.
+    `;
+
     if (userCalories) {
-        prompt = `User ate: "${foodName}" worth ${userCalories} kcal. Estimate macros (Protein, Fat, Carbs) based on this calorie count. Return ONLY JSON: {"name": "${foodName}", "calories": ${userCalories}, "protein": 10, "carbs": 10, "fats": 10}`;
+        prompt = `User ate: "${foodName}" worth ${userCalories} kcal. ${cookingRules} Estimate macros (Protein, Fat, Carbs) based on this calorie count. Return ONLY JSON: {"name": "${foodName}", "calories": ${userCalories}, "protein": 10, "carbs": 10, "fats": 10}`;
     } else {
-        prompt = `User ate: "${foodName}". Estimate calories and macros (Protein, Fat, Carbs) for a standard portion. Return ONLY JSON: {"name": "${foodName}", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
+        prompt = `User ate: "${foodName}". ${cookingRules} Estimate calories and macros (Protein, Fat, Carbs) for a standard portion. Return ONLY JSON: {"name": "${foodName}", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
@@ -813,6 +841,7 @@ function loadSavedData() {
                 nextStep(12);
             }, 100);
         }
+        checkInitialCelebration();
     }
 }
 
@@ -1435,6 +1464,13 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         prompt = `You are a helpful nutritionist AI.
         Analyze this food image. If the image is blurry or unclear, MAKE A BEST GUESS based on visible colors and shapes.
         Do NOT return an error unless it is absolutely clearly not food (like a photo of a car or a wall).
+        
+        CRITICAL RULES:
+        - Assume standard cooking methods: If you see "Fried eggs" or "Steak", assume oil was used for frying (add fats).
+        - Account for common hidden calories: If the dish implies sauce, marination, or breading (e.g., "Cutlet"), add some carbs and fats even if not explicitly visible.
+        - Be realistic, not theoretical: Provide values for the finished dish on the plate, not raw ingredients. For example, a Steak should have 0.5g-2g of carbs for caramelization/spices and more fats from oil.
+        - Salads: Assume dressing/oil unless it looks completely dry.
+
         Provide a single, definitive estimate based on visual evidence.
         1. Краткое название продукта (1-2 слова) на русском, в поле "product_name".
         2. Калории (ккал), белки (г), жиры (г), углеводы (г).
@@ -1575,14 +1611,10 @@ function recalculateMacros() {
 }
 
 function deleteFood(index) {
-    if (confirm("Удалить это блюдо?")) {
-        triggerHaptic('medium');
-        if (currentMacros.foodHistory && currentMacros.foodHistory[index]) {
-            currentMacros.foodHistory.splice(index, 1);
-            recalculateMacros();
-            saveAllData();
-            initHomeScreenFromSaved();
-        }
+    itemToDeleteIndex = index;
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
     }
 }
 
@@ -1600,6 +1632,47 @@ function openEditModal(id) {
     document.getElementById('manual-carbs').value = Math.round(food.carbs);
 
     document.getElementById('manual-add-modal').classList.remove('hidden');
+}
+
+let itemToDeleteIndex = null;
+
+function initDeleteConfirmModal() {
+    const modal = document.getElementById('delete-confirm-modal');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const cancelBtn = document.getElementById('cancel-delete-btn');
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+            if (itemToDeleteIndex !== null) {
+                triggerHaptic('medium');
+                if (currentMacros.foodHistory && currentMacros.foodHistory[itemToDeleteIndex]) {
+                    currentMacros.foodHistory.splice(itemToDeleteIndex, 1);
+                    recalculateMacros();
+                    saveAllData();
+                    initHomeScreenFromSaved();
+                    updateStreak();
+                }
+                itemToDeleteIndex = null;
+                modal.classList.add('hidden');
+            }
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            itemToDeleteIndex = null;
+            modal.classList.add('hidden');
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                itemToDeleteIndex = null;
+                modal.classList.add('hidden');
+            }
+        });
+    }
 }
 
 function goToHome() {
@@ -1633,7 +1706,45 @@ function goToHome() {
     nextStep(12);
 }
 
+function checkInitialCelebration() {
+    if (currentMacros.calories >= currentMacros.totalCalories) celebratedStatus.calories = true;
+    if (currentMacros.protein >= currentMacros.totalProtein) celebratedStatus.protein = true;
+    if (currentMacros.carbs >= currentMacros.totalCarbs) celebratedStatus.carbs = true;
+    if (currentMacros.fats >= currentMacros.totalFats) celebratedStatus.fats = true;
+}
+
+function triggerConfetti(type) {
+    const colors = {
+        protein: ['#e58b8b', '#ff4d4d'], // Красный
+        fats: ['#8bb6e5', '#3498db'],    // Синий/Голубой
+        carbs: ['#e5b68b', '#27ae60'],   // Зеленый (user asked for green for carbs)
+        calories: ['#f1c40f', '#e67e22'] // Золотой/Оранжевый
+    };
+
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: colors[type] || ['#ffffff']
+    });
+}
+
 function setHomeProgress(id, percent, circumference) {
+    // Триггер конфетти для колец на главной
+    if (percent >= 100) {
+        let type = null;
+        if (id === 'home-ring-calories') type = 'calories';
+        if (id === 'home-ring-protein') type = 'protein';
+        if (id === 'home-ring-carbs') type = 'carbs';
+        if (id === 'home-ring-fats') type = 'fats';
+
+        if (type && !celebratedStatus[type]) {
+            celebratedStatus[type] = true;
+            triggerConfetti(type);
+            triggerHaptic('success');
+        }
+    }
+
     const circle = document.getElementById(id);
     if (!circle) return;
     // Ограничиваем визуальное заполнение максимум на 100%
@@ -1943,23 +2054,7 @@ function updateBMI() {
  * Weight and Progress Widgets Logic
  */
 function logNewWeight() {
-    const newWeight = prompt("Введите ваш текущий вес (кг):", userData.weight);
-    if (newWeight !== null && !isNaN(newWeight) && newWeight > 0) {
-        const weight = parseFloat(newWeight);
-        userData.weight = weight;
-        
-        // Save to history
-        if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
-        currentMacros.weightHistory.push({
-            date: new Date().toISOString(),
-            weight: weight
-        });
-        
-        saveAllData();
-        updateWeightWidgets();
-        updateBMI();
-        triggerHaptic('success');
-    }
+    openWeightRuler();
 }
 
 function updateWeightWidgets() {

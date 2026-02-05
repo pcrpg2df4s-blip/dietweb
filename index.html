@@ -842,6 +842,18 @@
         </div>
     </div>
 
+    <div id="delete-confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 320px; padding: 30px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 15px;">🗑️</div>
+            <h3 style="margin-bottom: 10px;">Подтвердите удаление</h3>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 25px; line-height: 1.4;">Вы действительно хотите удалить этот продукт?</p>
+            <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="confirm-delete-btn" style="background-color: #ff3b30; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Удалить</button>
+                <button id="cancel-delete-btn" style="background: transparent; border: none; color: var(--text-primary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <div id="weight-modal" class="full-screen-modal hidden">
         <div class="modal-header">
             <button id="close-weight-modal" class="icon-btn">✕</button>
@@ -868,6 +880,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script src="script.js?v=999.0"></script>
 </body>
 </html> 

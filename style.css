@@ -1998,7 +1998,37 @@ input:checked + .slider:before {
     color: #ff3b30;
     background: transparent;
     border: 1px solid #ff3b30;
-    transition: all 0.2s ease;
+}
+
+/* Custom Delete Confirm Modal Styles */
+#delete-confirm-modal .modal-content {
+    background: var(--bg-card);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+#delete-confirm-modal #confirm-delete-btn {
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+#delete-confirm-modal #confirm-delete-btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+#delete-confirm-modal #cancel-delete-btn {
+    transition: background 0.2s;
+}
+
+#delete-confirm-modal #cancel-delete-btn:hover {
+    background: rgba(0,0,0,0.03);
+}
+
+[data-theme="dark"] #delete-confirm-modal #cancel-delete-btn:hover {
+    background: rgba(255,255,255,0.05);
 }
 
 .danger-btn:hover, .danger-btn:active {
