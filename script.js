@@ -798,9 +798,6 @@ function initManualAddModal() {
     const clearInputs = () => {
         document.getElementById('manual-name').value = '';
         document.getElementById('manual-calories').value = '';
-        document.getElementById('manual-protein').value = '';
-        document.getElementById('manual-fat').value = '';
-        document.getElementById('manual-carbs').value = '';
         document.getElementById('edit-food-id').value = '';
         document.getElementById('manual-modal-title').innerText = 'Добавить блюдо';
         document.getElementById('save-manual-btn').innerText = 'Добавить';
@@ -819,17 +816,13 @@ function initManualAddModal() {
             const id = document.getElementById('edit-food-id').value;
             const name = document.getElementById('manual-name').value.trim();
             const cals = document.getElementById('manual-calories').value.trim();
-            const protein = document.getElementById('manual-protein').value.trim();
-            const fat = document.getElementById('manual-fat').value.trim();
-            const carbs = document.getElementById('manual-carbs').value.trim();
-
             if (!name) {
                 alert("Пожалуйста, введите название блюда");
                 return;
             }
 
             if (!cals || parseInt(cals) === 0) {
-                // AI Recalculation
+                // AI Recalculation - if calories are empty or zero
                 saveBtn.innerText = "Считаю...";
                 saveBtn.disabled = true;
 
@@ -862,34 +855,50 @@ function initManualAddModal() {
                     clearInputs();
                 }
             } else {
-                // Manual input
-                if (id) {
-                    // Edit existing manually
-                    const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
-                    if (foodIndex !== -1) {
-                        currentMacros.foodHistory[foodIndex].name = name;
-                        currentMacros.foodHistory[foodIndex].calories = parseInt(cals) || 0;
-                        currentMacros.foodHistory[foodIndex].protein = parseInt(protein) || 0;
-                        currentMacros.foodHistory[foodIndex].fats = parseInt(fat) || 0;
-                        currentMacros.foodHistory[foodIndex].carbs = parseInt(carbs) || 0;
+                // Manual input with only calories provided - we still use AI to estimate macros for these calories
+                saveBtn.innerText = "Считаю...";
+                saveBtn.disabled = true;
+                
+                try {
+                    const aiResult = await analyzeTextFood(name, cals);
+                    
+                    if (id) {
+                        const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                        if (foodIndex !== -1) {
+                            currentMacros.foodHistory[foodIndex].name = aiResult.name;
+                            currentMacros.foodHistory[foodIndex].calories = aiResult.calories;
+                            currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
+                            currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
+                            currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
+                        }
+                    } else {
+                        addFoodToHome(aiResult, null);
                     }
-                } else {
-                    // Add new manually
+                } catch (err) {
+                    console.error("AI recalculation error with cals:", err);
+                    // Fallback to 0 macros if AI fails
                     const foodItem = {
-                        id: Date.now().toString(),
+                        id: id || Date.now().toString(),
                         name: name,
                         calories: parseInt(cals) || 0,
-                        protein: parseInt(protein) || 0,
-                        fats: parseInt(fat) || 0,
-                        carbs: parseInt(carbs) || 0
+                        protein: 0,
+                        fats: 0,
+                        carbs: 0
                     };
-                    addFoodToHome(foodItem, null);
+                    if (id) {
+                        const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                        if (foodIndex !== -1) currentMacros.foodHistory[foodIndex] = foodItem;
+                    } else {
+                        addFoodToHome(foodItem, null);
+                    }
+                } finally {
+                    saveBtn.disabled = false;
+                    recalculateMacros();
+                    saveAllData();
+                    initHomeScreenFromSaved();
+                    modal.classList.add('hidden');
+                    clearInputs();
                 }
-                recalculateMacros();
-                saveAllData();
-                initHomeScreenFromSaved();
-                modal.classList.add('hidden');
-                clearInputs();
             }
         });
     }
@@ -1801,10 +1810,6 @@ function openEditModal(id) {
     document.getElementById('edit-food-id').value = food.id;
     document.getElementById('manual-name').value = food.name;
     document.getElementById('manual-calories').value = Math.round(food.calories);
-    document.getElementById('manual-protein').value = Math.round(food.protein);
-    document.getElementById('manual-fat').value = Math.round(food.fats);
-    document.getElementById('manual-carbs').value = Math.round(food.carbs);
-
     document.getElementById('manual-add-modal').classList.remove('hidden');
 }
 
