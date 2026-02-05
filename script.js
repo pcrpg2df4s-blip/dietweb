@@ -191,7 +191,7 @@ function initRuler() {
     const pickerVal = document.getElementById('picker-val');
     const pixelsPerTick = 20; // 2px width + 18px margin-right
 
-    let lastIntegerWeight = -1;
+    let lastVibratedWeight = -1;
 
     scrollArea.addEventListener('scroll', () => {
         const scrollLeft = scrollArea.scrollLeft;
@@ -199,11 +199,11 @@ function initRuler() {
         const displayWeight = weight.toFixed(1);
         pickerVal.innerText = displayWeight;
 
-        // Haptic on integer change
-        const currentIntegerWeight = Math.floor(weight);
-        if (currentIntegerWeight !== lastIntegerWeight) {
-            triggerHaptic('selection'); // Using Telegram style or fallback if defined
-            lastIntegerWeight = currentIntegerWeight;
+        // Haptic on every 0.1 division (every tick)
+        const currentVibratedWeight = parseFloat(displayWeight);
+        if (currentVibratedWeight !== lastVibratedWeight) {
+            triggerHaptic('selection');
+            lastVibratedWeight = currentVibratedWeight;
         }
     });
 }
@@ -212,14 +212,19 @@ function initWeightModal() {
     const modal = document.getElementById('weight-modal');
     const closeBtn = document.getElementById('close-weight-modal');
     const saveBtn = document.getElementById('save-weight-btn');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 400); // Wait for transition
+    };
     const scrollArea = document.getElementById('ruler-scroll-area');
     const pixelsPerTick = 20;
     const minWeight = 30;
 
     if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+        closeBtn.addEventListener('click', closeModal);
     }
 
     if (saveBtn) {
@@ -228,12 +233,22 @@ function initWeightModal() {
             if (!isNaN(weightVal)) {
                 userData.weight = weightVal;
                 
-                // Add to history
+                // Add to history (One Date = One Record)
                 if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
-                currentMacros.weightHistory.push({
-                    date: new Date().toISOString(),
-                    weight: weightVal
-                });
+                const todayStr = new Date().toISOString().split('T')[0];
+                const existingEntryIndex = currentMacros.weightHistory.findIndex(entry =>
+                    entry.date && entry.date.split('T')[0] === todayStr
+                );
+                
+                if (existingEntryIndex !== -1) {
+                    currentMacros.weightHistory[existingEntryIndex].weight = weightVal;
+                    currentMacros.weightHistory[existingEntryIndex].date = new Date().toISOString(); // Update timestamp
+                } else {
+                    currentMacros.weightHistory.push({
+                        date: new Date().toISOString(),
+                        weight: weightVal
+                    });
+                }
 
                 // Full recalculation of goals
                 calculateNorms();
@@ -245,10 +260,11 @@ function initWeightModal() {
                 updateAllUINorms();
                 updateWeightWidgets();
                 updateBMI();
+                renderWeightChart();
                 initHomeScreenFromSaved(); // Refreshes rings and "Left" values on dashboard
                 
                 triggerHaptic('success');
-                modal.classList.add('hidden');
+                closeModal();
             }
         });
     }
@@ -266,10 +282,14 @@ function initWeightModal() {
 function openWeightRuler() {
     const modal = document.getElementById('weight-modal');
     const scrollArea = document.getElementById('ruler-scroll-area');
-    const pixelsPerTick = 20;
-    const minWeight = 30;
 
     modal.classList.remove('hidden');
+    // Trigger slide-up animation
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+    const pixelsPerTick = 20;
+    const minWeight = 30;
 
     // Scroll to current weight
     const currentWeight = userData.weight || 75;
