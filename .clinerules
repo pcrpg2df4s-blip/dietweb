@@ -19,3 +19,40 @@
 
 ## 5. PRE-CHANGE ANALYSIS
 - Before any change, analyze if it might break the current registration flow.
+
+# 🎨 DESIGN & UX PHILOSOPHY ("The Apple Way")
+1. **Visual Style:**
+   - Use "Glassmorphism" (backdrop-filter), rounded corners (20px+), and smooth gradients.
+   - **Dark/Light Mode:** All features must support both themes using CSS variables (`var(--bg-card)`, etc.).
+
+2. **Interaction (No Native Alerts):**
+   - **STRICTLY FORBIDDEN:** `window.alert()`, `window.confirm()`, `window.prompt()`.
+   - **REQUIRED:** Use custom modal windows with slide-up animations for all interactions (confirmations, inputs, errors).
+
+3. **Haptics (Vibration):**
+   - **ALWAYS** trigger `triggerHaptic()` on user interactions.
+   - Use `'light'` for tabs, `'medium'` for buttons, `'success'` for saves, `'warning'` for delete.
+   - **Rulers:** Trigger haptics on *every* value change (e.g., every 0.1kg step), not just integers.
+
+4. **Animations:**
+   - Modals must `slideUp` from the bottom.
+   - Pages must `fadeIn`.
+   - Use `cubic-bezier` for natural, "physical" feel.
+
+---
+
+# 🧠 INTELLIGENT BEHAVIOR
+1. **AI Nutritionist Persona:**
+   - When analyzing food, act as a **Realistic Nutritionist**.
+   - Assume standard cooking methods (oil, sauces) unless specified otherwise.
+   - Never return 0 carbs for cooked meals/breaded items unless it's raw meat.
+
+2. **Data Logic:**
+   - **Streak:** Only increment if `calories > 0` for the day.
+   - **Weight:** "One day = One entry". Update existing entry if date matches.
+   - **Manual Entry:** If user inputs Macros manually, SAVE THEM EXACTLY. Do not recalculate or zero them out.
+
+3. **Tech Stack:**
+   - **Pure Vanilla JS** (No React/Vue/jQuery).
+   - **Chart.js** for graphs.
+   - **Canvas-confetti** for rewards.
