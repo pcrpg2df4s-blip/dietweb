@@ -56,3 +56,9 @@
    - **Pure Vanilla JS** (No React/Vue/jQuery).
    - **Chart.js** for graphs.
    - **Canvas-confetti** for rewards.
+
+   # 🚫 NO AUTOMATED TESTING / NO SERVER START
+1. **CODE ONLY:** Your job is to write/edit code. Do NOT try to verify it.
+2. **NO LOCALHOST:** Do NOT run commands like `npm start`, `python -m http.server`, or `live-server`.
+3. **NO BROWSERS:** Do NOT launch browsers or Puppeteer scripts to check the UI.
+4. **WAIT FOR FEEDBACK:** Implement the change, save the files, and then **STOP**. I will test it myself.
