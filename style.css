@@ -2904,20 +2904,15 @@ input:checked + .slider:before {
 }
 
 .cinematic-reveal {
-    max-height: 0;
     opacity: 0;
-    transform: translateY(20px);
-    overflow: hidden;
-    transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
 }
 
 .cinematic-reveal.visible {
-    max-height: 100px; /* Adjust based on button height */
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     margin-top: 24px;
 }
 
@@ -3394,7 +3389,9 @@ input:checked + .slider:before {
 .ruler-ticks {
     display: flex;
     height: 50px;
-    padding: 0 50vw;
+    /* (wrapperWidth / 2) calibration logic */
+    padding-left: 50vw;
+    padding-right: 50vw;
 }
 
 .tick {
@@ -3402,17 +3399,18 @@ input:checked + .slider:before {
     background: var(--text-secondary);
     margin-right: 18px;
     flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tick.major {
-    height: 40px;
+    height: 45px; /* Taller for integers */
     background: var(--text-primary);
-    width: 3px;
+    width: 4px; /* Thicker for integers */
 }
 
 .tick.minor {
-    height: 20px;
-    opacity: 0.5;
+    height: 20px; /* Shorter for decimal steps */
+    opacity: 0.3;
 }
 
 .icon-btn {
@@ -3462,7 +3460,7 @@ input:checked + .slider:before {
 .height-ruler-wrapper {
     position: relative;
     width: 100%;
-    height: 350px; /* Increased height for better visibility */
+    height: 300px; /* Fixed height for consistent math: 300px / 2 = 150px center */
     display: flex;
     justify-content: center;
     overflow: hidden;
@@ -3489,7 +3487,7 @@ input:checked + .slider:before {
     display: flex;
     justify-content: center;
     scroll-behavior: auto;
-    scroll-snap-type: y mandatory;
+    /* scroll-snap-type removed for smoother calibration check, can be added back if needed */
 }
 
 .height-ruler-area::-webkit-scrollbar {
@@ -3500,25 +3498,25 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     width: 50px;
-    padding-top: 174px; /* (height-ruler-wrapper height / 2) - half of first tick height */
-    padding-bottom: 174px; /* (height-ruler-wrapper height / 2) - half of last tick margin/height */
-    box-sizing: content-box;
+    /* (wrapperHeight / 2) = 150px. To align first tick center, padding-top = 150px */
+    padding-top: 150px;
+    padding-bottom: 150px;
+    box-sizing: border-box;
 }
 
 .height-ruler .tick {
     height: 2px;
     background: var(--text-secondary);
-    margin-bottom: 13px; /* ~15px per 1cm */
+    margin-bottom: 18px; /* 2px + 18px = 20px EXACT STEP */
     margin-right: 0;
     width: 20px;
     flex-shrink: 0;
-    scroll-snap-align: center;
 }
 
 .height-ruler .tick.major {
-    width: 40px;
+    width: 45px;
     background: var(--text-primary);
-    height: 3px;
+    height: 4px; /* Thicker major tick */
 }
 
 .height-ruler .tick.minor {
@@ -3549,5 +3547,39 @@ input:checked + .slider:before {
 .onboarding-ruler .height-ruler-wrapper,
 .onboarding-ruler .ruler-wrapper {
     position: relative;
-    height: 300px;
+    height: 300px; /* Matching the 300px standard for calibration */
+}
+/* Choice Cards - Premium Dropdown Replacement */
+.choice-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 5px;
+}
+
+.choice-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 16px;
+    text-align: left;
+    font-size: 18px;
+    color: var(--text-primary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    width: 100%;
+    outline: none;
+}
+
+.choice-card.active {
+    border-color: var(--primary-color, #ffa500);
+    background: rgba(255, 165, 0, 0.15);
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1);
+}
+
+.choice-card:active {
+    transform: scale(0.98);
 }

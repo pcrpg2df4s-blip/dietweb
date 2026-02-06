@@ -243,10 +243,12 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
     // For height (step 1), we want 1 tick per 1cm
     const totalSteps = Math.round((max - min) / step);
 
+    const ticks = [];
     for (let i = 0; i <= totalSteps; i++) {
         const val = min + i * step;
         const tick = document.createElement('div');
         tick.className = 'tick';
+        tick.dataset.value = val;
         
         if (step === 0.1) {
             // Weight logic
@@ -261,18 +263,48 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
         
         if (isVertical && i === totalSteps) {
             tick.style.marginBottom = '0px';
+        } else if (!isVertical && i === totalSteps) {
+            tick.style.marginRight = '0px';
         }
         container.appendChild(tick);
+        ticks.push(tick);
     }
 
     let lastVibratedVal = -1;
 
     const onScroll = () => {
+        // GEOMETRIC DETECTION: Find the tick closest to the center line
+        const scrollAreaRect = scrollArea.getBoundingClientRect();
+        const center = isVertical
+            ? scrollAreaRect.top + scrollAreaRect.height / 2
+            : scrollAreaRect.left + scrollAreaRect.width / 2;
+
+        // Optimization: Start from approximate index
         const scrollPos = isVertical ? scrollArea.scrollTop : scrollArea.scrollLeft;
-        let value = min + (scrollPos / pixelsPerUnit) * step;
-        value = Math.max(min, Math.min(max, value));
-        
+        let approxIndex = Math.round(scrollPos / pixelsPerUnit);
+        approxIndex = Math.max(0, Math.min(ticks.length - 1, approxIndex));
+
+        let closestTick = ticks[approxIndex];
+        let minDiff = Infinity;
+
+        // Check a wider range of neighbors for robust geometric detection
+        // Using +/- 10 ticks to ensure we don't miss the center due to scroll momentum or sub-pixel issues
+        const searchRange = 10;
+        for (let i = Math.max(0, approxIndex - searchRange); i <= Math.min(ticks.length - 1, approxIndex + searchRange); i++) {
+            const tickRect = ticks[i].getBoundingClientRect();
+            const tickCenter = isVertical
+                ? tickRect.top + tickRect.height / 2
+                : tickRect.left + tickRect.width / 2;
+            const diff = Math.abs(center - tickCenter);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestTick = ticks[i];
+            }
+        }
+
+        const value = parseFloat(closestTick.dataset.value);
         const displayValue = step < 1 ? value.toFixed(1) : Math.round(value);
+        
         if (display) display.innerText = displayValue;
 
         if (displayValue !== lastVibratedVal) {
@@ -280,7 +312,6 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
             lastVibratedVal = displayValue;
         }
         
-        // Return current value for saving
         return parseFloat(displayValue);
     };
 
@@ -303,15 +334,7 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
 }
 
 function initRuler() {
-    // Re-implemented using setupRuler for the existing weight picker
-    setupRuler('ruler-ticks', 'ruler-scroll-area', 'picker-val', {
-        min: 30,
-        max: 150,
-        initialValue: userData.weight || 75,
-        isVertical: false,
-        step: 0.1,
-        pixelsPerUnit: 20
-    });
+    // Replaced by specific initializers
 }
 
 function initWeightModal() {
@@ -323,11 +346,8 @@ function initWeightModal() {
         modal.classList.remove('active');
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 400); // Wait for transition
+        }, 400);
     };
-    const scrollArea = document.getElementById('ruler-scroll-area');
-    const pixelsPerTick = 20;
-    const minWeight = 30;
 
     if (closeBtn) {
         closeBtn.addEventListener('click', closeModal);
@@ -335,7 +355,7 @@ function initWeightModal() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
-            const weightVal = parseFloat(document.getElementById('picker-val').innerText);
+            const weightVal = parseFloat(document.getElementById('settings-weight-val').innerText);
             if (!isNaN(weightVal)) {
                 userData.weight = weightVal;
                 
@@ -348,7 +368,7 @@ function initWeightModal() {
                 
                 if (existingEntryIndex !== -1) {
                     currentMacros.weightHistory[existingEntryIndex].weight = weightVal;
-                    currentMacros.weightHistory[existingEntryIndex].date = new Date().toISOString(); // Update timestamp
+                    currentMacros.weightHistory[existingEntryIndex].date = new Date().toISOString();
                 } else {
                     currentMacros.weightHistory.push({
                         date: new Date().toISOString(),
@@ -356,26 +376,24 @@ function initWeightModal() {
                     });
                 }
 
-                // Full recalculation of goals
                 calculateNorms();
-                
-                // Save and sync everything
                 saveAllData();
-                
-                // Update all UI components
                 updateAllUINorms();
                 updateWeightWidgets();
                 updateBMI();
-                renderWeightChart();
-                initHomeScreenFromSaved(); // Refreshes rings and "Left" values on dashboard
+                if (typeof renderWeightChart === 'function') renderWeightChart();
+                initHomeScreenFromSaved();
                 
+                // Update settings text if visible
+                const setWeightText = document.getElementById('set-weight-text');
+                if (setWeightText) setWeightText.innerText = weightVal.toFixed(1) + ' кг';
+
                 triggerHaptic('success');
                 closeModal();
             }
         });
     }
 
-    // Intercept clicks on weight card in Progress page
     const weightCard = document.querySelector('.weight-card');
     if (weightCard) {
         weightCard.onclick = (e) => {
@@ -387,36 +405,23 @@ function initWeightModal() {
 
 function openWeightRuler() {
     const modal = document.getElementById('weight-modal');
-    const scrollArea = document.getElementById('ruler-scroll-area');
-
     modal.classList.remove('hidden');
-    // Trigger slide-up animation
     setTimeout(() => {
         modal.classList.add('active');
     }, 10);
-    const pixelsPerTick = 20;
-    const minWeight = 30;
 
-    // Scroll to current weight
-    const currentWeight = userData.weight || 75;
-    const scrollTarget = (currentWeight - minWeight) * 10 * pixelsPerTick;
-    
-    // We need a small timeout to ensure modal is rendered for scrollLeft to work correctly
-    setTimeout(() => {
-        scrollArea.scrollLeft = scrollTarget;
-        document.getElementById('picker-val').innerText = currentWeight.toFixed(1);
-    }, 10);
+    setupRuler('settings-weight-ruler', 'settings-weight-ruler-area', 'settings-weight-val', {
+        min: 30,
+        max: 160,
+        initialValue: userData.weight || 75,
+        isVertical: false,
+        step: 0.1,
+        pixelsPerUnit: 20
+    });
 }
 
 function initHeightRuler() {
-    setupRuler('height-ruler', 'height-ruler-area', 'height-val', {
-        min: 120,
-        max: 220,
-        initialValue: userData.height || 175,
-        isVertical: true,
-        step: 1,
-        pixelsPerUnit: 15
-    });
+    // Replaced by specific initializers
 }
 
 function initHeightModal() {
@@ -437,7 +442,7 @@ function initHeightModal() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
-            const heightVal = parseInt(document.getElementById('height-val').innerText);
+            const heightVal = parseInt(document.getElementById('settings-height-val').innerText);
             if (!isNaN(heightVal)) {
                 userData.height = heightVal;
                 
@@ -460,22 +465,19 @@ function initHeightModal() {
 
 function openHeightRuler() {
     const modal = document.getElementById('height-modal');
-    const scrollArea = document.getElementById('height-ruler-area');
-
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.add('active');
     }, 10);
 
-    const pixelsPerCm = 15;
-    const minHeight = 120;
-    const currentHeight = userData.height || 170;
-    const scrollTarget = (currentHeight - minHeight) * pixelsPerCm;
-    
-    setTimeout(() => {
-        scrollArea.scrollTop = scrollTarget;
-        document.getElementById('height-val').innerText = currentHeight;
-    }, 10);
+    setupRuler('settings-height-ruler', 'settings-height-ruler-area', 'settings-height-val', {
+        min: 120,
+        max: 220,
+        initialValue: userData.height || 175,
+        isVertical: true,
+        step: 1,
+        pixelsPerUnit: 20
+    });
 }
 
 /**
@@ -1266,7 +1268,7 @@ function initOnboardingHeightRuler() {
         initialValue: userData.height || 175,
         isVertical: true,
         step: 1,
-        pixelsPerUnit: 15
+        pixelsPerUnit: 20 // STRICTLY 20px (2px tick + 18px margin)
     });
 }
 
@@ -1346,9 +1348,9 @@ function initDateSpinner() {
     });
     monthCol.innerHTML = monthsHtml;
 
-    // Populate Years (1960-2012)
+    // Populate Years (1960-2025)
     let yearsHtml = '';
-    for (let i = 1960; i <= 2012; i++) {
+    for (let i = 1960; i <= 2025; i++) {
         yearsHtml += `<div class="spinner-item" data-value="${i}">${i}</div>`;
     }
     yearCol.innerHTML = yearsHtml;
@@ -1401,16 +1403,40 @@ function initDateSpinner() {
     monthCol.addEventListener('scroll', () => handleScroll(monthCol, 'month'));
     yearCol.addEventListener('scroll', () => handleScroll(yearCol, 'year'));
 
-    // Initial position for Year 2000
-    setTimeout(() => {
+    // Initial position for Day 1, Month 1 (Jan), Year 2000
+    const scrollDateSpinnerToDefault = () => {
+        const dayIndex = 1 - 1;
+        const monthIndex = 1 - 1;
         const yearIndex = 2000 - 1960;
-        yearCol.scrollTop = yearIndex * itemHeight;
         
-        // Trigger initial active states
+        // Use scrollTo for more control and explicit behavior
+        dayCol.scrollTo({ top: dayIndex * itemHeight, behavior: 'auto' });
+        monthCol.scrollTo({ top: monthIndex * itemHeight, behavior: 'auto' });
+        yearCol.scrollTo({ top: yearIndex * itemHeight, behavior: 'auto' });
+        
+        // Force active states
         handleScroll(dayCol, 'day');
         handleScroll(monthCol, 'month');
         handleScroll(yearCol, 'year');
-    }, 100);
+    };
+
+    // Run after DOM is fully ready and painted
+    if (document.readyState === 'complete') {
+        setTimeout(scrollDateSpinnerToDefault, 200);
+    } else {
+        window.addEventListener('load', () => setTimeout(scrollDateSpinnerToDefault, 200));
+    }
+    
+    // Also trigger on nextStep(5) to ensure it works when the screen is actually shown
+    const originalNextStep = window.nextStep;
+    window.nextStep = function(stepNumber) {
+        if (typeof originalNextStep === 'function') {
+            originalNextStep(stepNumber);
+        }
+        if (stepNumber === 5) {
+            setTimeout(scrollDateSpinnerToDefault, 50);
+        }
+    };
 }
 
 function selectGoal(goal) {
@@ -1482,17 +1508,14 @@ function startLoadingAnimation() {
             document.getElementById('loading-title').innerText = "План успешно составлен!";
             statusEl.style.display = 'none';
             
-            // Cinematic Reveal with 500ms delay
+            // Cinematic Reveal with 400ms delay
             setTimeout(() => {
                 const btnContainer = document.getElementById('final-btn-container');
                 if (btnContainer) {
                     btnContainer.classList.add('visible');
                     triggerHaptic('medium');
-                } else {
-                    // Fallback if container doesn't exist for some reason
-                    finalBtn.style.display = 'block';
                 }
-            }, 500);
+            }, 400);
         }
     }, 40);
 }
@@ -2652,17 +2675,21 @@ function editSetting(type) {
     const saveBtn = document.getElementById('save-edit-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
 
-    const goalMap = { 'lose': 'Похудение', 'maintain': 'Норма', 'gain': 'Масса' };
+    const goalMap = { 'lose': '📉 Похудение', 'maintain': '⚖️ Норма', 'gain': '💪 Набор массы' };
     const activityMap = {
-        1.2: 'Сидячий (0-2)',
-        1.375: 'Лёгкий (2-3)',
-        1.55: 'Умеренный (3-5)',
-        1.725: 'Высокая (6+)',
-        1.9: 'Экстремальная'
+        1.2: '🧘 Сидячий (0-2)',
+        1.375: '🚶 Лёгкий (2-3)',
+        1.55: '🏃 Умеренный (3-5)',
+        1.725: '🚴 Высокая (6+)',
+        1.9: '🏋️ Экстремальная'
     };
 
     let content = '';
     let currentTitle = '';
+    let selectedVal = null;
+
+    if (type === 'goal') selectedVal = userData.goal;
+    if (type === 'activity') selectedVal = userData.activity;
 
     switch (type) {
         case 'weight':
@@ -2675,25 +2702,41 @@ function editSetting(type) {
             return;
         case 'activity':
             currentTitle = 'Активность';
-            content = `<select id="edit-value-input" class="modal-input">`;
+            content = `<div class="choice-grid">`;
             for (const [val, label] of Object.entries(activityMap)) {
-                content += `<option value="${val}" ${userData.activity == val ? 'selected' : ''}>${label}</option>`;
+                const isActive = userData.activity == val ? 'active' : '';
+                content += `<button class="choice-card ${isActive}" data-value="${val}">${label}</button>`;
             }
-            content += `</select>`;
+            content += `</div><input type="hidden" id="edit-value-input" value="${userData.activity}">`;
             break;
         case 'goal':
             currentTitle = 'Цель';
-            content = `<select id="edit-value-input" class="modal-input">`;
+            content = `<div class="choice-grid">`;
             for (const [val, label] of Object.entries(goalMap)) {
-                content += `<option value="${val}" ${userData.goal == val ? 'selected' : ''}>${label}</option>`;
+                const isActive = userData.goal == val ? 'active' : '';
+                content += `<button class="choice-card ${isActive}" data-value="${val}">${label}</button>`;
             }
-            content += `</select>`;
+            content += `</div><input type="hidden" id="edit-value-input" value="${userData.goal}">`;
             break;
     }
 
     title.innerText = currentTitle;
     container.innerHTML = content;
     modal.classList.remove('hidden');
+
+    // Add click listeners for choice cards
+    if (type === 'activity' || type === 'goal') {
+        const cards = container.querySelectorAll('.choice-card');
+        cards.forEach(card => {
+            card.onclick = () => {
+                cards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                const newVal = card.getAttribute('data-value');
+                document.getElementById('edit-value-input').value = newVal;
+                triggerHaptic('light');
+            };
+        });
+    }
 
     const handleSave = () => {
         const input = document.getElementById('edit-value-input');
@@ -2709,6 +2752,7 @@ function editSetting(type) {
             userData.goal = val;
         }
 
+        triggerHaptic('success');
         calculateNorms();
         saveAllData();
         updateAllUINorms();
@@ -2721,9 +2765,6 @@ function editSetting(type) {
 
     saveBtn.onclick = handleSave;
     cancelBtn.onclick = closeModal;
-
-    // Change button text to "Добавить" for weight/height and "Изменить" for others if needed
-    // or keep "Добавить" as requested in the latest message
     saveBtn.innerText = "Добавить";
 }
 
