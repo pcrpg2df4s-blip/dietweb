@@ -126,18 +126,11 @@ let celebratedStatus = {
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
-    // Если это ошибка квоты localStorage, она обычно содержит "quota"
-    if (message.toLowerCase().includes("quota")) {
-        alert(`ОШИБКА ХРАНИЛИЩА: ${message}\nПопробуйте очистить данные в настройках.`);
-    }
     return false;
 };
 
 window.onunhandledrejection = function(event) {
     console.error("Unhandled rejection:", event.reason);
-    if (event.reason && event.reason.toString().toLowerCase().includes("quota")) {
-        alert(`ОШИБКА КВОТЫ (Promise): ${event.reason}`);
-    }
 };
 
 // Инициализация при загрузке
@@ -167,6 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initHeightRuler();
     initHeightModal();
     initGalleryButton();
+    initDateSpinner();
 });
 
 function initGalleryButton() {
@@ -221,45 +215,102 @@ function processUploadedFile(file) {
     reader.readAsDataURL(file);
 }
 
-function initRuler() {
-    const rulerTicks = document.getElementById('ruler-ticks');
-    if (!rulerTicks) return;
+/**
+ * Generic Ruler Initialization
+ * @param {string} containerId - ID of the container for ticks
+ * @param {string} scrollAreaId - ID of the scrollable area
+ * @param {string} valueDisplayId - ID of the element to display value
+ * @param {object} options - { min, max, initialValue, isVertical, step, pixelsPerUnit }
+ */
+function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
+    const container = document.getElementById(containerId);
+    const scrollArea = document.getElementById(scrollAreaId);
+    const display = document.getElementById(valueDisplayId);
+    if (!container || !scrollArea) return;
 
-    rulerTicks.innerHTML = '';
-    const minWeight = 30;
-    const maxWeight = 150;
+    const {
+        min = 30,
+        max = 150,
+        initialValue = 75,
+        isVertical = false,
+        step = 0.1,
+        pixelsPerUnit = 20
+    } = options;
 
-    for (let i = minWeight * 10; i <= maxWeight * 10; i++) {
+    container.innerHTML = '';
+    
+    // For weight (step 0.1), we want 10 ticks per 1kg
+    // For height (step 1), we want 1 tick per 1cm
+    const totalSteps = Math.round((max - min) / step);
+
+    for (let i = 0; i <= totalSteps; i++) {
+        const val = min + i * step;
         const tick = document.createElement('div');
         tick.className = 'tick';
-        if (i % 10 === 0) {
-            tick.classList.add('major');
-        } else if (i % 5 === 0) {
-            // Optional: semi-major for .5 values
+        
+        if (step === 0.1) {
+            // Weight logic
+            if (Math.round(val * 10) % 10 === 0) tick.classList.add('major');
+            else if (Math.round(val * 10) % 5 === 0) {}
+            else tick.classList.add('minor');
         } else {
-            tick.classList.add('minor');
+            // Height logic (step 1)
+            if (Math.round(val) % 10 === 0) tick.classList.add('major');
+            else tick.classList.add('minor');
         }
-        rulerTicks.appendChild(tick);
+        
+        if (isVertical && i === totalSteps) {
+            tick.style.marginBottom = '0px';
+        }
+        container.appendChild(tick);
     }
 
-    const scrollArea = document.getElementById('ruler-scroll-area');
-    const pickerVal = document.getElementById('picker-val');
-    const pixelsPerTick = 20; // 2px width + 18px margin-right
+    let lastVibratedVal = -1;
 
-    let lastVibratedWeight = -1;
+    const onScroll = () => {
+        const scrollPos = isVertical ? scrollArea.scrollTop : scrollArea.scrollLeft;
+        let value = min + (scrollPos / pixelsPerUnit) * step;
+        value = Math.max(min, Math.min(max, value));
+        
+        const displayValue = step < 1 ? value.toFixed(1) : Math.round(value);
+        if (display) display.innerText = displayValue;
 
-    scrollArea.addEventListener('scroll', () => {
-        const scrollLeft = scrollArea.scrollLeft;
-        const weight = minWeight + (scrollLeft / pixelsPerTick) / 10;
-        const displayWeight = weight.toFixed(1);
-        pickerVal.innerText = displayWeight;
-
-        // Haptic on every 0.1 division (every tick)
-        const currentVibratedWeight = parseFloat(displayWeight);
-        if (currentVibratedWeight !== lastVibratedWeight) {
+        if (displayValue !== lastVibratedVal) {
             triggerHaptic('selection');
-            lastVibratedWeight = currentVibratedWeight;
+            lastVibratedVal = displayValue;
         }
+        
+        // Return current value for saving
+        return parseFloat(displayValue);
+    };
+
+    scrollArea.addEventListener('scroll', onScroll);
+
+    // Initial positioning
+    const setPosition = (val) => {
+        const targetPos = ((val - min) / step) * pixelsPerUnit;
+        if (isVertical) {
+            scrollArea.scrollTop = targetPos;
+        } else {
+            scrollArea.scrollLeft = targetPos;
+        }
+        if (display) display.innerText = step < 1 ? val.toFixed(1) : Math.round(val);
+    };
+
+    setTimeout(() => setPosition(initialValue), 10);
+
+    return { setPosition, getValue: () => parseFloat(display.innerText) };
+}
+
+function initRuler() {
+    // Re-implemented using setupRuler for the existing weight picker
+    setupRuler('ruler-ticks', 'ruler-scroll-area', 'picker-val', {
+        min: 30,
+        max: 150,
+        initialValue: userData.weight || 75,
+        isVertical: false,
+        step: 0.1,
+        pixelsPerUnit: 20
     });
 }
 
@@ -358,42 +409,13 @@ function openWeightRuler() {
 }
 
 function initHeightRuler() {
-    const heightRuler = document.getElementById('height-ruler');
-    if (!heightRuler) return;
-
-    heightRuler.innerHTML = '';
-    const minHeight = 100;
-    const maxHeight = 250;
-
-    for (let i = minHeight; i <= maxHeight; i++) {
-        const tick = document.createElement('div');
-        tick.className = 'tick';
-        if (i % 10 === 0) {
-            tick.classList.add('major');
-        } else if (i % 5 === 0) {
-            // Semi-major
-        } else {
-            tick.classList.add('minor');
-        }
-        heightRuler.appendChild(tick);
-    }
-
-    const scrollArea = document.getElementById('height-ruler-area');
-    const heightVal = document.getElementById('height-val');
-    const pixelsPerCm = 15; // 2px height + 13px margin-bottom
-
-    let lastVibratedHeight = -1;
-
-    scrollArea.addEventListener('scroll', () => {
-        const scrollTop = scrollArea.scrollTop;
-        const height = minHeight + (scrollTop / pixelsPerCm);
-        const displayHeight = Math.round(height);
-        heightVal.innerText = displayHeight;
-
-        if (displayHeight !== lastVibratedHeight) {
-            triggerHaptic('selection');
-            lastVibratedHeight = displayHeight;
-        }
+    setupRuler('height-ruler', 'height-ruler-area', 'height-val', {
+        min: 120,
+        max: 220,
+        initialValue: userData.height || 175,
+        isVertical: true,
+        step: 1,
+        pixelsPerUnit: 15
     });
 }
 
@@ -446,8 +468,8 @@ function openHeightRuler() {
     }, 10);
 
     const pixelsPerCm = 15;
-    const minHeight = 100;
-    const currentHeight = userData.height || 175;
+    const minHeight = 120;
+    const currentHeight = userData.height || 170;
     const scrollTarget = (currentHeight - minHeight) * pixelsPerCm;
     
     setTimeout(() => {
@@ -798,6 +820,9 @@ function initManualAddModal() {
     const clearInputs = () => {
         document.getElementById('manual-name').value = '';
         document.getElementById('manual-calories').value = '';
+        document.getElementById('manual-protein').value = '';
+        document.getElementById('manual-fat').value = '';
+        document.getElementById('manual-carbs').value = '';
         document.getElementById('edit-food-id').value = '';
         document.getElementById('manual-modal-title').innerText = 'Добавить блюдо';
         document.getElementById('save-manual-btn').innerText = 'Добавить';
@@ -816,8 +841,39 @@ function initManualAddModal() {
             const id = document.getElementById('edit-food-id').value;
             const name = document.getElementById('manual-name').value.trim();
             const cals = document.getElementById('manual-calories').value.trim();
+            const protein = document.getElementById('manual-protein').value.trim();
+            const fat = document.getElementById('manual-fat').value.trim();
+            const carbs = document.getElementById('manual-carbs').value.trim();
+
             if (!name) {
-                alert("Пожалуйста, введите название блюда");
+                console.error("Пожалуйста, введите название блюда");
+                return;
+            }
+
+            // If user provided macros manually
+            if (protein !== '' || fat !== '' || carbs !== '') {
+                const foodItem = {
+                    id: id || Date.now().toString(),
+                    name: name,
+                    calories: parseInt(cals) || ( (parseInt(protein) || 0) * 4 + (parseInt(fat) || 0) * 9 + (parseInt(carbs) || 0) * 4 ),
+                    protein: parseInt(protein) || 0,
+                    fats: parseInt(fat) || 0,
+                    carbs: parseInt(carbs) || 0
+                };
+
+                if (id) {
+                    const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                    if (foodIndex !== -1) currentMacros.foodHistory[foodIndex] = foodItem;
+                } else {
+                    addFoodToHome(foodItem, null);
+                }
+
+                saveBtn.disabled = false;
+                recalculateMacros();
+                saveAllData();
+                initHomeScreenFromSaved();
+                modal.classList.add('hidden');
+                clearInputs();
                 return;
             }
 
@@ -845,7 +901,6 @@ function initManualAddModal() {
                     }
                 } catch (err) {
                     console.error("AI recalculation error:", err);
-                    alert("Ошибка при анализе текста.");
                 } finally {
                     saveBtn.disabled = false;
                     recalculateMacros();
@@ -975,13 +1030,11 @@ function saveAllData() {
                 try {
                     localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
                     console.log("[Storage] Save successful after trimming.");
-                    alert("Внимание: История фотографий была сокращена, так как место в браузере закончилось.");
                 } catch (e2) {
                     console.error("[Storage] Still failing after trimming:", e2);
-                    alert("Критическая ошибка: Место в браузере полностью исчерпано (даже после удаления фото). Возможно, другие приложения на этом сайте занимают всё место.");
                 }
             } else {
-                alert("Ошибка: Превышен лимит памяти браузера. Даже без истории фотографий не удается сохранить данные. Попробуйте очистить кэш браузера для этого сайта.");
+                console.error("Ошибка: Превышен лимит памяти браузера.");
             }
         }
     }
@@ -1070,7 +1123,7 @@ function initHomeScreenFromSaved() {
                     </div>
                 </div>
                 <div class="food-item-right">
-                    <span class="food-time">${food.time}</span>
+                    <span class="food-time">${food.time || (food.timestamp ? new Date(food.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '')}</span>
                     <div class="food-actions">
                         <button class="action-icon-btn edit-btn" data-id="${food.id}">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1180,6 +1233,13 @@ function nextStep(stepNumber) {
             globalTabBar.style.display = 'none';
         }
     }
+
+    // Initialize rulers if entering height or weight onboarding steps
+    if (stepNumber === 4) {
+        initOnboardingHeightRuler();
+    } else if (stepNumber === 'height-weight') {
+        initOnboardingWeightRuler();
+    }
     window.scrollTo(0,0);
 }
 
@@ -1199,17 +1259,158 @@ function selectActivity(multiplier) {
     nextStep(3);
 }
 
+function initOnboardingHeightRuler() {
+    setupRuler('onboarding-height-ruler', 'onboarding-height-ruler-area', 'onboarding-height-val', {
+        min: 120,
+        max: 220,
+        initialValue: userData.height || 175,
+        isVertical: true,
+        step: 1,
+        pixelsPerUnit: 15
+    });
+}
+
+function initOnboardingWeightRuler() {
+    setupRuler('onboarding-weight-ruler', 'onboarding-weight-ruler-area', 'onboarding-weight-val', {
+        min: 30,
+        max: 160,
+        initialValue: userData.weight || 75,
+        isVertical: false,
+        step: 0.1,
+        pixelsPerUnit: 20
+    });
+}
+
+function saveHeightOnboarding() {
+    triggerHaptic('success');
+    userData.height = parseInt(document.getElementById('onboarding-height-val').innerText);
+    nextStep('height-weight');
+}
+
+function saveWeightOnboarding() {
+    triggerHaptic('success');
+    userData.weight = parseFloat(document.getElementById('onboarding-weight-val').innerText);
+    nextStep(5);
+}
+
 function saveBorn() {
     const birthdate = document.getElementById('birthdate').value;
     if (!birthdate) {
-        tg.showAlert("Пожалуйста, выберите дату рождения");
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert("Пожалуйста, выберите дату рождения");
+        } else {
+            console.error("Пожалуйста, выберите дату рождения");
+        }
         return;
     }
     userData.birthdate = birthdate;
-    const birthYear = new Date(birthdate).getFullYear();
-    const currentYear = new Date().getFullYear();
-    userData.age = currentYear - birthYear;
+    
+    // Calculate age precisely
+    const birthDateObj = new Date(birthdate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const m = today.getMonth() - birthDateObj.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+        age--;
+    }
+    
+    userData.age = age;
+    triggerHaptic('success');
     nextStep(6);
+}
+
+/**
+ * Date Spinner Initialization
+ */
+function initDateSpinner() {
+    const dayCol = document.getElementById('spinner-day');
+    const monthCol = document.getElementById('spinner-month');
+    const yearCol = document.getElementById('spinner-year');
+    const birthdateInput = document.getElementById('birthdate');
+
+    if (!dayCol || !monthCol || !yearCol) return;
+
+    const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    
+    // Populate Days (1-31)
+    let daysHtml = '';
+    for (let i = 1; i <= 31; i++) {
+        daysHtml += `<div class="spinner-item" data-value="${i}">${i}</div>`;
+    }
+    dayCol.innerHTML = daysHtml;
+
+    // Populate Months
+    let monthsHtml = '';
+    months.forEach((m, i) => {
+        monthsHtml += `<div class="spinner-item" data-value="${i + 1}">${m}</div>`;
+    });
+    monthCol.innerHTML = monthsHtml;
+
+    // Populate Years (1960-2012)
+    let yearsHtml = '';
+    for (let i = 1960; i <= 2012; i++) {
+        yearsHtml += `<div class="spinner-item" data-value="${i}">${i}</div>`;
+    }
+    yearCol.innerHTML = yearsHtml;
+
+    let selectedDay = 1;
+    let selectedMonth = 1;
+    let selectedYear = 2000;
+
+    const updateSelectedDate = () => {
+        const formattedMonth = selectedMonth.toString().padStart(2, '0');
+        const formattedDay = selectedDay.toString().padStart(2, '0');
+        birthdateInput.value = `${selectedYear}-${formattedMonth}-${formattedDay}`;
+    };
+
+    const itemHeight = 40;
+
+    const handleScroll = (col, type) => {
+        const scrollTop = col.scrollTop;
+        const index = Math.round(scrollTop / itemHeight);
+        const items = col.querySelectorAll('.spinner-item');
+        
+        items.forEach((item, i) => {
+            if (i === index) {
+                item.classList.add('active');
+                const val = parseInt(item.dataset.value);
+                if (type === 'day') {
+                    if (selectedDay !== val) {
+                        selectedDay = val;
+                        triggerHaptic('selection');
+                    }
+                } else if (type === 'month') {
+                    if (selectedMonth !== val) {
+                        selectedMonth = val;
+                        triggerHaptic('selection');
+                    }
+                } else if (type === 'year') {
+                    if (selectedYear !== val) {
+                        selectedYear = val;
+                        triggerHaptic('selection');
+                    }
+                }
+            } else {
+                item.classList.remove('active');
+            }
+        });
+        updateSelectedDate();
+    };
+
+    dayCol.addEventListener('scroll', () => handleScroll(dayCol, 'day'));
+    monthCol.addEventListener('scroll', () => handleScroll(monthCol, 'month'));
+    yearCol.addEventListener('scroll', () => handleScroll(yearCol, 'year'));
+
+    // Initial position for Year 2000
+    setTimeout(() => {
+        const yearIndex = 2000 - 1960;
+        yearCol.scrollTop = yearIndex * itemHeight;
+        
+        // Trigger initial active states
+        handleScroll(dayCol, 'day');
+        handleScroll(monthCol, 'month');
+        handleScroll(yearCol, 'year');
+    }, 100);
 }
 
 function selectGoal(goal) {
@@ -1280,7 +1481,18 @@ function startLoadingAnimation() {
             triggerHaptic('success');
             document.getElementById('loading-title').innerText = "План успешно составлен!";
             statusEl.style.display = 'none';
-            finalBtn.style.display = 'block';
+            
+            // Cinematic Reveal with 500ms delay
+            setTimeout(() => {
+                const btnContainer = document.getElementById('final-btn-container');
+                if (btnContainer) {
+                    btnContainer.classList.add('visible');
+                    triggerHaptic('medium');
+                } else {
+                    // Fallback if container doesn't exist for some reason
+                    finalBtn.style.display = 'block';
+                }
+            }, 500);
         }
     }, 40);
 }
@@ -1395,13 +1607,7 @@ function calculateNorms() {
 }
 
 function showResults() {
-    const heightInput = document.getElementById('height');
-    const weightInput = document.getElementById('weight');
-
-    if (!heightInput || !weightInput) return;
-
-    userData.height = parseFloat(heightInput.value);
-    userData.weight = parseFloat(weightInput.value);
+    // userData.height and userData.weight are now already set via onboarding rulers
     
     const norms = calculateNorms();
     const { calories, protein, fats, carbs } = norms;
@@ -1615,7 +1821,7 @@ async function startAnalysis(imageData, thumbnailDataUrl) {
 async function finishAnalysis(imageData, thumbnailDataUrl) {
     // 1. Проверяем, видит ли вообще скрипт твой ключ
     if (!CONFIG.GOOGLE_API_KEY) {
-        alert("ОШИБКА: Скрипт не видит API ключ! (Хотя в .env он может быть). Проблема в передаче ключа.");
+        console.error("ОШИБКА: Скрипт не видит API ключ!");
         nextStep(12);
         return;
     }
@@ -1684,16 +1890,12 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
 
         // 2. Если Google вернул ошибку, показываем её текст
         if (data.error) {
-            if (data.error.code === 429) {
-                alert(`Лимит запросов исчерпан (429) после 3 попыток. Попробуйте позже.`);
-            } else {
-                alert(`GOOGLE ОТКАЗАЛ: ${data.error.message} (Code: ${data.error.code})`);
-            }
+            console.error("Google API error:", data.error);
             throw new Error(data.error.message);
         }
         
         if (!data.candidates || !data.candidates[0].content) {
-            alert("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ (Блокировка безопасности или сбой)");
+            console.error("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ");
             throw new Error("Empty response");
         }
 
@@ -1815,6 +2017,9 @@ function openEditModal(id) {
     document.getElementById('edit-food-id').value = food.id;
     document.getElementById('manual-name').value = food.name;
     document.getElementById('manual-calories').value = Math.round(food.calories);
+    document.getElementById('manual-protein').value = food.protein || '';
+    document.getElementById('manual-fat').value = food.fats || '';
+    document.getElementById('manual-carbs').value = food.carbs || '';
     document.getElementById('manual-add-modal').classList.remove('hidden');
 }
 
@@ -1946,13 +2151,14 @@ function updateCalendarDates() {
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
     monday.setDate(now.getDate() + diff);
 
-    const dayElements = document.querySelectorAll('.calendar-day');
+    const dayElements = document.querySelectorAll('.day-card');
     dayElements.forEach((el, index) => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + index);
         
         const dayNum = date.getDate();
-        el.querySelector('.day-number').innerText = dayNum;
+        const dayNumEl = el.querySelector('.day-number') || el.querySelector('text');
+        if (dayNumEl) dayNumEl.textContent = dayNum;
         
         if (date.toDateString() === now.toDateString()) {
             el.classList.add('active');
@@ -2243,19 +2449,9 @@ function logNewWeight() {
 
 function updateWeightWidgets() {
     const currentWeightEl = document.getElementById('stats-current-weight');
-    const goalWeightEl = document.getElementById('stats-goal-weight');
     const streakCountEl = document.getElementById('stats-streak-count');
     
     if (currentWeightEl) currentWeightEl.innerText = userData.weight || '--';
-    if (goalWeightEl) {
-        // Calculate a simple goal if not set, or use weight as fallback
-        // In this app, we don't have a separate target weight field in userData yet,
-        // but we can infer it from the goal (lose/gain).
-        let targetWeight = userData.weight;
-        if (userData.goal === 'lose') targetWeight -= 5;
-        else if (userData.goal === 'gain') targetWeight += 5;
-        goalWeightEl.innerText = targetWeight;
-    }
     
     // Update streak from existing logic
     const streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
@@ -2581,10 +2777,36 @@ function loadSettingsData() {
 }
 
 function resetAppData() {
-    if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
-        localStorage.clear();
-        location.reload();
+    const modal = document.getElementById('reset-confirm-modal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    
+    const confirmBtn = document.getElementById('confirm-reset-btn');
+    const cancelBtn = document.getElementById('cancel-reset-btn');
+    
+    if (confirmBtn) {
+        confirmBtn.onclick = () => {
+            triggerHaptic('warning');
+            localStorage.clear();
+            location.reload();
+        };
     }
+    
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            triggerHaptic('light');
+            modal.classList.add('hidden');
+        };
+    }
+
+    // Close on overlay click
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            triggerHaptic('light');
+            modal.classList.add('hidden');
+        }
+    };
 }
 
 function setProgress(id, percent) {

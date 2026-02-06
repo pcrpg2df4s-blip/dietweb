@@ -80,7 +80,7 @@ body {
     opacity: 0;
     transition: all 0.3s ease-in-out;
 }
-.step.active {
+.step.active:not(.hidden) {
     display: block;
     opacity: 1;
 }
@@ -2000,6 +2000,145 @@ input:checked + .slider:before {
     border: 1px solid #ff3b30;
 }
 
+/* Date Spinner Styles */
+.date-spinner-container {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.date-spinner-wrapper {
+    display: flex;
+    gap: 10px;
+    height: 250px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 0 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+}
+
+.spinner-col {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    scroll-snap-type: y mandatory;
+    padding: 110px 0; /* Huge padding trick to allow center snapping */
+}
+
+.spinner-col::-webkit-scrollbar {
+    display: none;
+}
+
+.spinner-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    scroll-snap-align: center;
+    transition: all 0.2s ease;
+}
+
+.spinner-item.active {
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.spinner-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 40px;
+    border-top: 2px solid #ff9500;
+    border-bottom: 2px solid #ff9500;
+    pointer-events: none;
+    z-index: 2;
+}
+
+#spinner-month .spinner-item {
+    font-size: 16px;
+}
+
+#spinner-month .spinner-item.active {
+    font-size: 18px;
+}
+
+.main-btn.danger-bg {
+    background-color: #ff3b30 !important;
+    color: #ffffff !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Slide up from bottom */
+    z-index: 3000;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+[data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.btn-outline {
+    background: transparent !important;
+    border: 2px solid var(--text-primary) !important;
+    color: var(--text-primary) !important;
+    border-radius: 30px;
+    padding: 16px 0;
+    width: 100%;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger-filled {
+    background-color: #ff3b30 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 30px;
+    padding: 16px 0;
+    width: 100%;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+}
+
 /* Custom Delete Confirm Modal Styles */
 #delete-confirm-modal .modal-content {
     background: var(--bg-card);
@@ -2764,6 +2903,24 @@ input:checked + .slider:before {
     margin: 0;
 }
 
+.cinematic-reveal {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(20px);
+    overflow: hidden;
+    transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+}
+
+.cinematic-reveal.visible {
+    max-height: 100px; /* Adjust based on button height */
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 24px;
+}
+
 @keyframes pulse {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.1); opacity: 0.7; }
@@ -3303,24 +3460,23 @@ input:checked + .slider:before {
 }
 
 .height-ruler-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     width: 100%;
-    height: 100%;
+    height: 350px; /* Increased height for better visibility */
     display: flex;
     justify-content: center;
     overflow: hidden;
+    margin: 20px 0;
 }
 
 .center-line-horizontal {
     position: absolute;
     top: 50%;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    width: 140px;
     height: 4px;
     background: #FF9F0A;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%);
     z-index: 10;
     border-radius: 2px;
     pointer-events: none;
@@ -3333,6 +3489,7 @@ input:checked + .slider:before {
     display: flex;
     justify-content: center;
     scroll-behavior: auto;
+    scroll-snap-type: y mandatory;
 }
 
 .height-ruler-area::-webkit-scrollbar {
@@ -3343,7 +3500,9 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     width: 50px;
-    padding: 50vh 0;
+    padding-top: 174px; /* (height-ruler-wrapper height / 2) - half of first tick height */
+    padding-bottom: 174px; /* (height-ruler-wrapper height / 2) - half of last tick margin/height */
+    box-sizing: content-box;
 }
 
 .height-ruler .tick {
@@ -3353,6 +3512,7 @@ input:checked + .slider:before {
     margin-right: 0;
     width: 20px;
     flex-shrink: 0;
+    scroll-snap-align: center;
 }
 
 .height-ruler .tick.major {
@@ -3364,4 +3524,30 @@ input:checked + .slider:before {
 .height-ruler .tick.minor {
     width: 15px;
     opacity: 0.5;
+}
+
+.onboarding-ruler {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    height: auto;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.onboarding-ruler .current-height-display,
+.onboarding-ruler .current-weight-display {
+    margin-top: 0;
+    font-size: 48px;
+    text-align: center;
+}
+
+.onboarding-ruler .height-ruler-wrapper,
+.onboarding-ruler .ruler-wrapper {
+    position: relative;
+    height: 300px;
 }
