@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,14 +9,13 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
     <div class="container">
-
+        
         <div id="step-1" class="step active">
             <h1>Ваш пол</h1>
             <p class="subtitle">Это необходимо для составления персонального плана.</p>
-
+            
             <div class="options-vertical">
                 <button class="option-btn" onclick="selectGender('male')">Мужской</button>
                 <button class="option-btn" onclick="selectGender('female')">Женский</button>
@@ -27,7 +25,7 @@
         <div id="step-2" class="step">
             <div class="header-back" onclick="prevStep(1)">←</div>
             <h1>Сколько у вас тренировок в неделю?</h1>
-
+            
             <div class="options-vertical">
                 <div class="card" onclick="selectActivity(1.2)">
                     <div class="icon">⦿</div>
@@ -56,44 +54,40 @@
         <div id="step-3" class="step">
             <div class="header-back" onclick="prevStep(2)">←</div>
             <h1>Долгосрочные результаты</h1>
-
+            
             <div class="graph-container">
                 <div class="graph-placeholder">
                     <svg viewBox="0 0 300 180" style="width: 100%; height: auto;">
                         <!-- Grid Lines -->
                         <line x1="30" y1="50" x2="270" y2="50" stroke="#eee" stroke-dasharray="4" />
                         <line x1="30" y1="130" x2="270" y2="130" stroke="#eee" stroke-dasharray="4" />
-
+                        
                         <!-- Red Line Area (Traditional Diet) -->
-                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20 L270,50 L30,50 Z"
-                            fill="rgba(255, 77, 77, 0.1)" />
+                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20 L270,50 L30,50 Z" fill="rgba(255, 77, 77, 0.1)" />
                         <!-- Black Line Area (App) -->
                         <path d="M30,50 C100,50 200,130 270,130 L270,150 L30,150 L30,50 Z" fill="rgba(0, 0, 0, 0.05)" />
-
+                        
                         <!-- Red Line -->
-                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20" fill="none" stroke="#ff4d4d"
-                            stroke-width="3" stroke-linecap="round" />
+                        <path d="M30,50 C100,50 140,110 160,100 S230,20 270,20" fill="none" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" />
                         <!-- Black Line -->
-                        <path d="M30,50 C100,50 200,130 270,130" fill="none" stroke="#000" stroke-width="3"
-                            stroke-linecap="round" />
-
+                        <path d="M30,50 C100,50 200,130 270,130" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                        
                         <!-- Points -->
                         <circle cx="30" cy="50" r="5" fill="#fff" stroke="#000" stroke-width="2" />
                         <circle cx="270" cy="130" r="5" fill="#fff" stroke="#000" stroke-width="2" />
-
+                        
                         <!-- Labels -->
                         <text x="30" y="30" fill="#000" font-size="14" font-weight="bold">Ваш вес</text>
-
+                        
                         <text x="210" y="70" fill="#666" font-size="10">Обычная диета</text>
                         <text x="50" y="115" fill="#000" font-size="10" font-weight="bold">★ Наше приложение</text>
-
+                        
                         <text x="30" y="170" fill="#999" font-size="10">Месяц 1</text>
                         <text x="240" y="170" fill="#999" font-size="10">Месяц 6</text>
                     </svg>
                 </div>
                 <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #555; line-height: 1.4;">
-                    <b>80% пользователей</b> людей набирают вес обратно после жестких диет. Мы строим систему питания, с
-                    которой комфортно жить годами.
+                    <b>80% пользователей</b> сохраняют результат даже через полгода
                 </p>
             </div>
 
@@ -102,59 +96,30 @@
 
         <div id="step-4" class="step">
             <div class="header-back" onclick="prevStep(3)">←</div>
-            <h1>Укажите ваш рост</h1>
-            <p class="subtitle">Это поможет точно рассчитать вашу норму калорий</p>
+            <h1>Рост и вес</h1>
+            <p class="subtitle">Введите свои данные для расчета</p>
 
-            <div class="onboarding-height-picker">
-                <div class="current-height-display-onboarding">
-                    <span id="onboarding-height-val">175</span> <span class="unit">см</span>
+            <div class="inputs-container">
+                <div class="input-group">
+                    <label>Рост (см)</label>
+                    <input type="number" id="height" value="175" placeholder="175">
                 </div>
-
-                <div class="height-ruler-wrapper-onboarding">
-                    <div class="center-line-horizontal"></div>
-                    <div id="onboarding-height-ruler-area" class="height-ruler-area">
-                        <div id="onboarding-height-ruler" class="height-ruler">
-                            <!-- Ticks generated by JS -->
-                        </div>
-                    </div>
+                <div class="input-group">
+                    <label>Вес (кг)</label>
+                    <input type="number" id="weight" value="75" placeholder="75">
                 </div>
             </div>
 
-            <button class="main-btn" onclick="saveOnboardingHeight()">Далее</button>
-        </div>
-
-        <div id="step-5" class="step">
-            <div class="header-back" onclick="prevStep(4)">←</div>
-            <h1>Укажите ваш вес</h1>
-            <p class="subtitle">Последний шаг перед персональным планом</p>
-
-            <div class="onboarding-weight-picker">
-                <div class="current-weight-display-onboarding">
-                    <span id="onboarding-weight-val">75.0</span> <span class="unit">кг</span>
-                </div>
-
-                <div class="ruler-wrapper-onboarding">
-                    <div class="center-line"></div>
-                    <div id="onboarding-ruler-scroll-area" class="ruler-scroll-area">
-                        <div id="onboarding-ruler-ticks" class="ruler-ticks">
-                            <!-- Ticks generated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="main-btn" onclick="saveOnboardingWeight()">Далее</button>
+            <button class="main-btn" onclick="nextStep(5)">Далее</button>
         </div>
 
         <!-- New Steps based on images -->
-        <div id="step-6" class="step">
-            <div class="header-back" onclick="prevStep(5)">←</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: 50%;"></div>
-            </div>
+        <div id="step-5" class="step">
+            <div class="header-back" onclick="prevStep(4)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 50%;"></div></div>
             <h1>Когда вы родились?</h1>
             <p class="subtitle">Это поможет нам откалибровать ваш персональный план.</p>
-
+            
             <div class="date-picker-container">
                 <input type="date" id="birthdate" class="date-input" value="2005-01-01">
             </div>
@@ -162,14 +127,12 @@
             <button class="main-btn" onclick="saveBorn()">Далее</button>
         </div>
 
-        <div id="step-7" class="step">
-            <div class="header-back" onclick="prevStep(6)">←</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: 60%;"></div>
-            </div>
+        <div id="step-6" class="step">
+            <div class="header-back" onclick="prevStep(5)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 60%;"></div></div>
             <h1>Какая ваша цель?</h1>
             <p class="subtitle">Это поможет нам составить план потребления калорий.</p>
-
+            
             <div class="options-vertical">
                 <button class="option-btn" onclick="selectGoal('lose')">Похудеть</button>
                 <button class="option-btn" onclick="selectGoal('maintain')">Поддержать вес</button>
@@ -177,13 +140,11 @@
             </div>
         </div>
 
-        <div id="step-8" class="step">
-            <div class="header-back" onclick="prevStep(7)">←</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: 70%;"></div>
-            </div>
+        <div id="step-7" class="step">
+            <div class="header-back" onclick="prevStep(6)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 70%;"></div></div>
             <h1>Что мешает вам достичь цели?</h1>
-
+            
             <div class="options-vertical">
                 <div class="card" onclick="selectStopper('consistency')">
                     <div class="icon">📊</div>
@@ -218,13 +179,11 @@
             </div>
         </div>
 
-        <div id="step-9" class="step">
-            <div class="header-back" onclick="prevStep(8)">←</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: 80%;"></div>
-            </div>
+        <div id="step-8" class="step">
+            <div class="header-back" onclick="prevStep(7)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 80%;"></div></div>
             <h1>Вы придерживаетесь диеты?</h1>
-
+            
             <div class="options-vertical">
                 <div class="card" onclick="selectDiet('classic')">
                     <div class="icon">🍗</div>
@@ -247,13 +206,11 @@
             </div>
         </div>
 
-        <div id="step-10" class="step">
-            <div class="header-back" onclick="prevStep(9)">←</div>
-            <div class="progress-bar">
-                <div class="progress" style="width: 90%;"></div>
-            </div>
+        <div id="step-9" class="step">
+            <div class="header-back" onclick="prevStep(8)">←</div>
+            <div class="progress-bar"><div class="progress" style="width: 90%;"></div></div>
             <h1>Чего бы вы хотели достичь?</h1>
-
+            
             <div class="options-vertical">
                 <div class="card" onclick="selectAccomplish('healthier')">
                     <div class="icon">🍎</div>
@@ -282,11 +239,11 @@
             </div>
         </div>
 
-        <div id="step-11" class="step">
+        <div id="step-10" class="step">
             <div class="loading-container">
                 <div class="percentage" id="load-percentage">0%</div>
                 <h1 id="loading-title">Готовим ваш план</h1>
-
+                
                 <div class="loading-bar-wrapper">
                     <div class="loading-bar-fill" id="load-progress"></div>
                 </div>
@@ -320,11 +277,9 @@
                 </div>
             </div>
 
-            <button id="final-btn" class="main-btn" style="display: none;" onclick="showResults()">Получить
-                план</button>
-        </div>
+<button id="final-btn" class="main-btn" style="display: none;" onclick="showResults()">Получить план</button>        </div>
 
-        <div id="step-12" class="step">
+        <div id="step-11" class="step">
             <div class="result-header">
                 <div class="check-circle-big">✓</div>
                 <h1>Поздравляем!<br>Ваш персональный план готов!</h1>
@@ -346,10 +301,8 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent"
-                                    r="40" cx="50" cy="50" />
-                                <circle id="ring-calories" class="progress-ring__circle ring-progress" stroke-width="8"
-                                    fill="transparent" r="40" cx="50" cy="50" />
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-calories" class="progress-ring__circle ring-progress" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-calories">2062</div>
                         </div>
@@ -362,10 +315,8 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent"
-                                    r="40" cx="50" cy="50" />
-                                <circle id="ring-carbs" class="progress-ring__circle carbs" stroke="#e5b68b"
-                                    stroke-width="8" fill="transparent" r="40" cx="50" cy="50" />
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-carbs" class="progress-ring__circle carbs" stroke="#e5b68b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-carbs">234г</div>
                         </div>
@@ -378,10 +329,8 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent"
-                                    r="40" cx="50" cy="50" />
-                                <circle id="ring-protein" class="progress-ring__circle protein" stroke="#e58b8b"
-                                    stroke-width="8" fill="transparent" r="40" cx="50" cy="50" />
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-protein" class="progress-ring__circle protein" stroke="#e58b8b" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-protein">152г</div>
                         </div>
@@ -394,10 +343,8 @@
                         </div>
                         <div class="progress-ring-container">
                             <svg class="progress-ring" width="100" height="100">
-                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent"
-                                    r="40" cx="50" cy="50" />
-                                <circle id="ring-fats" class="progress-ring__circle fats" stroke="#8bb6e5"
-                                    stroke-width="8" fill="transparent" r="40" cx="50" cy="50" />
+                                <circle class="progress-ring__circle-bg ring-track" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                                <circle id="ring-fats" class="progress-ring__circle fats" stroke="#8bb6e5" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
                             </svg>
                             <div class="macro-value" id="res-fats">57г</div>
                         </div>
@@ -408,92 +355,96 @@
             <div class="how-to-reach">
                 <h2>Как достичь цели:</h2>
                 <div class="tips-container" id="ai-tips">
-                    <!-- Советы будут сгенерированы AI индивидуально для каждого пользователя -->
+                    <!-- Будет заполнено AI -->
+                    <div class="tip-item">
+                        <div class="tip-icon">💖</div>
+                        <div class="tip-text">Используйте индекс здоровья для улучшения режима</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">🥑</div>
+                        <div class="tip-text">Отслеживайте каждый прием пищи</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">⏲️</div>
+                        <div class="tip-text">Следуйте дневной норме калорий</div>
+                    </div>
                 </div>
             </div>
 
             <button class="main-btn" onclick="goToHome()">Начать!</button>
         </div>
 
-        <div id="step-13" class="step step-home">
+        <div id="step-12" class="step step-home">
             <div class="home-page">
                 <div id="week-calendar" class="calendar-container"></div>
 
 
-                <div class="main-calorie-card">
-                    <div id="streak-badge" class="streak-badge">
-                        <span class="streak-icon">🔥</span>
-                        <span id="streak-count">0</span>
+            <div class="main-calorie-card">
+                <div id="streak-badge" class="streak-badge">
+                    <span class="streak-icon">🔥</span>
+                    <span id="streak-count">0</span>
+                </div>
+                <div class="calorie-left">
+                    <h2 id="home-calories-left">0</h2>
+                    <span id="home-calories-total">Ккал осталось</span>
+                </div>
+                <div class="calorie-ring-container">
+                    <svg viewBox="0 0 100 100" class="large-ring">
+                        <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="8"></circle>
+                        <circle id="home-ring-calories" class="ring-progress" cx="50" cy="50" r="45" fill="none" stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7" stroke-linecap="round"></circle>
+                    </svg>
+                    <div class="ring-icon" style="filter: grayscale(1) brightness(0);">🔥</div>
+                </div>
+            </div>
+
+            <div class="macros-home-grid">
+                <div class="macro-home-card">
+                    <div class="macro-home-top">
+                        <div class="macro-home-value"><span id="home-protein-eaten">0</span>г</div>
+                        <div class="macro-home-label">Белки</div>
                     </div>
-                    <div class="calorie-left">
-                        <h2 id="home-calories-left">0</h2>
-                        <span id="home-calories-total">Ккал осталось</span>
-                    </div>
-                    <div class="calorie-ring-container">
-                        <svg viewBox="0 0 100 100" class="large-ring">
-                            <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="8"></circle>
-                            <circle id="home-ring-calories" class="ring-progress" cx="50" cy="50" r="45" fill="none"
-                                stroke-width="8" stroke-dasharray="282.7" stroke-dashoffset="282.7"
-                                stroke-linecap="round"></circle>
+                    <div class="macro-home-ring">
+                        <svg viewBox="0 0 36 36">
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
+                            <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#e58b8b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
                         </svg>
-                        <div class="ring-icon" style="filter: grayscale(1) brightness(0);">🔥</div>
+                        <div class="macro-mini-icon">🥩</div>
                     </div>
                 </div>
+                <div class="macro-home-card">
+                    <div class="macro-home-top">
+                        <div class="macro-home-value"><span id="home-carbs-eaten">0</span>г</div>
+                        <div class="macro-home-label">Углеводы</div>
+                    </div>
+                    <div class="macro-home-ring">
+                        <svg viewBox="0 0 36 36">
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
+                            <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#e5b68b" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="macro-mini-icon">🌾</div>
+                    </div>
+                </div>
+                <div class="macro-home-card">
+                    <div class="macro-home-top">
+                        <div class="macro-home-value"><span id="home-fats-eaten">0</span>г</div>
+                        <div class="macro-home-label">Жиры</div>
+                    </div>
+                    <div class="macro-home-ring">
+                        <svg viewBox="0 0 36 36">
+                            <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
+                            <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#8bb6e5" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="macro-mini-icon">🥑</div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="macros-home-grid">
-                    <div class="macro-home-card">
-                        <div class="macro-home-top">
-                            <div class="macro-home-value"><span id="home-protein-eaten">0</span>г</div>
-                            <div class="macro-home-label">Белки</div>
-                        </div>
-                        <div class="macro-home-ring">
-                            <svg viewBox="0 0 36 36">
-                                <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
-                                <circle id="home-ring-protein" cx="18" cy="18" r="16" fill="none" stroke="#e58b8b"
-                                    stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100"
-                                    stroke-linecap="round"></circle>
-                            </svg>
-                            <div class="macro-mini-icon">🥩</div>
-                        </div>
-                    </div>
-                    <div class="macro-home-card">
-                        <div class="macro-home-top">
-                            <div class="macro-home-value"><span id="home-carbs-eaten">0</span>г</div>
-                            <div class="macro-home-label">Углеводы</div>
-                        </div>
-                        <div class="macro-home-ring">
-                            <svg viewBox="0 0 36 36">
-                                <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
-                                <circle id="home-ring-carbs" cx="18" cy="18" r="16" fill="none" stroke="#e5b68b"
-                                    stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100"
-                                    stroke-linecap="round"></circle>
-                            </svg>
-                            <div class="macro-mini-icon">🌾</div>
-                        </div>
-                    </div>
-                    <div class="macro-home-card">
-                        <div class="macro-home-top">
-                            <div class="macro-home-value"><span id="home-fats-eaten">0</span>г</div>
-                            <div class="macro-home-label">Жиры</div>
-                        </div>
-                        <div class="macro-home-ring">
-                            <svg viewBox="0 0 36 36">
-                                <circle class="ring-track" cx="18" cy="18" r="16" fill="none" stroke-width="3"></circle>
-                                <circle id="home-ring-fats" cx="18" cy="18" r="16" fill="none" stroke="#8bb6e5"
-                                    stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="100"
-                                    stroke-linecap="round"></circle>
-                            </svg>
-                            <div class="macro-mini-icon">🥑</div>
-                        </div>
-                    </div>
+            <div class="recent-uploads">
+                <h3>Недавно добавлено</h3>
+                <div id="food-list" class="food-list">
+                    <div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>
                 </div>
-
-                <div class="recent-uploads">
-                    <h3>Недавно добавлено</h3>
-                    <div id="food-list" class="food-list">
-                        <div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>
-                    </div>
-                </div>
+            </div>
             </div>
         </div>
 
@@ -502,19 +453,16 @@
             <div id="camera-hint"></div>
             <div id="camera-permission-ui">
                 <p id="camera-status-text">Разрешите доступ к камере, чтобы сканировать еду 📸</p>
-                <button id="retry-camera-btn" class="secondary-btn hidden" onclick="openCamera()">Попробовать
-                    снова</button>
+                <button id="retry-camera-btn" class="secondary-btn hidden" onclick="openCamera()">Попробовать снова</button>
             </div>
-
+            
             <div id="analysis-overlay" class="hidden">
                 <div id="analysis-card">
                     <h3>Анализируем...</h3>
                     <div class="progress-ring-container">
                         <svg class="progress-ring" width="120" height="120">
-                            <circle class="progress-ring__circle--track ring-track" stroke-width="8" fill="transparent"
-                                r="52" cx="60" cy="60" />
-                            <circle class="progress-ring__circle--progress ring-progress" stroke-width="8"
-                                fill="transparent" r="52" cx="60" cy="60" id="analysis-progress-circle" />
+                            <circle class="progress-ring__circle--track ring-track" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                            <circle class="progress-ring__circle--progress ring-progress" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" id="analysis-progress-circle"/>
                         </svg>
                         <div class="progress-text-container">
                             <span id="analysis-percent-val">0</span><span>%</span>
@@ -532,8 +480,7 @@
                 <div class="camera-close" onclick="closeCamera()">✕</div>
                 <div id="shutter-btn" onclick="takePhoto()"></div>
                 <div id="gallery-btn" class="icon-btn">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                         <polyline points="21 15 16 10 5 21"></polyline>
@@ -548,7 +495,7 @@
             <img id="analyzed-img" src="" style="display:none;">
         </div>
 
-        <div id="step-16" class="step">
+        <div id="step-15" class="step">
             <div class="progress-page">
                 <!-- Новый блок управления весом и прогрессом -->
                 <div class="weight-progress-grid">
@@ -600,7 +547,7 @@
                             <span class="chart-unit">ккал</span>
                         </div>
                     </div>
-
+                    
                     <div class="chart-canvas-container">
                         <canvas id="totalCaloriesChart"></canvas>
                     </div>
@@ -626,7 +573,7 @@
                         <h3>Ваш ИМТ</h3>
                         <div class="help-icon bmi-info-icon" style="cursor: pointer;">?</div>
                     </div>
-
+                    
                     <div class="bmi-value-row">
                         <span id="bmi-number" class="bmi-number">0.0</span>
                         <div class="bmi-status-box">
@@ -660,10 +607,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="step-17" class="step">
+        </div> <div id="step-16" class="step">
             <div class="settings-page-new">
-
+                
                 <div class="profile-header-center">
                     <div class="avatar-large-container" id="settings-avatar"></div>
                     <h2 id="settings-name">Загрузка...</h2>
@@ -676,40 +622,28 @@
                         <span class="row-label">Активность</span>
                         <div class="row-value-group">
                             <span id="set-activity-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
                     <div class="settings-row" onclick="openWeightRuler()">
                         <span class="row-label">Вес</span>
                         <div class="row-value-group">
                             <span id="set-weight-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
                     <div class="settings-row" onclick="editSetting('goal')">
                         <span class="row-label">Цель</span>
                         <div class="row-value-group">
                             <span id="set-goal-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
                     <div class="settings-row no-border" onclick="editSetting('height')">
                         <span class="row-label">Рост</span>
                         <div class="row-value-group">
                             <span id="set-height-text">-</span>
-                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </div>
                 </div>
@@ -738,50 +672,34 @@
                 <div class="settings-actions" style="margin-top: 30px;">
                     <button class="settings-btn danger-btn" onclick="resetAppData()">Сбросить данные</button>
                 </div>
-
+                
                 <div style="height: 100px;"></div>
             </div>
         </div>
 
     </div>
     <div id="global-tab-bar" class="tab-bar" style="display: none;">
-        <div id="tab-home" class="tab-item active" onclick="nextStep(13)">
+        <div id="tab-home" class="tab-item active" onclick="nextStep(12)">
             <div class="tab-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
         </div>
         <div id="tab-progress" class="tab-item" onclick="updateProgressPage()">
             <div class="tab-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
-                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             </div>
         </div>
         <div id="tab-settings" class="tab-item" onclick="openSettings()">
             <div class="tab-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </div>
         </div>
         <div id="add-options-menu" class="hidden">
             <button id="option-check-btn" class="menu-option-btn">
                 <span class="option-label">Проверка</span>
                 <div class="option-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M8 7v10M12 7v10M16 7v10" />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M8 7v10M12 7v10M16 7v10"/>
                     </svg>
                 </div>
             </button>
@@ -812,23 +730,18 @@
                 <span class="option-label">Фото</span>
                 <div class="option-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                        </path>
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
                     </svg>
                 </div>
             </button>
         </div>
         <div id="add-btn-main" class="add-btn-main">
-            <svg class="add-btn-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                    stroke-linejoin="round" />
+            <svg class="add-btn-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <div id="app-version-label"
-            style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">
-            v1.2.0</div>
+        <div id="app-version-label" style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 8px; color: #ccc; pointer-events: none;">v1.2.0</div>
     </div>
 
     <div id="bmi-modal" class="modal-overlay hidden">
@@ -837,8 +750,7 @@
             <div class="formula-box">
                 <span class="formula-text">ИМТ = Вес (кг) / Рост (м)²</span>
             </div>
-            <p class="modal-desc">Индекс массы тела рассчитывается делением веса в килограммах на квадрат роста в
-                метрах.</p>
+            <p class="modal-desc">Индекс массы тела рассчитывается делением веса в килограммах на квадрат роста в метрах.</p>
             <button id="close-bmi-modal" class="primary-btn small">Понятно</button>
         </div>
     </div>
@@ -859,8 +771,7 @@
             <h3 id="manual-modal-title">Добавить блюдо</h3>
             <input type="hidden" id="edit-food-id">
             <input type="text" id="manual-name" placeholder="Название (напр. Яблоко)" class="modal-input">
-            <input type="number" id="manual-calories" placeholder="Ккал (если знаете, или оставьте пустым)"
-                class="modal-input">
+            <input type="number" id="manual-calories" placeholder="Ккал (если знаете, или оставьте пустым)" class="modal-input">
 
             <div class="modal-buttons">
                 <button id="save-manual-btn" class="primary-btn">Добавить</button>
@@ -868,7 +779,7 @@
             </div>
         </div>
     </div>
-
+    
     <div id="ai-loader" class="loader-overlay hidden">
         <div class="loader-content">
             <div class="loader-icon">✨</div>
@@ -883,11 +794,10 @@
     <div id="recipe-modal" class="modal hidden">
         <div class="modal-content recipe-content">
             <h2 id="recipe-title">Загрузка...</h2>
-            <p class="recipe-macros">Ккал: <span id="recipe-cal">0</span> (Б: <span id="recipe-p">0</span>, Ж: <span
-                    id="recipe-f">0</span>, У: <span id="recipe-c">0</span>)</p>
+            <p class="recipe-macros">Ккал: <span id="recipe-cal">0</span> (Б: <span id="recipe-p">0</span>, Ж: <span id="recipe-f">0</span>, У: <span id="recipe-c">0</span>)</p>
             <hr>
             <div id="recipe-instructions" class="recipe-text"></div>
-
+            
             <div class="modal-actions">
                 <button id="save-recipe-btn" class="primary-btn icon-btn-wide">Да, записать</button>
                 <button id="cancel-recipe-btn" class="secondary-btn">Отмена</button>
@@ -913,8 +823,7 @@
                 </div>
                 <div class="modal-actions" style="flex-shrink: 0;">
                     <button id="recheck-btn" class="main-btn" style="margin-top: 0;">Проверить снова</button>
-                    <button id="close-check-btn" class="secondary-btn"
-                        style="width: 100%; margin-top: 10px; border-radius: 30px; padding: 16px;">Закрыть</button>
+                    <button id="close-check-btn" class="secondary-btn" style="width: 100%; margin-top: 10px; border-radius: 30px; padding: 16px;">Закрыть</button>
                 </div>
             </div>
         </div>
@@ -928,10 +837,8 @@
                 <!-- Input or Select will be injected here -->
             </div>
             <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-                <button id="save-edit-btn"
-                    style="background-color: #000000; color: #ffffff; border: none; border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Добавить</button>
-                <button id="cancel-edit-btn"
-                    style="background: transparent; border: 2px solid #000; color: #000; border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Отмена</button>
+                <button id="save-edit-btn" style="background-color: #000000; color: #ffffff; border: none; border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Добавить</button>
+                <button id="cancel-edit-btn" style="background: transparent; border: 2px solid #000; color: #000; border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Отмена</button>
             </div>
         </div>
     </div>
@@ -940,28 +847,10 @@
         <div class="modal-content" style="max-width: 320px; padding: 30px; text-align: center;">
             <div style="font-size: 40px; margin-bottom: 15px;">🗑️</div>
             <h3 style="margin-bottom: 10px;">Подтвердите удаление</h3>
-            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 25px; line-height: 1.4;">Вы
-                действительно хотите удалить этот продукт?</p>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 25px; line-height: 1.4;">Вы действительно хотите удалить этот продукт?</p>
             <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px;">
-                <button id="confirm-delete-btn"
-                    style="background-color: #ff3b30; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Удалить</button>
-                <button id="cancel-delete-btn"
-                    style="background: transparent; border: none; color: var(--text-primary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Отмена</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="reset-confirm-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 320px; padding: 30px; text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
-            <h3 style="margin-bottom: 10px;">Вы уверены?</h3>
-            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 25px; line-height: 1.4;">Все ваши
-                данные и прогресс будут удалены безвозвратно.</p>
-            <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px;">
-                <button id="confirm-reset-btn"
-                    style="background-color: #ff3b30; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Да</button>
-                <button id="cancel-reset-btn"
-                    style="background: transparent; border: none; color: var(--text-primary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Нет</button>
+                <button id="confirm-delete-btn" style="background-color: #ff3b30; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Удалить</button>
+                <button id="cancel-delete-btn" style="background: transparent; border: none; color: var(--text-primary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Отмена</button>
             </div>
         </div>
     </div>
@@ -972,12 +861,12 @@
             <span>Изменить вес</span>
             <div style="width: 24px"></div>
         </div>
-
+        
         <div class="weight-picker-content">
             <div class="current-weight-display">
                 <span id="picker-val">75.0</span> <span class="unit">кг</span>
             </div>
-
+            
             <div class="ruler-wrapper">
                 <div class="center-line"></div>
                 <div id="ruler-scroll-area" class="ruler-scroll-area">
@@ -987,9 +876,8 @@
                 </div>
             </div>
         </div>
-
-        <button id="save-weight-btn" class="main-btn" style="margin: 20px; width: calc(100% - 40px);">Сохранить
-            изменения</button>
+        
+        <button id="save-weight-btn" class="main-btn" style="margin: 20px; width: calc(100% - 40px);">Сохранить изменения</button>
     </div>
 
     <div id="height-modal" class="full-screen-modal hidden">
@@ -998,12 +886,12 @@
             <span>Изменить рост</span>
             <div style="width: 24px"></div>
         </div>
-
+        
         <div class="height-picker-content">
             <div class="current-height-display">
                 <span id="height-val">175</span> <span class="unit">см</span>
             </div>
-
+            
             <div class="height-ruler-wrapper">
                 <div class="center-line-horizontal"></div>
                 <div id="height-ruler-area" class="height-ruler-area">
@@ -1013,14 +901,12 @@
                 </div>
             </div>
         </div>
-
-        <button id="save-height-btn" class="main-btn" style="margin: 20px; width: calc(100% - 40px);">Сохранить
-            изменения</button>
+        
+        <button id="save-height-btn" class="main-btn" style="margin: 20px; width: calc(100% - 40px);">Сохранить изменения</button>
     </div>
 
     <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <script src="script.js?v=1003.0"></script>
+    <script src="script.js?v=999.0"></script>
 </body>
-
-</html>
+</html> 

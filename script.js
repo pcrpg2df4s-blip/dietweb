@@ -96,12 +96,6 @@ let userData = {
     birthdate: ''
 };
 
-// Temporary storage for registration data during onboarding
-let tempRegistrationData = {
-    height: null,
-    weight: null
-};
-
 let currentMacros = {
     calories: 0,
     protein: 0,
@@ -112,7 +106,7 @@ let currentMacros = {
     totalCarbs: 250,
     totalFats: 70,
     foodHistory: [],
-    dailyHistory: {}
+    dailyHistory: {} 
 };
 
 let isCameraPermissionGranted = false;
@@ -130,7 +124,7 @@ let celebratedStatus = {
 };
 
 // Глобальный перехватчик ошибок для диагностики
-window.onerror = function (message, source, lineno, colno, error) {
+window.onerror = function(message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
     // Если это ошибка квоты localStorage, она обычно содержит "quota"
     if (message.toLowerCase().includes("quota")) {
@@ -139,7 +133,7 @@ window.onerror = function (message, source, lineno, colno, error) {
     return false;
 };
 
-window.onunhandledrejection = function (event) {
+window.onunhandledrejection = function(event) {
     console.error("Unhandled rejection:", event.reason);
     if (event.reason && event.reason.toString().toLowerCase().includes("quota")) {
         alert(`ОШИБКА КВОТЫ (Promise): ${event.reason}`);
@@ -149,7 +143,7 @@ window.onunhandledrejection = function (event) {
 // Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
     console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
-
+    
     // Проверяем наличие ключа в URL
     const urlParams = new URLSearchParams(window.location.search);
     const urlKey = urlParams.get('api_key');
@@ -166,7 +160,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initRecipeModal();
     initCheckModal();
     initDeleteConfirmModal();
-    initResetConfirmModal();
     initTheme();
     checkStreakOnLoad();
     initRuler();
@@ -174,7 +167,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initHeightRuler();
     initHeightModal();
     initGalleryButton();
-    // Rulers now initialized on step activation, not on page load
 });
 
 function initGalleryButton() {
@@ -229,15 +221,8 @@ function processUploadedFile(file) {
     reader.readAsDataURL(file);
 }
 
-/**
- * Initialize a horizontal weight ruler in any container
- * @param {string} ticksContainerId - ID of the ticks container
- * @param {string} scrollAreaId - ID of the scroll area
- * @param {string} displayValueId - ID of the display value element
- * @param {number} initialWeight - Initial weight to display
- */
-function initWeightRuler(ticksContainerId, scrollAreaId, displayValueId, initialWeight = 75) {
-    const rulerTicks = document.getElementById(ticksContainerId);
+function initRuler() {
+    const rulerTicks = document.getElementById('ruler-ticks');
     if (!rulerTicks) return;
 
     rulerTicks.innerHTML = '';
@@ -257,10 +242,8 @@ function initWeightRuler(ticksContainerId, scrollAreaId, displayValueId, initial
         rulerTicks.appendChild(tick);
     }
 
-    const scrollArea = document.getElementById(scrollAreaId);
-    const pickerVal = document.getElementById(displayValueId);
-    if (!scrollArea || !pickerVal) return;
-
+    const scrollArea = document.getElementById('ruler-scroll-area');
+    const pickerVal = document.getElementById('picker-val');
     const pixelsPerTick = 20; // 2px width + 18px margin-right
 
     let lastVibratedWeight = -1;
@@ -278,17 +261,6 @@ function initWeightRuler(ticksContainerId, scrollAreaId, displayValueId, initial
             lastVibratedWeight = currentVibratedWeight;
         }
     });
-
-    // Set initial position
-    setTimeout(() => {
-        const scrollTarget = (initialWeight - minWeight) * 10 * pixelsPerTick;
-        scrollArea.scrollLeft = scrollTarget;
-        pickerVal.innerText = initialWeight.toFixed(1);
-    }, 10);
-}
-
-function initRuler() {
-    initWeightRuler('ruler-ticks', 'ruler-scroll-area', 'picker-val', userData.weight || 75);
 }
 
 function initWeightModal() {
@@ -315,14 +287,14 @@ function initWeightModal() {
             const weightVal = parseFloat(document.getElementById('picker-val').innerText);
             if (!isNaN(weightVal)) {
                 userData.weight = weightVal;
-
+                
                 // Add to history (One Date = One Record)
                 if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
                 const todayStr = new Date().toISOString().split('T')[0];
                 const existingEntryIndex = currentMacros.weightHistory.findIndex(entry =>
                     entry.date && entry.date.split('T')[0] === todayStr
                 );
-
+                
                 if (existingEntryIndex !== -1) {
                     currentMacros.weightHistory[existingEntryIndex].weight = weightVal;
                     currentMacros.weightHistory[existingEntryIndex].date = new Date().toISOString(); // Update timestamp
@@ -335,17 +307,17 @@ function initWeightModal() {
 
                 // Full recalculation of goals
                 calculateNorms();
-
+                
                 // Save and sync everything
                 saveAllData();
-
+                
                 // Update all UI components
                 updateAllUINorms();
                 updateWeightWidgets();
                 updateBMI();
                 renderWeightChart();
                 initHomeScreenFromSaved(); // Refreshes rings and "Left" values on dashboard
-
+                
                 triggerHaptic('success');
                 closeModal();
             }
@@ -377,7 +349,7 @@ function openWeightRuler() {
     // Scroll to current weight
     const currentWeight = userData.weight || 75;
     const scrollTarget = (currentWeight - minWeight) * 10 * pixelsPerTick;
-
+    
     // We need a small timeout to ensure modal is rendered for scrollLeft to work correctly
     setTimeout(() => {
         scrollArea.scrollLeft = scrollTarget;
@@ -385,15 +357,8 @@ function openWeightRuler() {
     }, 10);
 }
 
-/**
- * Initialize a vertical height ruler in any container
- * @param {string} rulerContainerId - ID of the ruler container
- * @param {string} scrollAreaId - ID of the scroll area
- * @param {string} displayValueId - ID of the display value element
- * @param {number} initialHeight - Initial height to display
- */
-function initHeightRulerGeneric(rulerContainerId, scrollAreaId, displayValueId, initialHeight = 175) {
-    const heightRuler = document.getElementById(rulerContainerId);
+function initHeightRuler() {
+    const heightRuler = document.getElementById('height-ruler');
     if (!heightRuler) return;
 
     heightRuler.innerHTML = '';
@@ -413,10 +378,8 @@ function initHeightRulerGeneric(rulerContainerId, scrollAreaId, displayValueId, 
         heightRuler.appendChild(tick);
     }
 
-    const scrollArea = document.getElementById(scrollAreaId);
-    const heightVal = document.getElementById(displayValueId);
-    if (!scrollArea || !heightVal) return;
-
+    const scrollArea = document.getElementById('height-ruler-area');
+    const heightVal = document.getElementById('height-val');
     const pixelsPerCm = 15; // 2px height + 13px margin-bottom
 
     let lastVibratedHeight = -1;
@@ -432,17 +395,6 @@ function initHeightRulerGeneric(rulerContainerId, scrollAreaId, displayValueId, 
             lastVibratedHeight = displayHeight;
         }
     });
-
-    // Set initial position
-    setTimeout(() => {
-        const scrollTarget = (initialHeight - minHeight) * pixelsPerCm;
-        scrollArea.scrollTop = scrollTarget;
-        heightVal.innerText = initialHeight;
-    }, 10);
-}
-
-function initHeightRuler() {
-    initHeightRulerGeneric('height-ruler', 'height-ruler-area', 'height-val', userData.height || 175);
 }
 
 function initHeightModal() {
@@ -466,17 +418,17 @@ function initHeightModal() {
             const heightVal = parseInt(document.getElementById('height-val').innerText);
             if (!isNaN(heightVal)) {
                 userData.height = heightVal;
-
+                
                 calculateNorms();
                 saveAllData();
                 updateAllUINorms();
                 updateBMI();
                 initHomeScreenFromSaved();
-
+                
                 // Update settings text if visible
                 const setHeightText = document.getElementById('set-height-text');
                 if (setHeightText) setHeightText.innerText = heightVal + ' см';
-
+                
                 triggerHaptic('success');
                 closeModal();
             }
@@ -497,65 +449,11 @@ function openHeightRuler() {
     const minHeight = 100;
     const currentHeight = userData.height || 175;
     const scrollTarget = (currentHeight - minHeight) * pixelsPerCm;
-
+    
     setTimeout(() => {
         scrollArea.scrollTop = scrollTarget;
         document.getElementById('height-val').innerText = currentHeight;
     }, 10);
-}
-
-/**
- * Initialize rulers for onboarding steps
- */
-function initOnboardingRulers() {
-    // Initialize height ruler for onboarding (step-4)
-    initHeightRulerGeneric(
-        'onboarding-height-ruler',
-        'onboarding-height-ruler-area',
-        'onboarding-height-val',
-        175
-    );
-
-    // Initialize weight ruler for onboarding (step-5)
-    initWeightRuler(
-        'onboarding-ruler-ticks',
-        'onboarding-ruler-scroll-area',
-        'onboarding-weight-val',
-        75
-    );
-}
-
-/**
- * Save height from onboarding and proceed to weight step
- */
-function saveOnboardingHeight() {
-    const heightVal = parseInt(document.getElementById('onboarding-height-val').innerText);
-    if (!isNaN(heightVal)) {
-        tempRegistrationData.height = heightVal;
-        triggerHaptic('medium');
-        nextStep(5); // Go to weight step
-    }
-}
-
-/**
- * Save weight from onboarding and proceed to birthdate step
- */
-function saveOnboardingWeight() {
-    const weightVal = parseFloat(document.getElementById('onboarding-weight-val').innerText);
-    if (!isNaN(weightVal)) {
-        tempRegistrationData.weight = weightVal;
-
-        // Save to userData ONLY if values are valid (prevent overwrite on back navigation)
-        if (tempRegistrationData.height) {
-            userData.height = tempRegistrationData.height;
-        }
-        if (tempRegistrationData.weight) {
-            userData.weight = tempRegistrationData.weight;
-        }
-
-        triggerHaptic('medium');
-        nextStep(6); // Go to next step (birthdate, previously step-5)
-    }
 }
 
 /**
@@ -566,20 +464,20 @@ function calculateStreak() {
 
     const today = new Date().toISOString().split('T')[0];
     const history = currentMacros.dailyHistory;
-
+    
     // Check if today has entries
     const loggedToday = history[today] && history[today].calories > 0;
-
+    
     let streak = 0;
     let currentDate = new Date();
 
     if (loggedToday) {
         streak = 1;
     }
-
+    
     // Start checking from yesterday
     currentDate.setDate(currentDate.getDate() - 1);
-
+    
     while (true) {
         const dateStr = currentDate.toISOString().split('T')[0];
         if (history[dateStr] && history[dateStr].calories > 0) {
@@ -610,7 +508,7 @@ function updateStreakUI(count) {
     if (streakCountEl) {
         streakCountEl.innerText = count;
     }
-
+    
     const statsStreakCountEl = document.getElementById('stats-streak-count');
     if (statsStreakCountEl) {
         statsStreakCountEl.innerText = count;
@@ -629,7 +527,7 @@ function updateStreakUI(count) {
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.getElementById('theme-toggle');
-
+    
     if (savedTheme === 'dark') {
         document.body.setAttribute('data-theme', 'dark');
         if (themeToggle) themeToggle.checked = true;
@@ -644,7 +542,7 @@ function initTheme() {
                 document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
             }
-
+            
             // Re-render weight chart with new theme colors
             if (typeof renderWeightChart === 'function') {
                 if (weightChart) {
@@ -665,7 +563,7 @@ function showLoader(mode = 'food') {
     const statusText = document.getElementById('loader-status');
     const titleText = document.getElementById('loader-title');
     const iconEl = loader.querySelector('.loader-icon');
-
+    
     loader.classList.remove('hidden');
     fill.style.width = '0%';
 
@@ -689,17 +587,17 @@ function showLoader(mode = 'food') {
             "Считаем БЖУ..."
         ];
     }
-
+    
     statusText.innerText = messages[0];
 
     let progress = 0;
     const startTime = Date.now();
 
     if (loaderInterval) clearInterval(loaderInterval);
-
+    
     loaderInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-
+        
         // Progress emulation: 0% to 90% over 4 seconds
         if (progress < 90) {
             progress += Math.random() * 2;
@@ -716,11 +614,11 @@ function showLoader(mode = 'food') {
 function hideLoader() {
     const loader = document.getElementById('ai-loader');
     const fill = loader.querySelector('.progress-bar-fill');
-
+    
     if (loaderInterval) clearInterval(loaderInterval);
-
+    
     fill.style.width = '100%';
-
+    
     setTimeout(() => {
         loader.classList.add('hidden');
         fill.style.width = '0%';
@@ -823,7 +721,7 @@ async function analyzeTextFood(foodName, userCalories) {
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-
+    
     try {
         const response = await fetchWithRetry(url, {
             method: 'POST',
@@ -839,7 +737,7 @@ async function analyzeTextFood(foodName, userCalories) {
         let text = data.candidates[0].content.parts[0].text;
         text = text.replace(/```json|```/g, '').trim();
         const result = JSON.parse(text);
-
+        
         return {
             id: Date.now().toString(),
             name: result.name || foodName,
@@ -930,7 +828,7 @@ function initManualAddModal() {
 
                 try {
                     const aiResult = await analyzeTextFood(name);
-
+                    
                     if (id) {
                         // Editing existing with AI
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
@@ -960,10 +858,10 @@ function initManualAddModal() {
                 // Manual input with only calories provided - we still use AI to estimate macros for these calories
                 saveBtn.innerText = "Считаю...";
                 saveBtn.disabled = true;
-
+                
                 try {
                     const aiResult = await analyzeTextFood(name, cals);
-
+                    
                     if (id) {
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
                         if (foodIndex !== -1) {
@@ -1016,29 +914,29 @@ function initManualAddModal() {
 }
 
 function initBMIModal() {
-    const modal = document.getElementById('bmi-modal');
-    const closeBtn = document.getElementById('close-bmi-modal');
-    const infoIcon = document.querySelector('.bmi-info-icon');
+   const modal = document.getElementById('bmi-modal');
+   const closeBtn = document.getElementById('close-bmi-modal');
+   const infoIcon = document.querySelector('.bmi-info-icon');
 
-    if (infoIcon) {
-        infoIcon.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-        });
-    }
+   if (infoIcon) {
+       infoIcon.addEventListener('click', () => {
+           modal.classList.remove('hidden');
+       });
+   }
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-    }
+   if (closeBtn) {
+       closeBtn.addEventListener('click', () => {
+           modal.classList.add('hidden');
+       });
+   }
 
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-            }
-        });
-    }
+   if (modal) {
+       modal.addEventListener('click', (e) => {
+           if (e.target === modal) {
+               modal.classList.add('hidden');
+           }
+       });
+   }
 }
 
 function checkTotalStorageUsage() {
@@ -1058,13 +956,13 @@ function saveAllData() {
         checkTotalStorageUsage();
         const userDataStr = JSON.stringify(userData);
         const macrosStr = JSON.stringify(currentMacros);
-
+        
         console.log(`[Storage] Attempting to save userData: ${(userDataStr.length / 1024).toFixed(2)} KB`);
         console.log(`[Storage] Attempting to save macros: ${(macrosStr.length / 1024).toFixed(2)} KB`);
-
+        
         localStorage.setItem('dietApp_userData', userDataStr);
         localStorage.setItem('dietApp_macros', macrosStr);
-
+        
         console.log(`[Storage] Successfully saved.`);
     } catch (e) {
         console.error("[Storage] Failed to save data to localStorage:", e);
@@ -1096,10 +994,10 @@ function loadSavedData() {
     if (savedUser && savedMacros) {
         userData = JSON.parse(savedUser);
         currentMacros = JSON.parse(savedMacros);
-
+        
         const today = new Date().toISOString().split('T')[0];
         if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-
+        
         const lastUpdate = localStorage.getItem('dietApp_lastUpdate');
         if (lastUpdate !== today) {
             if (lastUpdate) {
@@ -1115,7 +1013,7 @@ function loadSavedData() {
             currentMacros.carbs = 0;
             currentMacros.fats = 0;
             currentMacros.foodHistory = [];
-
+            
             localStorage.setItem('dietApp_lastUpdate', today);
             saveAllData();
         }
@@ -1123,7 +1021,7 @@ function loadSavedData() {
         if (userData.goal) {
             setTimeout(() => {
                 initHomeScreenFromSaved();
-                nextStep(13);
+                nextStep(12);
             }, 100);
         }
         checkInitialCelebration();
@@ -1148,12 +1046,12 @@ function initHomeScreenFromSaved() {
 
     const foodList = document.getElementById('food-list');
     foodList.innerHTML = '';
-
+    
     if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
         currentMacros.foodHistory.forEach((food, index) => {
             const div = document.createElement('div');
             div.className = 'food-item';
-
+            
             const foodIcon = food.thumbnail
                 ? `<div class="food-img-placeholder"><img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды"></div>`
                 : `<div class="food-img-placeholder">${getEmojiForFood(food.name)}</div>`;
@@ -1211,7 +1109,7 @@ function renderWeeklyCalendar() {
 
     const now = new Date();
     const todayISO = now.toISOString().split('T')[0];
-
+    
     // Находим начало недели (понедельник)
     const startOfWeek = new Date(now);
     const day = now.getDay();
@@ -1227,7 +1125,7 @@ function renderWeeklyCalendar() {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
         const dateISO = date.toISOString().split('T')[0];
-
+        
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'narrow' }).toUpperCase();
         const dayNumber = date.getDate();
         const isActive = date.toDateString() === now.toDateString();
@@ -1264,57 +1162,31 @@ tg.expand();
 function nextStep(stepNumber) {
     triggerHaptic('light');
     const targetStepEl = document.getElementById(`step-${stepNumber}`);
-
+    
     if (!targetStepEl) return;
 
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     targetStepEl.classList.add('active');
-
+    
     const globalTabBar = document.getElementById('global-tab-bar');
     if (globalTabBar) {
-        if (stepNumber === 13 || stepNumber === 16 || stepNumber === 17) {
+        if (stepNumber === 12 || stepNumber === 15 || stepNumber === 16) {
             globalTabBar.style.display = 'flex';
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-            if (stepNumber === 13) document.getElementById('tab-home').classList.add('active');
-            if (stepNumber === 16) document.getElementById('tab-progress').classList.add('active');
-            if (stepNumber === 17) document.getElementById('tab-settings').classList.add('active');
+            if (stepNumber === 12) document.getElementById('tab-home').classList.add('active');
+            if (stepNumber === 15) document.getElementById('tab-progress').classList.add('active');
+            if (stepNumber === 16) document.getElementById('tab-settings').classList.add('active');
         } else {
             globalTabBar.style.display = 'none';
         }
     }
-
-    // Initialize rulers AFTER step is visible (fix race condition)
-    requestAnimationFrame(() => {
-        if (stepNumber === 4) {
-            initHeightRulerGeneric('onboarding-height-ruler', 'onboarding-height-ruler-area', 'onboarding-height-val', 175);
-        } else if (stepNumber === 5) {
-            initWeightRuler('onboarding-ruler-ticks', 'onboarding-ruler-scroll-area', 'onboarding-weight-val', 75);
-        }
-    });
-
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
 }
 
 function prevStep(stepNumber) {
-    // Validate step number to prevent navigation to invalid steps
-    if (stepNumber < 1 || !document.getElementById(`step-${stepNumber}`)) {
-        console.error(`Invalid step number: ${stepNumber}`);
-        return;
-    }
-
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     document.getElementById(`step-${stepNumber}`).classList.add('active');
-
-    // Re-initialize rulers if navigating back to ruler steps
-    requestAnimationFrame(() => {
-        if (stepNumber === 4) {
-            initHeightRulerGeneric('onboarding-height-ruler', 'onboarding-height-ruler-area', 'onboarding-height-val', tempRegistrationData.height || 175);
-        } else if (stepNumber === 5) {
-            initWeightRuler('onboarding-ruler-ticks', 'onboarding-ruler-scroll-area', 'onboarding-weight-val', tempRegistrationData.weight || 75);
-        }
-    });
-
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
 }
 
 function selectGender(gender) {
@@ -1330,35 +1202,34 @@ function selectActivity(multiplier) {
 function saveBorn() {
     const birthdate = document.getElementById('birthdate').value;
     if (!birthdate) {
-        // Fixed: Removed undefined tg.showAlert() - validation handled by HTML5 required attribute
-        triggerHaptic('error');
+        tg.showAlert("Пожалуйста, выберите дату рождения");
         return;
     }
     userData.birthdate = birthdate;
     const birthYear = new Date(birthdate).getFullYear();
     const currentYear = new Date().getFullYear();
     userData.age = currentYear - birthYear;
-    nextStep(7);
+    nextStep(6);
 }
 
 function selectGoal(goal) {
     userData.goal = goal;
-    nextStep(8);
+    nextStep(7);
 }
 
 function selectStopper(stopper) {
     userData.stopper = stopper;
-    nextStep(9);
+    nextStep(8);
 }
 
 function selectDiet(diet) {
     userData.diet = diet;
-    nextStep(10);
+    nextStep(9);
 }
 
 function selectAccomplish(accomplish) {
     userData.accomplish = accomplish;
-    nextStep(11);
+    nextStep(10);
     startLoadingAnimation();
 }
 
@@ -1367,7 +1238,7 @@ function startLoadingAnimation() {
     const progressBar = document.getElementById('load-progress');
     const statusEl = document.getElementById('load-status');
     const finalBtn = document.getElementById('final-btn');
-
+    
     const steps = [
         { percent: 20, status: "Анализируем ваши данные...", check: "check-calories" },
         { percent: 40, status: "Рассчитываем метаболический возраст...", check: "check-carbs" },
@@ -1409,11 +1280,7 @@ function startLoadingAnimation() {
             triggerHaptic('success');
             document.getElementById('loading-title').innerText = "План успешно составлен!";
             statusEl.style.display = 'none';
-
-            // Плавное появление кнопки
             finalBtn.style.display = 'block';
-            finalBtn.style.opacity = '0';
-            finalBtn.style.animation = 'fadeInSlideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
         }
     }, 40);
 }
@@ -1497,23 +1364,23 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 
 function calculateNorms() {
     const { weight, height, age, gender, activity, goal } = userData;
-
+    
     let bmr;
     if (gender === 'male') {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
     } else {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
-
+    
     let calories = Math.round(bmr * activity);
-
+    
     // Корректировка по цели
     if (goal === 'lose') {
         calories -= 500; // Дефицит для похудения
     } else if (goal === 'gain') {
         calories += 500; // Профицит для набора массы
     }
-
+    
     // Расчет БЖУ
     const protein = Math.round((calories * 0.3) / 4);
     const fats = Math.round((calories * 0.3) / 9);
@@ -1528,9 +1395,14 @@ function calculateNorms() {
 }
 
 function showResults() {
-    // Height and weight are already saved in userData from onboarding steps
-    // No need to get them from input fields that don't exist on this step
+    const heightInput = document.getElementById('height');
+    const weightInput = document.getElementById('weight');
 
+    if (!heightInput || !weightInput) return;
+
+    userData.height = parseFloat(heightInput.value);
+    userData.weight = parseFloat(weightInput.value);
+    
     const norms = calculateNorms();
     const { calories, protein, fats, carbs } = norms;
 
@@ -1540,7 +1412,7 @@ function showResults() {
     document.getElementById('res-protein').innerText = protein + 'г';
     document.getElementById('res-fats').innerText = fats + 'г';
     document.getElementById('target-weight').innerText = userData.weight + ' кг';
-
+    
     const goalMap = {
         'lose': 'Похудение',
         'maintain': 'Поддержание веса',
@@ -1554,78 +1426,27 @@ function showResults() {
     setProgress('ring-carbs', 100);
     setProgress('ring-protein', 100);
     setProgress('ring-fats', 100);
-
+    
     // Переход сразу
-    nextStep(12);
+    nextStep(11);
 
-
-    // Создаем хеш данных пользователя для проверки изменений
-    const userDataHash = JSON.stringify({
-        gender: userData.gender,
-        weight: userData.weight,
-        height: userData.height,
-        age: userData.age,
-        goal: userData.goal,
-        stopper: userData.stopper,
-        diet: userData.diet,
-        accomplish: userData.accomplish,
-        calories: calories
-    });
-
-    // Проверяем, есть ли уже сохраненные советы для этих данных
-    const savedTipsData = localStorage.getItem('userTipsData');
-    let shouldRegenerateTips = true;
-
-
-    if (savedTipsData) {
-        try {
-            const parsed = JSON.parse(savedTipsData);
-            // Если хеш совпадает, используем сохраненные советы
-            if (parsed.hash === userDataHash && parsed.tips) {
-                shouldRegenerateTips = false;
-                const container = document.getElementById('ai-tips');
-                if (container) {
-                    container.innerHTML = '';
-                    parsed.tips.forEach(tip => {
-                        container.innerHTML += `
-                            <div class="tip-item">
-                                <div class="tip-icon">${tip.icon}</div>
-                                <div class="tip-text">${tip.text}</div>
-                            </div>
-                        `;
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("Error parsing saved tips:", e);
+    // Загрузка советов в фоновом режиме
+    fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
+        const container = document.getElementById('ai-tips');
+        if (container) {
+            container.innerHTML = '';
+            tips.forEach(tip => {
+                container.innerHTML += `
+                    <div class="tip-item">
+                        <div class="tip-icon">${tip.icon}</div>
+                        <div class="tip-text">${tip.text}</div>
+                    </div>
+                `;
+            });
         }
-    }
-
-    // Генерируем новые советы только если данные изменились
-    if (shouldRegenerateTips) {
-        fetchGeminiTips(userData, calories, carbs, protein, fats).then(tips => {
-            // Сохраняем советы вместе с хешем данных пользователя
-            localStorage.setItem('userTipsData', JSON.stringify({
-                hash: userDataHash,
-                tips: tips
-            }));
-
-            const container = document.getElementById('ai-tips');
-            if (container) {
-                container.innerHTML = '';
-                tips.forEach(tip => {
-                    container.innerHTML += `
-                        <div class="tip-item">
-                            <div class="tip-icon">${tip.icon}</div>
-                            <div class="tip-text">${tip.text}</div>
-                        </div>
-                    `;
-                });
-            }
-        }).catch(error => {
-            console.error("Tips error", error);
-        });
-    }
+    }).catch(error => {
+        console.error("Tips error", error);
+    });
 }
 
 let videoStream = null;
@@ -1635,7 +1456,7 @@ async function openCamera() {
     const permissionUI = document.getElementById('camera-permission-ui');
     const statusText = document.getElementById('camera-status-text');
     const retryBtn = document.getElementById('retry-camera-btn');
-
+    
     // Reset UI state
     cameraScreen.classList.remove('hidden');
 
@@ -1646,7 +1467,7 @@ async function openCamera() {
     } else {
         permissionUI.classList.add('hidden');
     }
-
+    
     // Explicitly hide analysis card and show controls at start
     const analysisOverlay = document.getElementById('analysis-overlay');
     analysisOverlay.style.display = 'none';
@@ -1655,7 +1476,7 @@ async function openCamera() {
 
     statusText.innerText = "Разрешите доступ к камере, чтобы сканировать еду 📸";
     retryBtn.classList.add('hidden');
-
+    
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -1665,10 +1486,10 @@ async function openCamera() {
             },
             audio: false
         });
-
+        
         video.srcObject = videoStream;
         await video.play();
-
+        
         // ШАГ 2 (Успех): Установи isCameraPermissionGranted = true
         isCameraPermissionGranted = true;
 
@@ -1677,7 +1498,7 @@ async function openCamera() {
         setTimeout(() => {
             permissionUI.classList.add('hidden');
         }, 500);
-
+        
     } catch (err) {
         console.error("Error accessing camera:", err);
         // ШАГ 3 (Ошибка): Установи isCameraPermissionGranted = false
@@ -1693,7 +1514,7 @@ async function openCamera() {
 function closeCamera() {
     const cameraScreen = document.getElementById('camera-screen');
     cameraScreen.classList.add('hidden');
-
+    
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
@@ -1704,12 +1525,12 @@ function takePhoto() {
     const video = document.getElementById('video-preview');
     const canvas = document.getElementById('camera-canvas');
     const context = canvas.getContext('2d');
-
+    
     // Resize for AI: max 1000px width/height while maintaining aspect ratio
     let targetWidth = video.videoWidth;
     let targetHeight = video.videoHeight;
     const maxDim = 1000;
-
+    
     if (targetWidth > maxDim || targetHeight > maxDim) {
         if (targetWidth > targetHeight) {
             targetHeight = (maxDim / targetWidth) * targetHeight;
@@ -1722,10 +1543,10 @@ function takePhoto() {
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
-
+    
     // Draw the current frame from the video onto the canvas with resizing
     context.drawImage(video, 0, 0, targetWidth, targetHeight);
-
+    
     // Convert to JPEG with quality 0.8 to reduce size
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
@@ -1740,15 +1561,15 @@ function takePhoto() {
     smallCanvas.width = 256;
     smallCanvas.height = 256;
     const smallCtx = smallCanvas.getContext('2d');
-
+    
     // Draw with square crop from center
     smallCtx.drawImage(video, startX, startY, shortSide, shortSide, 0, 0, 256, 256);
     thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
-
+    
     // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
     if (analyzedImg) analyzedImg.src = imageData;
-
+    
     // Freeze video feed visually by stopping tracks but keeping screen
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
@@ -1759,7 +1580,7 @@ function takePhoto() {
     const analysisOverlay = document.getElementById('analysis-overlay');
     analysisOverlay.style.display = 'flex';
     analysisOverlay.classList.remove('hidden');
-
+    
     // Start AI analysis
     showLoader(cameraMode);
     startAnalysis(imageData, thumbnailDataUrl);
@@ -1768,17 +1589,17 @@ function takePhoto() {
 async function startAnalysis(imageData, thumbnailDataUrl) {
     let progress = 0;
     const circ = 2 * Math.PI * 52; // New radius r=52
-
+    
     const interval = setInterval(() => {
         progress += Math.floor(Math.random() * 5) + 3;
         if (progress > 100) progress = 100;
-
+        
         // Update new UI elements
         const percentVal = document.getElementById('analysis-percent-val');
         if (percentVal) percentVal.innerText = progress;
-
+        
         setHomeProgress('analysis-progress-circle', progress, circ);
-
+        
         if (progress === 100) {
             clearInterval(interval);
             // Add slight delay at 100% for "expensive" feel
@@ -1795,7 +1616,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     // 1. Проверяем, видит ли вообще скрипт твой ключ
     if (!CONFIG.GOOGLE_API_KEY) {
         alert("ОШИБКА: Скрипт не видит API ключ! (Хотя в .env он может быть). Проблема в передаче ключа.");
-        nextStep(13);
+        nextStep(12);
         return;
     }
 
@@ -1844,7 +1665,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         3. Общее описание (короткий текст до 150 символов), в поле "description".
         Always return JSON: {"product_name": "Название", "calories": 100, "protein": 10, "carbs": 10, "fats": 10, "description": "Описание"}`;
     }
-
+    
     try {
         // Отправляем запрос
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
@@ -1870,14 +1691,14 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
             }
             throw new Error(data.error.message);
         }
-
+        
         if (!data.candidates || !data.candidates[0].content) {
             alert("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ (Блокировка безопасности или сбой)");
             throw new Error("Empty response");
         }
 
         let text = data.candidates[0].content.parts[0].text;
-
+        
         // Use regex to find JSON if the response contains extra text
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -1885,7 +1706,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         } else {
             text = text.replace(/```json|```/g, '').trim();
         }
-
+        
         const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
         if (cameraMode === 'cook') {
@@ -1908,13 +1729,13 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
 
     } catch (err) {
         console.error("Critical AI Error:", err);
-
+        
         // Замени alert на вызов нового окна
         const errorModal = document.getElementById('error-modal');
         if (errorModal) {
             errorModal.classList.remove('hidden');
         }
-
+        
         // We still need to leave analysis screen if it was active
         const analysisOverlay = document.getElementById('analysis-overlay');
         if (analysisOverlay) {
@@ -1922,14 +1743,14 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         }
         closeCamera();
         hideLoader();
-        nextStep(13); // Go back home
+        nextStep(12); // Go back home
     }
 }
 
 function addFoodToHome(food, thumbnail) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+    
     const foodEntry = {
         id: food.id || Date.now().toString(),
         name: food.name,
@@ -1943,12 +1764,12 @@ function addFoodToHome(food, thumbnail) {
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
     currentMacros.foodHistory.unshift(foodEntry);
-
+    
     recalculateMacros();
     saveAllData();
     updateStreak();
     initHomeScreenFromSaved();
-    nextStep(13);
+    nextStep(12);
 }
 
 function recalculateMacros() {
@@ -2038,27 +1859,6 @@ function initDeleteConfirmModal() {
     }
 }
 
-function initResetConfirmModal() {
-    const modal = document.getElementById('reset-confirm-modal');
-    const confirmBtn = document.getElementById('confirm-reset-btn');
-    const cancelBtn = document.getElementById('cancel-reset-btn');
-
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', () => {
-            triggerHaptic('warning');
-            localStorage.clear(); // Это уже удаляет все, включая userTips
-            location.reload();
-        });
-    }
-
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            triggerHaptic('light');
-            modal.classList.add('hidden');
-        });
-    }
-}
-
 function goToHome() {
     // Norms are already in currentMacros thanks to calculateNorms
     currentMacros.calories = 0;
@@ -2073,7 +1873,7 @@ function goToHome() {
 
     document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
     document.getElementById('home-calories-total').innerText = `Ккал осталось`;
-
+    
     document.getElementById('home-protein-eaten').innerText = currentMacros.totalProtein;
     document.getElementById('home-carbs-eaten').innerText = currentMacros.totalCarbs;
     document.getElementById('home-fats-eaten').innerText = currentMacros.totalFats;
@@ -2087,7 +1887,7 @@ function goToHome() {
 
     saveAllData();
     updateCalendarDates();
-    nextStep(13);
+    nextStep(12);
 }
 
 function checkInitialCelebration() {
@@ -2141,7 +1941,7 @@ function setHomeProgress(id, percent, circumference) {
 function updateCalendarDates() {
     const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
-
+    
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
     monday.setDate(now.getDate() + diff);
@@ -2150,10 +1950,10 @@ function updateCalendarDates() {
     dayElements.forEach((el, index) => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + index);
-
+        
         const dayNum = date.getDate();
         el.querySelector('.day-number').innerText = dayNum;
-
+        
         if (date.toDateString() === now.toDateString()) {
             el.classList.add('active');
         } else {
@@ -2165,9 +1965,9 @@ function updateCalendarDates() {
 function updateProgressPage() {
     triggerHaptic('light');
     const today = new Date().toISOString().split('T')[0];
-
+    
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-
+    
     currentMacros.dailyHistory[today] = {
         calories: currentMacros.calories,
         protein: currentMacros.protein,
@@ -2183,7 +1983,7 @@ function updateProgressPage() {
     renderProgressChart();
     updateWeightWidgets();
     updateBMI();
-    nextStep(16);
+    nextStep(15);
 }
 
 function renderProgressChart() {
@@ -2192,7 +1992,7 @@ function renderProgressChart() {
 
     const daysShortRu = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
-
+    
     // Get Monday of current week
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
@@ -2208,15 +2008,15 @@ function renderProgressChart() {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
-
+        
         labels.push(daysShortRu[date.getDay()]);
-
+        
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
-
+        
         const pCals = data.protein * 4;
         const cCals = data.carbs * 4;
         const fCals = data.fats * 9;
-
+        
         proteinData.push(pCals);
         carbsData.push(cCals);
         fatsData.push(fCals);
@@ -2234,7 +2034,7 @@ function renderProgressChart() {
         const total = proteinData[i] + carbsData[i] + fatsData[i];
         if (total > maxWeekVal) maxWeekVal = total;
     }
-
+    
     let suggestedMax = 600;
     if (maxWeekVal * 1.1 > 600) {
         suggestedMax = Math.ceil((maxWeekVal * 1.1) / 600) * 600;
@@ -2249,11 +2049,11 @@ function renderProgressChart() {
         caloriesChart.data.datasets[1].data = carbsData;
         caloriesChart.data.datasets[2].label = 'Белки';
         caloriesChart.data.datasets[2].data = proteinData;
-
+        
         // Update scales dynamically
         caloriesChart.options.scales.y.suggestedMax = suggestedMax;
         caloriesChart.options.scales.y.ticks.stepSize = stepSize;
-
+        
         caloriesChart.update();
     } else {
         caloriesChart = new Chart(ctx, {
@@ -2332,7 +2132,7 @@ function renderProgressChart() {
                         padding: 10,
                         displayColors: true,
                         callbacks: {
-                            label: function (context) {
+                            label: function(context) {
                                 return ` ${context.dataset.label}: ${Math.round(context.raw)} ккал`;
                             }
                         }
@@ -2397,19 +2197,19 @@ function renderProgressChart() {
 
 function updateBMI() {
     if (!userData.weight || !userData.height) return;
-
+    
     const heightInMeters = userData.height / 100;
     const bmi = (userData.weight / (heightInMeters * heightInMeters)).toFixed(1);
-
+    
     const bmiEl = document.getElementById('bmi-number');
     const statusTextEl = document.getElementById('bmi-status-text');
     const pointerEl = document.getElementById('bmi-pointer');
-
+    
     bmiEl.innerText = bmi;
-
+    
     let status = "Норма";
     let statusClass = "healthy";
-    let pointerPos = 50;
+    let pointerPos = 50; 
 
     if (bmi < 18.5) {
         status = "Дефицит";
@@ -2445,7 +2245,7 @@ function updateWeightWidgets() {
     const currentWeightEl = document.getElementById('stats-current-weight');
     const goalWeightEl = document.getElementById('stats-goal-weight');
     const streakCountEl = document.getElementById('stats-streak-count');
-
+    
     if (currentWeightEl) currentWeightEl.innerText = userData.weight || '--';
     if (goalWeightEl) {
         // Calculate a simple goal if not set, or use weight as fallback
@@ -2456,11 +2256,11 @@ function updateWeightWidgets() {
         else if (userData.goal === 'gain') targetWeight += 5;
         goalWeightEl.innerText = targetWeight;
     }
-
+    
     // Update streak from existing logic
     const streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
     if (streakCountEl) streakCountEl.innerText = streakCount;
-
+    
     updateStreakDots(streakCount);
     renderWeightChart();
 }
@@ -2468,10 +2268,10 @@ function updateWeightWidgets() {
 function updateStreakDots(count) {
     const dotsContainer = document.getElementById('stats-streak-dots');
     if (!dotsContainer) return;
-
+    
     const dayLabels = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В'];
     dotsContainer.innerHTML = '';
-
+    
     // Get current day of week (0 for Sunday, 1 for Monday, etc.)
     const now = new Date();
     let currentDay = now.getDay();
@@ -2482,10 +2282,10 @@ function updateStreakDots(count) {
     for (let i = 0; i < 7; i++) {
         const dayColumn = document.createElement('div');
         dayColumn.className = 'day-column';
-
+        
         const dot = document.createElement('div');
         dot.className = 'streak-dot circle-day';
-
+        
         // Highlight logic:
         // 1. Current day is always highlighted (orange/active)
         // 2. Previous days are highlighted if streak count covers them
@@ -2496,7 +2296,7 @@ function updateStreakDots(count) {
         } else if (i < todayIdx && (todayIdx - i) < count) {
             dot.classList.add('active');
         }
-
+        
         const label = document.createElement('span');
         label.className = 'day-label';
         label.innerText = dayLabels[i];
@@ -2504,7 +2304,7 @@ function updateStreakDots(count) {
             label.style.color = '#ff9500'; // Highlight current day label
             label.style.fontWeight = 'bold';
         }
-
+        
         dayColumn.appendChild(dot);
         dayColumn.appendChild(label);
         dotsContainer.appendChild(dayColumn);
@@ -2520,7 +2320,7 @@ function renderWeightChart() {
     const gridColor = style.getPropertyValue('--border-color').trim() || '#e5e5ea';
     const textColor = style.getPropertyValue('--text-secondary').trim() || '#8e8e93';
     const cardBg = style.getPropertyValue('--bg-card').trim() || '#ffffff';
-
+    
     // Get primary text color for points and lines (Black in Light, White in Dark)
     const primaryColor = style.getPropertyValue('--text-primary').trim() || '#000000';
     const isDark = document.body.getAttribute('data-theme') === 'dark';
@@ -2539,7 +2339,7 @@ function renderWeightChart() {
     const history = currentMacros.weightHistory || [];
     // Get last 7 entries or all if less
     const lastEntries = history.slice(-7);
-
+    
     const labels = lastEntries.map(e => {
         const d = new Date(e.date);
         const day = d.getDate();
@@ -2619,7 +2419,7 @@ function renderWeightChart() {
 
 function openSettings() {
     triggerHaptic('light');
-    nextStep(17);
+    nextStep(16);
     loadSettingsData();
 }
 
@@ -2735,12 +2535,12 @@ function loadSettingsData() {
     const tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
-
+        
         const nameEl = document.getElementById('settings-name');
         if (nameEl) {
             nameEl.innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
         }
-
+        
         const avatarEl = document.getElementById('settings-avatar');
         if (avatarEl) {
             if (user.photo_url) {
@@ -2755,20 +2555,20 @@ function loadSettingsData() {
         if (nameEl) nameEl.innerText = 'Гость';
     }
 
-    const activityMap = {
-        1.2: 'Сидячий',
-        1.375: 'Лёгкий',
-        1.55: 'Умеренный',
-        1.725: 'Высокая',
-        1.9: 'Экстремальная'
+    const activityMap = { 
+        1.2: 'Сидячий', 
+        1.375: 'Лёгкий', 
+        1.55: 'Умеренный', 
+        1.725: 'Высокая', 
+        1.9: 'Экстремальная' 
     };
-
-    const goalMap = {
-        'lose': 'Похудение',
-        'maintain': 'Норма',
-        'gain': 'Масса'
+    
+    const goalMap = { 
+        'lose': 'Похудение', 
+        'maintain': 'Норма', 
+        'gain': 'Масса' 
     };
-
+    
     const setText = (id, text) => {
         const el = document.getElementById(id);
         if (el) el.innerText = text;
@@ -2781,10 +2581,9 @@ function loadSettingsData() {
 }
 
 function resetAppData() {
-    const modal = document.getElementById('reset-confirm-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        triggerHaptic('light');
+    if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
+        localStorage.clear();
+        location.reload();
     }
 }
 
@@ -2793,7 +2592,7 @@ function setProgress(id, percent) {
     if (circle) {
         const radius = 40;
         const circumference = 2 * Math.PI * radius;
-
+        
         // Ограничиваем визуальное заполнение максимум на 100%
         const visualPercent = Math.min(percent, 100);
         const offset = circumference - (visualPercent / 100 * circumference);
@@ -2835,20 +2634,20 @@ function initRecipeModal() {
 
 function showRecipeModal(recipeData) {
     currentRecipeData = recipeData;
-
+    
     document.getElementById('recipe-title').innerText = recipeData.recipeName || "Рецепт";
     document.getElementById('recipe-cal').innerText = recipeData.calories || 0;
     document.getElementById('recipe-p').innerText = recipeData.protein || 0;
     document.getElementById('recipe-f').innerText = recipeData.fat || 0;
     document.getElementById('recipe-c').innerText = recipeData.carbs || 0;
-
+    
     // Formatting instructions
     const instructionsContainer = document.getElementById('recipe-instructions');
     if (instructionsContainer) {
         instructionsContainer.innerHTML = '';
         const instructionsText = recipeData.instructions || "";
         const steps = instructionsText.split('\n').filter(step => step.trim() !== '');
-
+        
         steps.forEach((stepText) => {
             const stepDiv = document.createElement('div');
             stepDiv.className = 'recipe-step-item';
@@ -2856,7 +2655,7 @@ function showRecipeModal(recipeData) {
             instructionsContainer.appendChild(stepDiv);
         });
     }
-
+    
     const modal = document.getElementById('recipe-modal');
     if (modal) modal.classList.remove('hidden');
 }
@@ -2894,7 +2693,7 @@ function showCheckResult(result) {
     scoreNum.innerText = "0";
     scoreFill.style.width = "0%";
     if (nameDisplay) nameDisplay.innerText = result.product_name || "";
-
+    
     const score = result.score || 0;
 
     // Set color based on score
@@ -2927,7 +2726,7 @@ function showCheckResult(result) {
     `;
 
     modal.classList.remove('hidden');
-
+    
     // Start animation after modal is visible
     setTimeout(() => {
         animateScore(score);
@@ -2946,12 +2745,12 @@ function animateScore(targetScore) {
     function update(timestamp) {
         const elapsed = timestamp - startTime;
         const progress = Math.min(elapsed / duration, 1);
-
+        
         // Easing function: easeOutCubic
         const easeProgress = 1 - Math.pow(1 - progress, 3);
-
+        
         currentScore = Math.floor(easeProgress * targetScore);
-
+        
         scoreNum.innerText = currentScore;
         scoreFill.style.width = (easeProgress * targetScore) + "%";
 
