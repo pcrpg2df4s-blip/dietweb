@@ -161,7 +161,45 @@ window.addEventListener('DOMContentLoaded', () => {
     initHeightModal();
     initGalleryButton();
     initDateSpinner();
+    initSplashScreen();
 });
+
+function initSplashScreen() {
+    const splash = document.getElementById('splash-screen');
+    const video = document.getElementById('splash-video');
+    if (!splash || !video) return;
+
+    // Detect theme
+    const isLight = localStorage.getItem('theme') === 'light';
+    const videoSrc = isLight ? 'intro-light.mp4' : 'intro-dark.mp4';
+
+    // Set background to prevent black flash for light mode
+    if (isLight) {
+        splash.classList.add('splash-bg-light');
+    }
+
+    // Set video source and play
+    video.src = videoSrc;
+    
+    video.play().catch(err => {
+        console.warn("Video auto-play failed, proceeding to remove splash", err);
+        removeSplash();
+    });
+
+    const removeSplash = () => {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+            splash.remove();
+        }, 500);
+    };
+
+    // Cleanup after 2.5 seconds or video ends
+    const timer = setTimeout(removeSplash, 2500);
+    video.onended = () => {
+        clearTimeout(timer);
+        removeSplash();
+    };
+}
 
 function initGalleryButton() {
     const galleryBtn = document.getElementById('gallery-btn');

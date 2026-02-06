@@ -16,6 +16,30 @@
     animation: fadeInUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#splash-screen.splash-bg-light {
+    background-color: #ffffff;
+}
+
+.splash-content {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 :root {
     --bg-background: #F2F2F7;
     --bg-card: #FFFFFF;
