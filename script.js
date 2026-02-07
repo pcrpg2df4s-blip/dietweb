@@ -2,7 +2,7 @@ const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
-const API_URL = "https://YOUR_SERVER_URL/api/analyze";
+const API_URL = "https://white-enters-true-outputs.trycloudflare.com";
 
 /**
  * Triggers haptic feedback using Telegram WebApp API or browser fallback.
