@@ -55,21 +55,26 @@ async def handle_analyze(request):
     try:
         data = await request.json()
         image_base64 = data.get("image")
+        text_query = data.get("text") or data.get("query")
         mime_type = data.get("mime_type", "image/jpeg")
-        prompt = data.get("prompt", "Analyze this food image. Return JSON: {\"product_name\": \"...\", \"calories\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0}")
+        prompt = data.get("prompt", "Analyze this food. Return JSON: {\"product_name\": \"...\", \"calories\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0}")
 
-        if not image_base64:
-            return web.json_response({"error": "No image data provided"}, status=400)
-
-        # Декодируем картинку
-        image_data = base64.b64decode(image_base64)
-
-        # Вызываем Gemini
         model = genai.GenerativeModel('gemini-2.0-flash-lite-001')
-        response = model.generate_content([
-            prompt,
-            {'mime_type': mime_type, 'data': image_data}
-        ])
+
+        if image_base64:
+            # Декодируем картинку
+            image_data = base64.b64decode(image_base64)
+            # Вызываем Gemini с картинкой
+            response = model.generate_content([
+                prompt,
+                {'mime_type': mime_type, 'data': image_data}
+            ])
+        elif text_query:
+            # Вызываем Gemini только с текстом
+            full_prompt = f"Определи КБЖУ для продукта: {text_query}. {prompt}"
+            response = model.generate_content(full_prompt)
+        else:
+            return web.json_response({"error": "No image or text data provided"}, status=400, headers={"Access-Control-Allow-Origin": "*"})
 
         # Парсим JSON из ответа Gemini
         text = response.text

@@ -755,6 +755,7 @@ async function analyzeTextFood(foodName, userCalories) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                text: foodName,
                 prompt: prompt
             })
         });
