@@ -1,6 +1,10 @@
 import asyncio
 import logging
 import os
+import base64
+import json
+from aiohttp import web
+import google.generativeai as genai
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -30,6 +34,10 @@ if not BOT_TOKEN:
     print("💀 ОШИБКА: Нет BOT_TOKEN в .env")
     exit(1)
 
+# Настройка Gemini
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
@@ -41,9 +49,78 @@ async def cmd_start(message: types.Message):
     )
     await message.answer("Привет! Нажми кнопку, чтобы открыть приложение 👇", reply_markup=kb)
 
+# --- Web Server (aiohttp) ---
+
+async def handle_analyze(request):
+    try:
+        data = await request.json()
+        image_base64 = data.get("image")
+        mime_type = data.get("mime_type", "image/jpeg")
+        prompt = data.get("prompt", "Analyze this food image. Return JSON: {\"product_name\": \"...\", \"calories\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0}")
+
+        if not image_base64:
+            return web.json_response({"error": "No image data provided"}, status=400)
+
+        # Декодируем картинку
+        image_data = base64.b64decode(image_base64)
+
+        # Вызываем Gemini
+        model = genai.GenerativeModel('gemini-2.0-flash-lite-001')
+        response = model.generate_content([
+            prompt,
+            {'mime_type': mime_type, 'data': image_data}
+        ])
+
+        # Парсим JSON из ответа Gemini
+        text = response.text
+        # Очистка от markdown блоков если есть
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
+        
+        try:
+            result = json.loads(text)
+        except:
+            # Fallback if Gemini fails to return clean JSON
+            result = {"raw_text": response.text}
+
+        return web.json_response(result, headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        })
+
+    except Exception as e:
+        logging.error(f"Error in /api/analyze: {e}")
+        return web.json_response({"error": str(e)}, status=500, headers={"Access-Control-Allow-Origin": "*"})
+
+async def handle_options(request):
+    return web.Response(headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "3600",
+    })
+
+async def init_web():
+    app = web.Application()
+    app.router.add_post('/api/analyze', handle_analyze)
+    app.router.add_options('/api/analyze', handle_options)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    await site.start()
+    print("🚀 Web server started on port 8080")
+
 async def main():
     logging.basicConfig(level=logging.INFO)
-    await dp.start_polling(bot)
+    
+    # Запускаем и бота, и веб-сервер
+    await asyncio.gather(
+        dp.start_polling(bot),
+        init_web()
+    )
 
 if __name__ == "__main__":
     try:

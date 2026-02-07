@@ -2,6 +2,8 @@ const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
+const API_URL = "https://YOUR_SERVER_URL/api/analyze";
+
 /**
  * Triggers haptic feedback using Telegram WebApp API or browser fallback.
  * @param {string} style - 'light', 'medium', 'heavy', 'success', 'error', 'warning'
@@ -137,14 +139,6 @@ window.onunhandledrejection = function(event) {
 window.addEventListener('DOMContentLoaded', () => {
     console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
     
-    // Проверяем наличие ключа в URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlKey = urlParams.get('api_key');
-    if (urlKey) {
-        console.log("Using API Key from URL");
-        CONFIG.GOOGLE_API_KEY = urlKey;
-    }
-
     loadSavedData();
     initBMIModal();
     initErrorModal();
@@ -743,16 +737,6 @@ function initAddMenu() {
 }
 
 async function analyzeTextFood(foodName, userCalories) {
-    if (!CONFIG.GOOGLE_API_KEY) {
-        return {
-            name: foodName,
-            calories: parseInt(userCalories) || 0,
-            protein: 0,
-            fats: 0,
-            carbs: 0
-        };
-    }
-
     let prompt = "";
     const cookingRules = `
     - Assume standard cooking methods: If the user says "Fried eggs" or "Steak", assume oil was used for frying (add fats).
@@ -766,34 +750,28 @@ async function analyzeTextFood(foodName, userCalories) {
         prompt = `User ate: "${foodName}". ${cookingRules} Estimate calories and macros (Protein, Fat, Carbs) for a standard portion. Return ONLY JSON: {"name": "${foodName}", "calories": 100, "protein": 10, "carbs": 10, "fats": 10}`;
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-    
     try {
-        const response = await fetchWithRetry(url, {
+        const response = await fetchWithRetry(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                prompt: prompt
             })
         });
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.message);
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
 
-        let text = data.candidates[0].content.parts[0].text;
-        text = text.replace(/```json|```/g, '').trim();
-        const result = JSON.parse(text);
-        
         return {
             id: Date.now().toString(),
-            name: result.name || foodName,
+            name: result.name || result.product_name || foodName,
             calories: parseInt(result.calories) || parseInt(userCalories) || 0,
             protein: parseInt(result.protein) || 0,
             fats: parseInt(result.fats) || 0,
             carbs: parseInt(result.carbs) || 0
         };
     } catch (e) {
-        console.error("Gemini text analysis error:", e);
+        console.error("Proxy text analysis error:", e);
         return {
             id: Date.now().toString(),
             name: foodName,
@@ -1581,18 +1559,6 @@ async function fetchWithRetry(url, options, maxRetries = 3, delay = 2000) {
 }
 
 async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
-    if (!CONFIG.GOOGLE_API_KEY) {
-        console.warn("No API key, skipping tips");
-        return [
-            { icon: "🥗", text: "Следите за балансом БЖУ ежедневно" },
-            { icon: "💧", text: "Пейте достаточное количество воды" },
-            { icon: "🏃", text: "Старайтесь больше двигаться" },
-            { icon: "😴", text: "Соблюдайте режим сна" }
-        ];
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-
     const prompt = `Пользователь:
 - Пол: ${userData.gender === 'male' ? 'Мужской' : 'Женский'}
 - Вес: ${userData.weight} кг
@@ -1605,29 +1571,28 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 
 Его норма: ${calories} ккал, БЖУ: ${protein}г белка, ${fats}г жиров, ${carbs}г углеводов.
 
-Дай 4 коротких, конкретных совета на русском языке, как ему достичь цели, основываясь на его ответах. 
+Дай 4 коротких, конкретных совета на русском языке, как ему достичь цели, основываясь на его ответах.
 Верни ТОЛЬКО JSON массив объектов с полями "icon" (эмодзи) и "text" (совет до 60 символов).
 Пример: [{"icon": "🥑", "text": "Ешь больше жиров"}, ...]`;
 
     try {
-        const response = await fetchWithRetry(url, {
+        const response = await fetchWithRetry(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                prompt: prompt
             })
         });
-        const data = await response.json();
+        const result = await response.json();
 
-        if (data.error) {
-            throw new Error(data.error.message);
+        if (result.error) {
+            throw new Error(result.error);
         }
 
-        const text = data.candidates[0].content.parts[0].text;
-        const cleanJson = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(cleanJson);
+        // The result should already be the parsed JSON from the server
+        return Array.isArray(result) ? result : (result.tips || []);
     } catch (e) {
-        console.error("Gemini error:", e);
+        console.error("Proxy tips error:", e);
         return [
             { icon: "🥗", text: "Следите за балансом БЖУ ежедневно" },
             { icon: "💧", text: "Пейте достаточное количество воды" },
@@ -1882,13 +1847,6 @@ async function startAnalysis(imageData, thumbnailDataUrl) {
 }
 
 async function finishAnalysis(imageData, thumbnailDataUrl) {
-    // 1. Проверяем, видит ли вообще скрипт твой ключ
-    if (!CONFIG.GOOGLE_API_KEY) {
-        console.error("ОШИБКА: Скрипт не видит API ключ!");
-        nextStep(12);
-        return;
-    }
-
     const hash = getImageHash(imageData) + "_" + cameraMode;
     if (imageAnalysisCache[hash]) {
         console.log("Using cached analysis result");
@@ -1913,7 +1871,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         Уменьши штрафы за "Е-добавки" в 2-3 раза, так как многие из них безопасны.
         Низкие оценки (ниже 50) ставь только за откровенно вредные продукты (чипсы, газировка, продукты с высокой степенью переработки и токсичности).
         Обычные продукты (например, пшеничная тортилья, хлеб, йогурт) должны получать 75-85 баллов.
-
+ 
         Если текст размыт, попробуй распознать ключевые слова или сделай предположение на основе бренда/вида продукта.
         Верни ответ СТРОГО в формате JSON: { "product_name": "...", "score": 50, "pros": "...", "cons": "...", "verdict": "..." }
         Требования: product_name: Краткое название продукта СТРОГО НА РУССКОМ ЯЗЫКЕ (1-3 слова). score: Оценка полезности от 0 до 100. Весь текст должен быть на русском языке.`;
@@ -1927,7 +1885,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         - Account for common hidden calories: If the dish implies sauce, marination, or breading (e.g., "Cutlet"), add some carbs and fats even if not explicitly visible.
         - Be realistic, not theoretical: Provide values for the finished dish on the plate, not raw ingredients. For example, a Steak should have 0.5g-2g of carbs for caramelization/spices and more fats from oil.
         - Salads: Assume dressing/oil unless it looks completely dry.
-
+ 
         Provide a single, definitive estimate based on visual evidence.
         1. Краткое название продукта (1-2 слова) на русском, в поле "product_name".
         2. Калории (ккал), белки (г), жиры (г), углеводы (г).
@@ -1936,43 +1894,23 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
     }
     
     try {
-        // Отправляем запрос
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${CONFIG.GOOGLE_API_KEY}`;
-        const response = await fetchWithRetry(url, {
+        const response = await fetchWithRetry(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }],
-                generationConfig: {
-                    temperature: 0.1
-                }
+                image: imageData.split(',')[1],
+                mime_type: "image/jpeg",
+                prompt: prompt
             })
         });
-
-        const data = await response.json();
-
-        // 2. Если Google вернул ошибку, показываем её текст
-        if (data.error) {
-            console.error("Google API error:", data.error);
-            throw new Error(data.error.message);
+ 
+        const result = await response.json();
+ 
+        if (result.error) {
+            console.error("Proxy API error:", result.error);
+            throw new Error(result.error);
         }
         
-        if (!data.candidates || !data.candidates[0].content) {
-            console.error("GOOGLE ПРИСЛАЛ ПУСТОЙ ОТВЕТ");
-            throw new Error("Empty response");
-        }
-
-        let text = data.candidates[0].content.parts[0].text;
-        
-        // Use regex to find JSON if the response contains extra text
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            text = jsonMatch[0];
-        } else {
-            text = text.replace(/```json|```/g, '').trim();
-        }
-        
-        const result = JSON.parse(text);
         imageAnalysisCache[hash] = result;
         if (cameraMode === 'cook') {
             showRecipeModal(result);
@@ -1982,16 +1920,16 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
             // Now map the received JSON keys to expected food entry keys
             const foodResult = {
                 id: Date.now().toString(),
-                name: result.product_name || result.name || "Еда",
+                name: result.product_name || result.name || result.recipeName || "Еда",
                 calories: Number(result.calories) || 0,
                 protein: Number(result.protein) || 0,
                 carbs: Number(result.carbs) || 0,
-                fats: Number(result.fats) || 0,
+                fats: Number(result.fats) || Number(result.fat) || 0,
             };
-            addFoodToHome(foodResult, thumbnailDataUrl); // Всё ок
+            addFoodToHome(foodResult, thumbnailDataUrl);
         }
         hideLoader();
-
+ 
     } catch (err) {
         console.error("Critical AI Error:", err);
         
