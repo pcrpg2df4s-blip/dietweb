@@ -27,7 +27,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform: translate3d(0,0,0) scale(1);
+    pointer-events: auto;
+    filter: blur(0px);
+    backdrop-filter: blur(0px);
+}
+
+#splash-screen.splash-exit {
+    opacity: 0;
+    transform: translate3d(0,0,0) scale(1.05);
+    pointer-events: none;
+    filter: blur(15px);
+    backdrop-filter: blur(20px);
+    visibility: hidden;
 }
 
 #splash-screen.splash-bg-light {

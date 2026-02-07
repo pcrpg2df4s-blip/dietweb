@@ -170,10 +170,10 @@ function initSplashScreenCleanup() {
     if (!splash || !video) return;
 
     const removeSplash = () => {
-        splash.style.opacity = '0';
+        splash.classList.add('splash-exit');
         setTimeout(() => {
             splash.remove();
-        }, 500);
+        }, 900);
     };
 
     // Video might already be playing due to the instant script in index.html
