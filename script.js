@@ -1100,8 +1100,20 @@ function loadSavedData() {
                 initHomeScreenFromSaved();
                 nextStep(12);
             }, 100);
+        } else {
+            // Reveal onboarding container if user is new
+            const container = document.querySelector('.container');
+            if (container) container.style.display = 'block';
         }
         checkInitialCelebration();
+    } else {
+        // Explicitly show onboarding for new users when no data exists
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.display = 'block';
+        }
+        // Ensure the first step is active
+        nextStep(1);
     }
 }
 
@@ -1241,6 +1253,12 @@ function nextStep(stepNumber) {
     const targetStepEl = document.getElementById(`step-${stepNumber}`);
     
     if (!targetStepEl) return;
+
+    // Reveal container if it was hidden (first navigation)
+    const container = document.querySelector('.container');
+    if (container && container.style.display !== 'block') {
+        container.style.display = 'block';
+    }
 
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     targetStepEl.classList.add('active');
