@@ -160,7 +160,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initHeightRuler();
     initHeightModal();
     initGalleryButton();
-    initOOMFallback();
     initDateSpinner();
     initSplashScreenCleanup();
 });
@@ -192,15 +191,6 @@ function initGalleryButton() {
 
     if (galleryBtn && galleryInput) {
         galleryBtn.addEventListener('click', () => {
-            // Check for iOS and show OOM fallback if needed
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            if (isIOS) {
-                const oomModal = document.getElementById('oom-fallback-modal');
-                if (oomModal) {
-                    oomModal.classList.remove('hidden');
-                    return;
-                }
-            }
             galleryInput.click();
         });
 
@@ -211,44 +201,6 @@ function initGalleryButton() {
             }
         });
     }
-}
-
-function initOOMFallback() {
-    const modal = document.getElementById('oom-fallback-modal');
-    const chatBtn = document.getElementById('oom-chat-btn');
-    const retryBtn = document.getElementById('oom-retry-btn');
-    const cancelBtn = document.getElementById('oom-cancel-btn');
-    const galleryInput = document.getElementById('gallery-input');
-
-    if (!modal) return;
-
-    chatBtn.addEventListener('click', () => {
-        triggerHaptic('medium');
-        if (window.Telegram && window.Telegram.WebApp) {
-            // Send message to bot to trigger "Plan B" flow on backend
-            window.Telegram.WebApp.sendData(JSON.stringify({ action: "UPLOAD_PHOTO_VIA_CHAT", mode: cameraMode }));
-            // Or alternatively, just close and let the bot catch the close event or specific message
-            // Since sendData closes the app automatically in some cases, or we can close manually
-            setTimeout(() => {
-                window.Telegram.WebApp.close();
-            }, 100);
-        }
-    });
-
-    retryBtn.addEventListener('click', () => {
-        triggerHaptic('light');
-        modal.classList.add('hidden');
-        if (galleryInput) galleryInput.click();
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        triggerHaptic('light');
-        modal.classList.add('hidden');
-    });
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.add('hidden');
-    });
 }
 
 function processUploadedFile(file) {
