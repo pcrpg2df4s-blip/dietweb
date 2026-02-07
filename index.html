@@ -576,7 +576,7 @@
                 <div class="focus-corners"></div>
             </div>
             <div class="camera-controls">
-                <input type="file" id="gallery-input" accept="image/*" style="display: none;">
+                <input type="file" id="gallery-input" accept="image/*" capture="environment" style="display: none;">
                 <div class="camera-close" onclick="closeCamera()">✕</div>
                 <div id="shutter-btn" onclick="takePhoto()"></div>
                 <div id="gallery-btn" class="icon-btn">
@@ -958,6 +958,22 @@
             <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px;">
                 <button id="confirm-delete-btn" style="background-color: #ff3b30; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Удалить</button>
                 <button id="cancel-delete-btn" style="background: transparent; border: none; color: var(--text-primary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="oom-fallback-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 320px; padding: 30px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+            <h3 style="margin-bottom: 10px;">Проблема с памятью</h3>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 25px; line-height: 1.4;">
+                Ваш iPhone ограничивает использование камеры в приложении.
+                Попробуйте загрузить фото через чат с ботом.
+            </p>
+            <div class="modal-buttons" style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="oom-chat-btn" style="background-color: #007aff; color: #ffffff; border: none; border-radius: 30px; padding: 16px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Загрузить через чат</button>
+                <button id="oom-retry-btn" style="background: transparent; border: 2px solid var(--text-primary); color: var(--text-primary); border-radius: 30px; padding: 14px 0; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer;">Попробовать галерею</button>
+                <button id="oom-cancel-btn" style="background: transparent; border: none; color: var(--text-secondary); border-radius: 30px; padding: 10px 0; width: 100%; font-weight: 600; font-size: 16px; cursor: pointer;">Отмена</button>
             </div>
         </div>
     </div>
