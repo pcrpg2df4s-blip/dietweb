@@ -157,37 +157,59 @@ h1 {
     width: 100%;
     padding: 18px;
     margin-bottom: 12px;
-    border: none;
+    border: 1px solid #E5E7EB !important;
     border-radius: 12px;
-    background-color: var(--bg-card);
-    color: var(--text-primary);
+    background-color: #F3F4F6 !important;
+    color: #000000 !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+[data-theme="dark"] .option-btn {
+    background-color: var(--bg-card) !important;
+    color: #FFFFFF !important;
+    border: 1px solid transparent !important;
+}
+
 .option-btn:hover {
     background-color: var(--border-color);
 }
+
 .option-btn:active, .option-btn.selected {
-    background-color: var(--text-primary);
-    color: var(--bg-card);
+    background-color: var(--text-primary) !important;
+    color: var(--bg-card) !important;
+    border-color: var(--text-primary) !important;
+    transform: scale(1.02);
 }
 
 /* Карточки активности */
 .card {
     display: flex;
     align-items: center;
-    background: var(--bg-card);
+    background: #F3F4F6 !important;
     padding: 15px;
     border-radius: 16px;
     margin-bottom: 12px;
     cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: #000000 !important;
+    border: 1px solid #E5E7EB !important;
 }
-.card:active {
-    background: var(--text-primary);
-    color: var(--bg-card);
+
+[data-theme="dark"] .card {
+    background: var(--bg-card) !important;
+    color: #FFFFFF !important;
+    border: 1px solid transparent !important;
+}
+
+.card:active, .card.selected {
+    background: var(--text-primary) !important;
+    color: var(--bg-card) !important;
+    border-color: var(--text-primary) !important;
+    transform: scale(1.02);
 }
 .card .icon {
     font-size: 24px;
@@ -3595,10 +3617,10 @@ input:checked + .slider:before {
 }
 
 .choice-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: #F3F4F6;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     padding: 20px;
     border-radius: 16px;
     text-align: left;
@@ -3611,12 +3633,22 @@ input:checked + .slider:before {
 }
 
 .choice-card.active {
-    border-color: var(--primary-color, #ffa500);
-    background: rgba(255, 165, 0, 0.15);
+    border-color: #FF9500;
+    background: rgba(255, 149, 0, 0.1);
     transform: scale(1.02);
     box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1);
 }
 
 .choice-card:active {
     transform: scale(0.98);
+}
+
+[data-theme="dark"] .choice-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .choice-card.active {
+    background: rgba(255, 149, 0, 0.15);
+    border-color: #FF9500;
 }
