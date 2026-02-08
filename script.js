@@ -250,30 +250,42 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
         initialValue = 75,
         isVertical = false,
         step = 0.1,
-        pixelsPerUnit = 20
+        pixelsPerUnit = 20,
+        isInverted = false
     } = options;
 
     container.innerHTML = '';
     
-    // For weight (step 0.1), we want 10 ticks per 1kg
-    // For height (step 1), we want 1 tick per 1cm
     const totalSteps = Math.round((max - min) / step);
-
     const ticks = [];
+
+    // ADD SPACER AT START (Absolute Hardcore Mode: 350px)
+    const startSpacer = document.createElement('div');
+    startSpacer.className = 'ruler-spacer';
+    startSpacer.style.flexShrink = '0';
+    if (isVertical) {
+        startSpacer.style.height = '350px';
+        startSpacer.style.width = '100%';
+    } else {
+        startSpacer.style.width = '350px';
+        startSpacer.style.height = '100%';
+    }
+    container.appendChild(startSpacer);
+
     for (let i = 0; i <= totalSteps; i++) {
-        const val = min + i * step;
+        // If inverted: start from Max and go down to Min
+        const val = isInverted ? (max - i * step) : (min + i * step);
         const tick = document.createElement('div');
         tick.className = 'tick';
         tick.dataset.value = val;
         
+        const absoluteVal = Math.abs(val);
         if (step === 0.1) {
-            // Weight logic
-            if (Math.round(val * 10) % 10 === 0) tick.classList.add('major');
-            else if (Math.round(val * 10) % 5 === 0) {}
+            if (Math.round(absoluteVal * 10) % 10 === 0) tick.classList.add('major');
+            else if (Math.round(absoluteVal * 10) % 5 === 0) {}
             else tick.classList.add('minor');
         } else {
-            // Height logic (step 1)
-            if (Math.round(val) % 10 === 0) tick.classList.add('major');
+            if (Math.round(absoluteVal) % 10 === 0) tick.classList.add('major');
             else tick.classList.add('minor');
         }
         
@@ -286,25 +298,38 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
         ticks.push(tick);
     }
 
+    // ADD SPACER AT END (Absolute Hardcore Mode: 350px)
+    const endSpacer = document.createElement('div');
+    endSpacer.className = 'ruler-spacer';
+    endSpacer.style.flexShrink = '0';
+    if (isVertical) {
+        endSpacer.style.height = '350px';
+        endSpacer.style.width = '100%';
+    } else {
+        endSpacer.style.width = '350px';
+        endSpacer.style.height = '100%';
+    }
+    container.appendChild(endSpacer);
+
     let lastVibratedVal = -1;
 
     const onScroll = () => {
-        // GEOMETRIC DETECTION: Find the tick closest to the center line
         const scrollAreaRect = scrollArea.getBoundingClientRect();
         const center = isVertical
             ? scrollAreaRect.top + scrollAreaRect.height / 2
             : scrollAreaRect.left + scrollAreaRect.width / 2;
 
-        // Optimization: Start from approximate index
         const scrollPos = isVertical ? scrollArea.scrollTop : scrollArea.scrollLeft;
-        let approxIndex = Math.round(scrollPos / pixelsPerUnit);
+        
+        // GEOMETRIC OFFSET: We need to subtract the startSpacer's size to get the true tick index.
+        const spacerOffset = 350; // Hardcoded to match Absolute Hardcore Mode
+        const adjustedScrollPos = Math.max(0, scrollPos - spacerOffset);
+        let approxIndex = Math.round(adjustedScrollPos / pixelsPerUnit);
         approxIndex = Math.max(0, Math.min(ticks.length - 1, approxIndex));
 
         let closestTick = ticks[approxIndex];
         let minDiff = Infinity;
 
-        // Check a wider range of neighbors for robust geometric detection
-        // Using +/- 10 ticks to ensure we don't miss the center due to scroll momentum or sub-pixel issues
         const searchRange = 10;
         for (let i = Math.max(0, approxIndex - searchRange); i <= Math.min(ticks.length - 1, approxIndex + searchRange); i++) {
             const tickRect = ticks[i].getBoundingClientRect();
@@ -333,9 +358,17 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
 
     scrollArea.addEventListener('scroll', onScroll);
 
-    // Initial positioning
     const setPosition = (val) => {
-        const targetPos = ((val - min) / step) * pixelsPerUnit;
+        let targetPos;
+        if (isInverted) {
+            targetPos = ((max - val) / step) * pixelsPerUnit;
+        } else {
+            targetPos = ((val - min) / step) * pixelsPerUnit;
+        }
+
+        // Add spacer offset to targetPos (Hardcoded 350px)
+        targetPos += 350;
+        
         if (isVertical) {
             scrollArea.scrollTop = targetPos;
         } else {
@@ -492,7 +525,8 @@ function openHeightRuler() {
         initialValue: userData.height || 175,
         isVertical: true,
         step: 1,
-        pixelsPerUnit: 20
+        pixelsPerUnit: 20,
+        isInverted: true
     });
 }
 
@@ -1287,7 +1321,8 @@ function initOnboardingHeightRuler() {
         initialValue: userData.height || 175,
         isVertical: true,
         step: 1,
-        pixelsPerUnit: 20 // STRICTLY 20px (2px tick + 18px margin)
+        pixelsPerUnit: 20, // STRICTLY 20px (2px tick + 18px margin)
+        isInverted: true
     });
 }
 
