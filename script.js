@@ -1651,65 +1651,71 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 }
 
 function calculateNorms() {
-    // 1. Извлекаем данные (age по умолчанию 25, если не указан)
-    const weight = parseFloat(userData.weight) || 75;
-    const height = parseFloat(userData.height) || 175;
-    const age = parseInt(userData.age) || 25;
-    const gender = userData.gender || 'male';
-    const activityMultiplier = parseFloat(userData.activity) || 1.2;
-    const goal = userData.goal || 'maintain';
-
-    // Шаг 1: Базовый обмен веществ (BMR) - Формула Миффлина-Сан Жеора
+    const { weight, height, age, gender, activity, goal } = userData;
+    
+    // ШАГ 1: Базовый обмен (BMR) - Формула Миффлина-Сан Жеора
     let bmr;
     if (gender === 'male') {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
     } else {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
-
-    // Считаем TDEE (Total Daily Energy Expenditure)
-    let tdee = bmr * activityMultiplier;
-
-    // Корректировка под цель (Target Calories)
-    let totalCalories = tdee;
+    
+    // ШАГ 2: Калории поддержки (TDEE)
+    // Коэффициенты активности: 1.2, 1.375, 1.55, 1.725, 1.9
+    let tdee = bmr * activity;
+    
+    // ШАГ 3: Целевые Калории (Target Calories)
+    let targetCalories;
     if (goal === 'lose') {
-        totalCalories = tdee * 0.80; // Дефицит -20%
+        targetCalories = Math.round(tdee * 0.8); // Дефицит 20%
     } else if (goal === 'gain') {
-        totalCalories = tdee * 1.15; // Профицит +15%
+        targetCalories = Math.round(tdee * 1.15); // Профицит 15%
+    } else {
+        targetCalories = Math.round(tdee); // Поддержание
     }
-    totalCalories = Math.round(totalCalories);
+    
+    // ШАГ 4: Расчет БЖУ (Macros) - ГИБРИДНЫЙ МЕТОД
+    let protein_g, fats_g, carbs_g;
+    
+    // А) БЕЛКИ (Protein)
+    if (goal === 'lose') {
+        protein_g = weight * 2.0;
+    } else if (goal === 'gain') {
+        protein_g = weight * 1.8;
+    } else {
+        protein_g = weight * 1.6;
+    }
+    
+    // Б) ЖИРЫ (Fats)
+    if (goal === 'lose') {
+        fats_g = weight * 0.8;
+    } else {
+        fats_g = weight * 1.0;
+    }
+    
+    // В) УГЛЕВОДЫ (Carbs) - По остаточному принципу
+    const proteinCalories = protein_g * 4;
+    const fatCalories = fats_g * 9;
+    const remainingCalories = targetCalories - (proteinCalories + fatCalories);
+    carbs_g = Math.max(0, remainingCalories / 4);
 
-    // Шаг 2: Расчет БЕЛКОВ (Фиксировано от веса тела)
-    let proteinFactor = 1.6; // Maintain
-    if (goal === 'lose') proteinFactor = 2.0;
-    if (goal === 'gain') proteinFactor = 1.8;
-    let proteinGrams = Math.round(weight * proteinFactor);
+    // Округление
+    const finalCalories = Math.round(targetCalories);
+    const finalProtein = Math.round(protein_g);
+    const finalFats = Math.round(fats_g);
+    const finalCarbs = Math.round(carbs_g);
 
-    // Шаг 3: Расчет ЖИРОВ (Фиксировано от веса тела)
-    let fatFactor = 1.0; // Maintain/Gain
-    if (goal === 'lose') fatFactor = 0.8;
-    let fatGrams = Math.round(weight * fatFactor);
-
-    // Шаг 4: Расчет УГЛЕВОДОВ (Остаток "Energy Gap")
-    let proteinCalories = proteinGrams * 4;
-    let fatCalories = fatGrams * 9;
-    let remainingCalories = totalCalories - (proteinCalories + fatCalories);
-    let carbsGrams = Math.round(Math.max(0, remainingCalories / 4));
-
-    // Обновляем глобальный объект
-    currentMacros.totalCalories = totalCalories;
-    currentMacros.totalProtein = proteinGrams;
-    currentMacros.totalFats = fatGrams;
-    currentMacros.totalCarbs = carbsGrams;
-
-    console.log(`[Hybrid Norms] BMR: ${bmr.toFixed(0)}, TDEE: ${tdee.toFixed(0)}, Goal: ${goal}, Cals: ${totalCalories}`);
-    console.log(`[Hybrid Macros] Weight: ${weight}kg, P: ${proteinGrams}g (${proteinFactor}), F: ${fatGrams}g (${fatFactor}), C: ${carbsGrams}g`);
+    currentMacros.totalCalories = finalCalories;
+    currentMacros.totalProtein = finalProtein;
+    currentMacros.totalCarbs = finalCarbs;
+    currentMacros.totalFats = finalFats;
 
     return {
-        calories: totalCalories,
-        protein: proteinGrams,
-        fats: fatGrams,
-        carbs: carbsGrams
+        calories: finalCalories,
+        protein: finalProtein,
+        fats: finalFats,
+        carbs: finalCarbs
     };
 }
 
@@ -2759,11 +2765,23 @@ function editSetting(type) {
             return;
         case 'activity':
             currentTitle = 'Активность';
-            content = `<div class="choice-grid">`;
-            for (const [val, label] of Object.entries(activityMap)) {
-                const isActive = userData.activity == val ? 'active' : '';
-                content += `<button class="choice-card ${isActive}" data-value="${val}">${label}</button>`;
-            }
+            const activities = [
+                { val: 1.2, title: '0-2 тренировки', sub: 'Сидячий образ жизни, мало движения', emoji: '🧘‍♂️' },
+                { val: 1.55, title: '3-5 тренировок', sub: 'Умеренная активность, спорт несколько раз в неделю', emoji: '🏃' },
+                { val: 1.725, title: '6+ тренировок', sub: 'Активный образ жизни, тяжелые тренировки', emoji: '🏋️' }
+            ];
+            content = `<div class="options-vertical">`;
+            activities.forEach(item => {
+                const isSelected = userData.activity == item.val ? 'selected' : '';
+                content += `
+                    <div class="card ${isSelected}" data-value="${item.val}">
+                        <div class="icon">${item.emoji}</div>
+                        <div class="text">
+                            <h3>${item.title}</h3>
+                            <p>${item.sub}</p>
+                        </div>
+                    </div>`;
+            });
             content += `</div><input type="hidden" id="edit-value-input" value="${userData.activity}">`;
             break;
         case 'goal':
@@ -2783,11 +2801,13 @@ function editSetting(type) {
 
     // Add click listeners for choice cards
     if (type === 'activity' || type === 'goal') {
-        const cards = container.querySelectorAll('.choice-card');
+        const selector = type === 'activity' ? '.card' : '.choice-card';
+        const activeClass = type === 'activity' ? 'selected' : 'active';
+        const cards = container.querySelectorAll(selector);
         cards.forEach(card => {
             card.onclick = () => {
-                cards.forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
+                cards.forEach(c => c.classList.remove(activeClass));
+                card.classList.add(activeClass);
                 const newVal = card.getAttribute('data-value');
                 document.getElementById('edit-value-input').value = newVal;
                 triggerHaptic('light');

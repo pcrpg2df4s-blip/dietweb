@@ -179,10 +179,21 @@ h1 {
 }
 
 .option-btn:active, .option-btn.selected {
-    background-color: var(--text-primary) !important;
-    color: var(--bg-card) !important;
-    border-color: var(--text-primary) !important;
     transform: scale(1.02);
+}
+
+body:not([data-theme="dark"]) .option-btn.selected {
+    background-color: #FFF4E5 !important;
+    border: 1px solid #FF9F43 !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 8px rgba(255, 159, 67, 0.15) !important;
+}
+
+[data-theme="dark"] .option-btn.selected {
+    background-color: rgba(255, 159, 67, 0.2) !important;
+    border: 1px solid #FF9F43 !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
 }
 
 /* Карточки активности */
@@ -206,10 +217,21 @@ h1 {
 }
 
 .card:active, .card.selected {
-    background: var(--text-primary) !important;
-    color: var(--bg-card) !important;
-    border-color: var(--text-primary) !important;
     transform: scale(1.02);
+}
+
+body:not([data-theme="dark"]) .card.selected {
+    background-color: #FFF4E5 !important;
+    border: 1px solid #FF9F43 !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 8px rgba(255, 159, 67, 0.15) !important;
+}
+
+[data-theme="dark"] .card.selected {
+    background-color: rgba(255, 159, 67, 0.2) !important;
+    border: 1px solid #FF9F43 !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
 }
 .card .icon {
     font-size: 24px;
@@ -3669,19 +3691,21 @@ input:checked + .slider:before {
 }
 
 .choice-card {
-    background: #F3F4F6;
+    background: rgba(243, 244, 246, 0.6);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    padding: 20px;
-    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 24px 20px;
+    border-radius: 20px;
     text-align: left;
     font-size: 18px;
+    font-weight: 500;
     color: var(--text-primary);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     cursor: pointer;
     width: 100%;
     outline: none;
+    margin-bottom: 4px;
 }
 
 /* === НОВЫЙ ДИЗАЙН КАРТОЧЕК ЕДЫ === */
@@ -3846,10 +3870,21 @@ body:not([data-theme="dark"]) .fire-icon {
 .dot-fats    { background-color: #8bb6e5; } /* Соответствует прогресс-бару Жиры */
 
 .choice-card.active {
-    border-color: #FF9500;
-    background: rgba(255, 149, 0, 0.1);
     transform: scale(1.02);
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.1);
+}
+
+body:not([data-theme="dark"]) .choice-card.active {
+    background-color: #FFF4E5 !important;
+    border: 1px solid #FF9F43 !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 8px rgba(255, 159, 67, 0.15) !important;
+}
+
+[data-theme="dark"] .choice-card.active {
+    background-color: rgba(255, 159, 67, 0.2) !important;
+    border: 1px solid #FF9F43 !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
 }
 
 .choice-card:active {
@@ -3857,11 +3892,6 @@ body:not([data-theme="dark"]) .fire-icon {
 }
 
 [data-theme="dark"] .choice-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .choice-card.active {
-    background: rgba(255, 149, 0, 0.15);
-    border-color: #FF9500;
 }
