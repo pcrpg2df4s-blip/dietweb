@@ -3688,17 +3688,19 @@ input:checked + .slider:before {
 .new-food-card {
     display: flex !important;
     align-items: center !important;
-    background-color: #F3F4F6 !important;
+    background-color: #FFFFFF !important;
     border-radius: 20px !important;
     padding: 12px !important;
     margin-bottom: 12px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
     position: relative !important;
     border: none !important;
 }
 
 [data-theme="dark"] .new-food-card {
-    background-color: #2C2C2E !important;
+    background-color: #1C1C1E !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
 .new-food-image-container {
@@ -3811,6 +3813,37 @@ input:checked + .slider:before {
 [data-theme="dark"] .new-action-btn:active {
     background: rgba(255,255,255,0.1) !important;
 }
+
+/* Стилизация иконки огня (монохром) */
+.fire-icon {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+/* СВЕТЛАЯ ТЕМА -> Делаем черным */
+body:not([data-theme="dark"]) .fire-icon {
+    filter: grayscale(100%) brightness(0%);
+    opacity: 0.8;
+}
+
+/* ТЕМНАЯ ТЕМА -> Делаем белым */
+[data-theme="dark"] .fire-icon {
+    filter: grayscale(100%) brightness(1000%);
+}
+
+/* Минималистичные точки для макронутриентов */
+.macro-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.dot-protein { background-color: #e58b8b; } /* Соответствует прогресс-бару Белки */
+.dot-carbs   { background-color: #e5b68b; } /* Соответствует прогресс-бару Углеводы */
+.dot-fats    { background-color: #8bb6e5; } /* Соответствует прогресс-бару Жиры */
 
 .choice-card.active {
     border-color: #FF9500;

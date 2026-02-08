@@ -1176,11 +1176,11 @@ function initHomeScreenFromSaved() {
                 ${foodIcon}
                 <div class="new-food-info">
                     <div class="new-food-name">${food.name}</div>
-                    <div class="new-food-calories">🔥 ${Math.round(food.calories)} ккал</div>
+                    <div class="new-food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
                     <div class="new-food-macros">
-                        <span>🍗 ${Math.round(food.protein)}г</span>
-                        <span>🌾 ${Math.round(food.carbs)}г</span>
-                        <span>🥑 ${Math.round(food.fats)}г</span>
+                        <span><span class="macro-dot dot-protein"></span> ${Math.round(food.protein)}г</span>
+                        <span><span class="macro-dot dot-carbs"></span> ${Math.round(food.carbs)}г</span>
+                        <span><span class="macro-dot dot-fats"></span> ${Math.round(food.fats)}г</span>
                     </div>
                 </div>
                 <div class="new-food-right">
