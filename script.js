@@ -2,7 +2,7 @@ const CONFIG_LOCAL = {
     VERSION: "FINAL_1.0"
 };
 
-const API_URL = "https://warriors-delegation-heard-compliance.trycloudflare.com /api/analyze";
+const API_URL = "https://warriors-delegation-heard-compliance.trycloudflare.com/api/analyze";
 
 /**
  * Triggers haptic feedback using Telegram WebApp API or browser fallback.
