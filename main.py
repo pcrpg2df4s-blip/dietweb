@@ -109,7 +109,7 @@ async def handle_options(request):
     })
 
 async def init_web():
-    app = web.Application()
+    app = web.Application(client_max_size=20*1024*1024)
     app.router.add_post('/api/analyze', handle_analyze)
     app.router.add_options('/api/analyze', handle_options)
     runner = web.AppRunner(app)
