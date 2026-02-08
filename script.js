@@ -900,7 +900,13 @@ function initManualAddModal() {
 
                 if (id) {
                     const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
-                    if (foodIndex !== -1) currentMacros.foodHistory[foodIndex] = foodItem;
+                    if (foodIndex !== -1) {
+                        const oldItem = currentMacros.foodHistory[foodIndex];
+                        foodItem.thumbnail = oldItem.thumbnail;
+                        foodItem.time = oldItem.time;
+                        foodItem.timestamp = oldItem.timestamp;
+                        currentMacros.foodHistory[foodIndex] = foodItem;
+                    }
                 } else {
                     addFoodToHome(foodItem, null);
                 }
@@ -931,6 +937,7 @@ function initManualAddModal() {
                             currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
                             currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
                             currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
+                            // Image and time are preserved because we update properties on the existing object
                         }
                     } else {
                         // Adding new with AI
@@ -962,6 +969,7 @@ function initManualAddModal() {
                             currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
                             currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
                             currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
+                            // Image and time are preserved because we update properties on the existing object
                         }
                     } else {
                         addFoodToHome(aiResult, null);
@@ -979,7 +987,13 @@ function initManualAddModal() {
                     };
                     if (id) {
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
-                        if (foodIndex !== -1) currentMacros.foodHistory[foodIndex] = foodItem;
+                        if (foodIndex !== -1) {
+                            const oldItem = currentMacros.foodHistory[foodIndex];
+                            foodItem.thumbnail = oldItem.thumbnail;
+                            foodItem.time = oldItem.time;
+                            foodItem.timestamp = oldItem.timestamp;
+                            currentMacros.foodHistory[foodIndex] = foodItem;
+                        }
                     } else {
                         addFoodToHome(foodItem, null);
                     }
@@ -1152,33 +1166,31 @@ function initHomeScreenFromSaved() {
     if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
         currentMacros.foodHistory.forEach((food, index) => {
             const div = document.createElement('div');
-            div.className = 'food-item';
+            div.className = 'new-food-card';
             
             const foodIcon = food.thumbnail
-                ? `<div class="food-img-placeholder"><img src="${food.thumbnail}" class="food-thumb-image" alt="Фото еды"></div>`
-                : `<div class="food-img-placeholder">${getEmojiForFood(food.name)}</div>`;
+                ? `<div class="new-food-image-container"><img src="${food.thumbnail}" class="new-food-image" alt="Фото еды"></div>`
+                : `<div class="new-food-image-container" style="font-size: 32px;">${getEmojiForFood(food.name)}</div>`;
 
             div.innerHTML = `
                 ${foodIcon}
-                <div class="food-info">
-                    <div class="food-header">
-                        <span class="food-name">${food.name}</span>
-                    </div>
-                    <div class="food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
-                    <div class="food-macros-mini">
-                        <span><div class="macro-mini-dot dot-protein"></div> Б: ${Math.round(food.protein)}г</span>
-                        <span><div class="macro-mini-dot dot-carbs"></div> У: ${Math.round(food.carbs)}г</span>
-                        <span><div class="macro-mini-dot dot-fats"></div> Ж: ${Math.round(food.fats)}г</span>
+                <div class="new-food-info">
+                    <div class="new-food-name">${food.name}</div>
+                    <div class="new-food-calories">🔥 ${Math.round(food.calories)} ккал</div>
+                    <div class="new-food-macros">
+                        <span>🍗 ${Math.round(food.protein)}г</span>
+                        <span>🌾 ${Math.round(food.carbs)}г</span>
+                        <span>🥑 ${Math.round(food.fats)}г</span>
                     </div>
                 </div>
-                <div class="food-item-right">
-                    <span class="food-time">${food.time || (food.timestamp ? new Date(food.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '')}</span>
-                    <div class="food-actions">
-                        <button class="action-icon-btn edit-btn" data-id="${food.id}">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <div class="new-food-right">
+                    <span class="new-food-time">${food.time || (food.timestamp ? new Date(food.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '')}</span>
+                    <div class="new-food-actions">
+                        <button class="new-action-btn edit-btn" data-id="${food.id}" onclick="triggerHaptic('medium')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="action-icon-btn delete-btn" data-index="${index}">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <button class="new-action-btn delete-btn" data-index="${index}" onclick="triggerHaptic('warning')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
                 </div>

@@ -1729,82 +1729,84 @@ h1 {
 /* Food Item Refined (Screenshot 4) */
 .food-item {
     display: flex;
-    background: var(--bg-card);
-    padding: 12px;
-    border-radius: 24px;
+    background: #F3F4F6;
+    padding: 16px;
+    border-radius: 20px;
     margin-bottom: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+    border: none;
+}
+
+[data-theme="dark"] .food-item {
+    background: #2C2C2E;
+}
+
+.food-img-placeholder {
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    border-radius: 12px;
+    background: #E5E7EB;
+    display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    font-size: 32px;
+    flex-shrink: 0;
+    overflow: hidden;
+    padding: 0;
+    margin-right: 0; /* Handled by gap on .food-item */
+}
+
+[data-theme="dark"] .food-img-placeholder {
+    background: #1C1C1E;
+}
+
+.food-thumb-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .food-info {
     flex: 1;
     min-width: 0;
-    margin-right: 10px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-}
-
-.food-header {
-    display: flex;
-    align-items: baseline;
+    gap: 4px;
+    justify-content: center;
+    height: 90px; /* Align with image height */
 }
 
 .food-name {
     margin: 0;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #000000;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.food-item-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
-}
-
-.food-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Расстояние между карандашом и корзиной */
-}
-
-.action-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    color: #999; /* Минималистичный серый цвет */
-    transition: color 0.2s;
-}
-
-.action-icon-btn:hover { color: #333; }
-.delete-btn:hover { color: #ff3b30; } /* Красный при наведении на корзину */
-
-.food-time {
-    font-size: 11px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    margin-bottom: 5px;
+[data-theme="dark"] .food-name {
+    color: #FFFFFF;
 }
 
 .food-calories {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #000000;
+    margin: 2px 0;
 }
 
-.food-calories span.fire-icon {
-    font-size: 14px;
+[data-theme="dark"] .food-calories {
+    color: #FFFFFF;
 }
 
 .food-macros-mini {
@@ -1816,18 +1818,68 @@ h1 {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text-secondary);
     white-space: nowrap;
     flex-shrink: 0;
 }
 
-.macro-mini-dot {
-    width: 6px;
-    height: 6px;
+.food-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 90px;
+}
+
+.food-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: rgba(0,0,0,0.05);
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .food-time {
+    background: rgba(255,255,255,0.1);
+}
+
+.food-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
 }
+
+.action-icon-btn:active {
+    transform: scale(0.9);
+    background: rgba(0,0,0,0.05);
+}
+
+[data-theme="dark"] .action-icon-btn:active {
+    background: rgba(255,255,255,0.1);
+}
+
+.action-icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.delete-btn:hover { color: #ff3b30; }
 
 .empty-state {
     color: #bbb;
@@ -3630,6 +3682,134 @@ input:checked + .slider:before {
     cursor: pointer;
     width: 100%;
     outline: none;
+}
+
+/* === НОВЫЙ ДИЗАЙН КАРТОЧЕК ЕДЫ === */
+.new-food-card {
+    display: flex !important;
+    align-items: center !important;
+    background-color: #F3F4F6 !important;
+    border-radius: 20px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+    position: relative !important;
+    border: none !important;
+}
+
+[data-theme="dark"] .new-food-card {
+    background-color: #2C2C2E !important;
+}
+
+.new-food-image-container {
+    width: 90px !important;
+    height: 90px !important;
+    min-width: 90px !important;
+    border-radius: 12px !important;
+    background-color: #E5E7EB !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    margin-right: 16px !important;
+}
+
+[data-theme="dark"] .new-food-image-container {
+    background-color: #1C1C1E !important;
+}
+
+.new-food-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.new-food-info {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+.new-food-name {
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+[data-theme="dark"] .new-food-name {
+    color: #FFFFFF !important;
+}
+
+.new-food-calories {
+    font-weight: 800 !important;
+    font-size: 19px !important;
+    color: #000000 !important;
+    margin: 2px 0 !important;
+}
+
+[data-theme="dark"] .new-food-calories {
+    color: #FFFFFF !important;
+}
+
+.new-food-macros {
+    color: #8E8E93 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    gap: 10px !important;
+}
+
+.new-food-right {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    height: 90px !important;
+}
+
+.new-food-time {
+    font-size: 12px !important;
+    color: #8E8E93 !important;
+    font-weight: 600 !important;
+    background: rgba(0,0,0,0.05) !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+}
+
+[data-theme="dark"] .new-food-time {
+    background: rgba(255,255,255,0.1) !important;
+}
+
+.new-food-actions {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+.new-action-btn {
+    background: none !important;
+    border: none !important;
+    padding: 6px !important;
+    color: #8E8E93 !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    transition: all 0.2s !important;
+}
+
+.new-action-btn:active {
+    background: rgba(0,0,0,0.05) !important;
+    transform: scale(0.9) !important;
+}
+
+[data-theme="dark"] .new-action-btn:active {
+    background: rgba(255,255,255,0.1) !important;
 }
 
 .choice-card.active {
