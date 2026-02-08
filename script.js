@@ -1651,35 +1651,66 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 }
 
 function calculateNorms() {
-    const { weight, height, age, gender, activity, goal } = userData;
-    
+    // 1. Извлекаем данные (age по умолчанию 25, если не указан)
+    const weight = parseFloat(userData.weight) || 75;
+    const height = parseFloat(userData.height) || 175;
+    const age = parseInt(userData.age) || 25;
+    const gender = userData.gender || 'male';
+    const activityMultiplier = parseFloat(userData.activity) || 1.2;
+    const goal = userData.goal || 'maintain';
+
+    // Шаг 1: Базовый обмен веществ (BMR) - Формула Миффлина-Сан Жеора
     let bmr;
     if (gender === 'male') {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
     } else {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
-    
-    let calories = Math.round(bmr * activity);
-    
-    // Корректировка по цели
+
+    // Считаем TDEE (Total Daily Energy Expenditure)
+    let tdee = bmr * activityMultiplier;
+
+    // Корректировка под цель (Target Calories)
+    let totalCalories = tdee;
     if (goal === 'lose') {
-        calories -= 500; // Дефицит для похудения
+        totalCalories = tdee * 0.80; // Дефицит -20%
     } else if (goal === 'gain') {
-        calories += 500; // Профицит для набора массы
+        totalCalories = tdee * 1.15; // Профицит +15%
     }
-    
-    // Расчет БЖУ
-    const protein = Math.round((calories * 0.3) / 4);
-    const fats = Math.round((calories * 0.3) / 9);
-    const carbs = Math.round((calories * 0.4) / 4);
+    totalCalories = Math.round(totalCalories);
 
-    currentMacros.totalCalories = calories;
-    currentMacros.totalProtein = protein;
-    currentMacros.totalCarbs = carbs;
-    currentMacros.totalFats = fats;
+    // Шаг 2: Расчет БЕЛКОВ (Фиксировано от веса тела)
+    let proteinFactor = 1.6; // Maintain
+    if (goal === 'lose') proteinFactor = 2.0;
+    if (goal === 'gain') proteinFactor = 1.8;
+    let proteinGrams = Math.round(weight * proteinFactor);
 
-    return { calories, protein, fats, carbs };
+    // Шаг 3: Расчет ЖИРОВ (Фиксировано от веса тела)
+    let fatFactor = 1.0; // Maintain/Gain
+    if (goal === 'lose') fatFactor = 0.8;
+    let fatGrams = Math.round(weight * fatFactor);
+
+    // Шаг 4: Расчет УГЛЕВОДОВ (Остаток "Energy Gap")
+    let proteinCalories = proteinGrams * 4;
+    let fatCalories = fatGrams * 9;
+    let remainingCalories = totalCalories - (proteinCalories + fatCalories);
+    let carbsGrams = Math.round(Math.max(0, remainingCalories / 4));
+
+    // Обновляем глобальный объект
+    currentMacros.totalCalories = totalCalories;
+    currentMacros.totalProtein = proteinGrams;
+    currentMacros.totalFats = fatGrams;
+    currentMacros.totalCarbs = carbsGrams;
+
+    console.log(`[Hybrid Norms] BMR: ${bmr.toFixed(0)}, TDEE: ${tdee.toFixed(0)}, Goal: ${goal}, Cals: ${totalCalories}`);
+    console.log(`[Hybrid Macros] Weight: ${weight}kg, P: ${proteinGrams}g (${proteinFactor}), F: ${fatGrams}g (${fatFactor}), C: ${carbsGrams}g`);
+
+    return {
+        calories: totalCalories,
+        protein: proteinGrams,
+        fats: fatGrams,
+        carbs: carbsGrams
+    };
 }
 
 function showResults() {
