@@ -89,7 +89,7 @@ let currentMacros = {
     totalCarbs: 250,
     totalFats: 70,
     foodHistory: [],
-    dailyHistory: {} 
+    dailyHistory: {}
 };
 
 let isCameraPermissionGranted = false;
@@ -107,19 +107,19 @@ let celebratedStatus = {
 };
 
 // Глобальный перехватчик ошибок для диагностики
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
     return false;
 };
 
-window.onunhandledrejection = function(event) {
+window.onunhandledrejection = function (event) {
     console.error("Unhandled rejection:", event.reason);
 };
 
 // Инициализация при загрузке
 window.addEventListener('DOMContentLoaded', () => {
     console.log("App started. Version: " + CONFIG_LOCAL.VERSION);
-    
+
     loadSavedData();
     initBMIModal();
     initErrorModal();
@@ -236,7 +236,7 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
     } = options;
 
     container.innerHTML = '';
-    
+
     const totalSteps = Math.round((max - min) / step);
     const ticks = [];
 
@@ -259,17 +259,17 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
         const tick = document.createElement('div');
         tick.className = 'tick';
         tick.dataset.value = val;
-        
+
         const absoluteVal = Math.abs(val);
         if (step === 0.1) {
             if (Math.round(absoluteVal * 10) % 10 === 0) tick.classList.add('major');
-            else if (Math.round(absoluteVal * 10) % 5 === 0) {}
+            else if (Math.round(absoluteVal * 10) % 5 === 0) { }
             else tick.classList.add('minor');
         } else {
             if (Math.round(absoluteVal) % 10 === 0) tick.classList.add('major');
             else tick.classList.add('minor');
         }
-        
+
         if (isVertical && i === totalSteps) {
             tick.style.marginBottom = '0px';
         } else if (!isVertical && i === totalSteps) {
@@ -301,7 +301,7 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
             : scrollAreaRect.left + scrollAreaRect.width / 2;
 
         const scrollPos = isVertical ? scrollArea.scrollTop : scrollArea.scrollLeft;
-        
+
         // GEOMETRIC OFFSET: We need to subtract the startSpacer's size to get the true tick index.
         const spacerOffset = 350; // Hardcoded to match Absolute Hardcore Mode
         const adjustedScrollPos = Math.max(0, scrollPos - spacerOffset);
@@ -326,14 +326,14 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
 
         const value = parseFloat(closestTick.dataset.value);
         const displayValue = step < 1 ? value.toFixed(1) : Math.round(value);
-        
+
         if (display) display.innerText = displayValue;
 
         if (displayValue !== lastVibratedVal) {
             triggerHaptic('selection');
             lastVibratedVal = displayValue;
         }
-        
+
         return parseFloat(displayValue);
     };
 
@@ -349,16 +349,22 @@ function setupRuler(containerId, scrollAreaId, valueDisplayId, options) {
 
         // Add spacer offset to targetPos (Hardcoded 350px)
         targetPos += 350;
-        
+
         if (isVertical) {
             scrollArea.scrollTop = targetPos;
         } else {
             scrollArea.scrollLeft = targetPos;
         }
-        if (display) display.innerText = step < 1 ? val.toFixed(1) : Math.round(val);
+        // Force immediate display update
+        if (display) display.innerText = step < 1 ? parseFloat(val).toFixed(1) : Math.round(val);
     };
 
-    setTimeout(() => setPosition(initialValue), 10);
+    // Immediate initial display update before scrolling
+    if (display) display.innerText = step < 1 ? parseFloat(initialValue).toFixed(1) : Math.round(initialValue);
+
+    // Use a shorter timeout or immediate call if possible
+    setPosition(initialValue);
+    setTimeout(() => setPosition(initialValue), 1);
 
     return { setPosition, getValue: () => parseFloat(display.innerText) };
 }
@@ -388,14 +394,14 @@ function initWeightModal() {
             const weightVal = parseFloat(document.getElementById('settings-weight-val').innerText);
             if (!isNaN(weightVal)) {
                 userData.weight = weightVal;
-                
+
                 // Add to history (One Date = One Record)
                 if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
                 const todayStr = new Date().toISOString().split('T')[0];
                 const existingEntryIndex = currentMacros.weightHistory.findIndex(entry =>
                     entry.date && entry.date.split('T')[0] === todayStr
                 );
-                
+
                 if (existingEntryIndex !== -1) {
                     currentMacros.weightHistory[existingEntryIndex].weight = weightVal;
                     currentMacros.weightHistory[existingEntryIndex].date = new Date().toISOString();
@@ -413,7 +419,7 @@ function initWeightModal() {
                 updateBMI();
                 if (typeof renderWeightChart === 'function') renderWeightChart();
                 initHomeScreenFromSaved();
-                
+
                 // Update settings text if visible
                 const setWeightText = document.getElementById('set-weight-text');
                 if (setWeightText) setWeightText.innerText = weightVal.toFixed(1) + ' кг';
@@ -435,15 +441,25 @@ function initWeightModal() {
 
 function openWeightRuler() {
     const modal = document.getElementById('weight-modal');
+    const display = document.getElementById('settings-weight-val');
+    const currentWeight = userData.weight || 75;
+
+    // 1. FORCE INITIALIZE VALUE
+    if (display) {
+        display.innerText = parseFloat(currentWeight).toFixed(1);
+    }
+
+    // 2. SHOW MODAL
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.add('active');
     }, 10);
 
+    // 3. INITIALIZE RULER WITH CORRECT VALUE
     setupRuler('settings-weight-ruler', 'settings-weight-ruler-area', 'settings-weight-val', {
         min: 30,
         max: 160,
-        initialValue: userData.weight || 75,
+        initialValue: currentWeight,
         isVertical: false,
         step: 0.1,
         pixelsPerUnit: 20
@@ -475,17 +491,17 @@ function initHeightModal() {
             const heightVal = parseInt(document.getElementById('settings-height-val').innerText);
             if (!isNaN(heightVal)) {
                 userData.height = heightVal;
-                
+
                 calculateNorms();
                 saveAllData();
                 updateAllUINorms();
                 updateBMI();
                 initHomeScreenFromSaved();
-                
+
                 // Update settings text if visible
                 const setHeightText = document.getElementById('set-height-text');
                 if (setHeightText) setHeightText.innerText = heightVal + ' см';
-                
+
                 triggerHaptic('success');
                 closeModal();
             }
@@ -495,15 +511,25 @@ function initHeightModal() {
 
 function openHeightRuler() {
     const modal = document.getElementById('height-modal');
+    const display = document.getElementById('settings-height-val');
+    const currentHeight = userData.height || 175;
+
+    // 1. FORCE INITIALIZE VALUE
+    if (display) {
+        display.innerText = Math.round(currentHeight);
+    }
+
+    // 2. SHOW MODAL
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.add('active');
     }, 10);
 
+    // 3. INITIALIZE RULER WITH CORRECT VALUE
     setupRuler('settings-height-ruler', 'settings-height-ruler-area', 'settings-height-val', {
         min: 120,
         max: 220,
-        initialValue: userData.height || 175,
+        initialValue: currentHeight,
         isVertical: true,
         step: 1,
         pixelsPerUnit: 20,
@@ -519,20 +545,20 @@ function calculateStreak() {
 
     const today = new Date().toISOString().split('T')[0];
     const history = currentMacros.dailyHistory;
-    
+
     // Check if today has entries
     const loggedToday = history[today] && history[today].calories > 0;
-    
+
     let streak = 0;
     let currentDate = new Date();
 
     if (loggedToday) {
         streak = 1;
     }
-    
+
     // Start checking from yesterday
     currentDate.setDate(currentDate.getDate() - 1);
-    
+
     while (true) {
         const dateStr = currentDate.toISOString().split('T')[0];
         if (history[dateStr] && history[dateStr].calories > 0) {
@@ -563,7 +589,7 @@ function updateStreakUI(count) {
     if (streakCountEl) {
         streakCountEl.innerText = count;
     }
-    
+
     const statsStreakCountEl = document.getElementById('stats-streak-count');
     if (statsStreakCountEl) {
         statsStreakCountEl.innerText = count;
@@ -582,7 +608,7 @@ function updateStreakUI(count) {
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.getElementById('theme-toggle');
-    
+
     if (savedTheme === 'dark') {
         document.body.setAttribute('data-theme', 'dark');
         if (themeToggle) themeToggle.checked = true;
@@ -597,7 +623,7 @@ function initTheme() {
                 document.body.removeAttribute('data-theme');
                 localStorage.setItem('theme', 'light');
             }
-            
+
             // Re-render weight chart with new theme colors
             if (typeof renderWeightChart === 'function') {
                 if (weightChart) {
@@ -618,7 +644,7 @@ function showLoader(mode = 'food') {
     const statusText = document.getElementById('loader-status');
     const titleText = document.getElementById('loader-title');
     const iconEl = loader.querySelector('.loader-icon');
-    
+
     loader.classList.remove('hidden');
     fill.style.width = '0%';
 
@@ -642,17 +668,17 @@ function showLoader(mode = 'food') {
             "Считаем БЖУ..."
         ];
     }
-    
+
     statusText.innerText = messages[0];
 
     let progress = 0;
     const startTime = Date.now();
 
     if (loaderInterval) clearInterval(loaderInterval);
-    
+
     loaderInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        
+
         // Progress emulation: 0% to 90% over 4 seconds
         if (progress < 90) {
             progress += Math.random() * 2;
@@ -669,11 +695,11 @@ function showLoader(mode = 'food') {
 function hideLoader() {
     const loader = document.getElementById('ai-loader');
     const fill = loader.querySelector('.progress-bar-fill');
-    
+
     if (loaderInterval) clearInterval(loaderInterval);
-    
+
     fill.style.width = '100%';
-    
+
     setTimeout(() => {
         loader.classList.add('hidden');
         fill.style.width = '0%';
@@ -841,6 +867,8 @@ function initManualAddModal() {
         document.getElementById('manual-protein').value = '';
         document.getElementById('manual-fat').value = '';
         document.getElementById('manual-carbs').value = '';
+        document.getElementById('manual-time').value = '';
+        document.getElementById('manual-description').value = '';
         document.getElementById('edit-food-id').value = '';
         document.getElementById('manual-modal-title').innerText = 'Добавить блюдо';
         document.getElementById('save-manual-btn').innerText = 'Добавить';
@@ -862,6 +890,8 @@ function initManualAddModal() {
             const protein = document.getElementById('manual-protein').value.trim();
             const fat = document.getElementById('manual-fat').value.trim();
             const carbs = document.getElementById('manual-carbs').value.trim();
+            const time = document.getElementById('manual-time').value;
+            const description = document.getElementById('manual-description').value.trim();
 
             if (!name) {
                 console.error("Пожалуйста, введите название блюда");
@@ -873,10 +903,12 @@ function initManualAddModal() {
                 const foodItem = {
                     id: id || Date.now().toString(),
                     name: name,
-                    calories: parseInt(cals) || ( (parseInt(protein) || 0) * 4 + (parseInt(fat) || 0) * 9 + (parseInt(carbs) || 0) * 4 ),
+                    calories: parseInt(cals) || ((parseInt(protein) || 0) * 4 + (parseInt(fat) || 0) * 9 + (parseInt(carbs) || 0) * 4),
                     protein: parseInt(protein) || 0,
                     fats: parseInt(fat) || 0,
-                    carbs: parseInt(carbs) || 0
+                    carbs: parseInt(carbs) || 0,
+                    time: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    description: description
                 };
 
                 if (id) {
@@ -884,7 +916,6 @@ function initManualAddModal() {
                     if (foodIndex !== -1) {
                         const oldItem = currentMacros.foodHistory[foodIndex];
                         foodItem.thumbnail = oldItem.thumbnail;
-                        foodItem.time = oldItem.time;
                         foodItem.timestamp = oldItem.timestamp;
                         currentMacros.foodHistory[foodIndex] = foodItem;
                     }
@@ -908,7 +939,7 @@ function initManualAddModal() {
 
                 try {
                     const aiResult = await analyzeTextFood(name);
-                    
+
                     if (id) {
                         // Editing existing with AI
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
@@ -918,14 +949,40 @@ function initManualAddModal() {
                             currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
                             currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
                             currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
-                            // Image and time are preserved because we update properties on the existing object
+                            currentMacros.foodHistory[foodIndex].time = time || currentMacros.foodHistory[foodIndex].time;
+                            currentMacros.foodHistory[foodIndex].description = description;
+                            // Image and timestamp are preserved because we update properties on the existing object
                         }
                     } else {
                         // Adding new with AI
+                        aiResult.time = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        aiResult.description = description;
                         addFoodToHome(aiResult, null);
                     }
                 } catch (err) {
                     console.error("AI recalculation error:", err);
+                    // Fallback to 0 macros if AI fails
+                    const foodItem = {
+                        id: id || Date.now().toString(),
+                        name: name,
+                        calories: 0, // Calories are 0 if AI fails and user didn't provide them
+                        protein: 0,
+                        fats: 0,
+                        carbs: 0,
+                        time: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        description: description
+                    };
+                    if (id) {
+                        const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
+                        if (foodIndex !== -1) {
+                            const oldItem = currentMacros.foodHistory[foodIndex];
+                            foodItem.thumbnail = oldItem.thumbnail;
+                            foodItem.timestamp = oldItem.timestamp;
+                            currentMacros.foodHistory[foodIndex] = foodItem;
+                        }
+                    } else {
+                        addFoodToHome(foodItem, null);
+                    }
                 } finally {
                     saveBtn.disabled = false;
                     recalculateMacros();
@@ -938,10 +995,10 @@ function initManualAddModal() {
                 // Manual input with only calories provided - we still use AI to estimate macros for these calories
                 saveBtn.innerText = "Считаю...";
                 saveBtn.disabled = true;
-                
+
                 try {
                     const aiResult = await analyzeTextFood(name, cals);
-                    
+
                     if (id) {
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
                         if (foodIndex !== -1) {
@@ -950,9 +1007,13 @@ function initManualAddModal() {
                             currentMacros.foodHistory[foodIndex].protein = aiResult.protein;
                             currentMacros.foodHistory[foodIndex].fats = aiResult.fats;
                             currentMacros.foodHistory[foodIndex].carbs = aiResult.carbs;
+                            currentMacros.foodHistory[foodIndex].time = time || currentMacros.foodHistory[foodIndex].time;
+                            currentMacros.foodHistory[foodIndex].description = description;
                             // Image and time are preserved because we update properties on the existing object
                         }
                     } else {
+                        aiResult.time = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        aiResult.description = description;
                         addFoodToHome(aiResult, null);
                     }
                 } catch (err) {
@@ -964,14 +1025,15 @@ function initManualAddModal() {
                         calories: parseInt(cals) || 0,
                         protein: 0,
                         fats: 0,
-                        carbs: 0
+                        carbs: 0,
+                        time: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        description: description
                     };
                     if (id) {
                         const foodIndex = currentMacros.foodHistory.findIndex(f => f.id === id);
                         if (foodIndex !== -1) {
                             const oldItem = currentMacros.foodHistory[foodIndex];
                             foodItem.thumbnail = oldItem.thumbnail;
-                            foodItem.time = oldItem.time;
                             foodItem.timestamp = oldItem.timestamp;
                             currentMacros.foodHistory[foodIndex] = foodItem;
                         }
@@ -1001,29 +1063,29 @@ function initManualAddModal() {
 }
 
 function initBMIModal() {
-   const modal = document.getElementById('bmi-modal');
-   const closeBtn = document.getElementById('close-bmi-modal');
-   const infoIcon = document.querySelector('.bmi-info-icon');
+    const modal = document.getElementById('bmi-modal');
+    const closeBtn = document.getElementById('close-bmi-modal');
+    const infoIcon = document.querySelector('.bmi-info-icon');
 
-   if (infoIcon) {
-       infoIcon.addEventListener('click', () => {
-           modal.classList.remove('hidden');
-       });
-   }
+    if (infoIcon) {
+        infoIcon.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+    }
 
-   if (closeBtn) {
-       closeBtn.addEventListener('click', () => {
-           modal.classList.add('hidden');
-       });
-   }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
 
-   if (modal) {
-       modal.addEventListener('click', (e) => {
-           if (e.target === modal) {
-               modal.classList.add('hidden');
-           }
-       });
-   }
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
 }
 
 function checkTotalStorageUsage() {
@@ -1043,13 +1105,13 @@ function saveAllData() {
         checkTotalStorageUsage();
         const userDataStr = JSON.stringify(userData);
         const macrosStr = JSON.stringify(currentMacros);
-        
+
         console.log(`[Storage] Attempting to save userData: ${(userDataStr.length / 1024).toFixed(2)} KB`);
         console.log(`[Storage] Attempting to save macros: ${(macrosStr.length / 1024).toFixed(2)} KB`);
-        
+
         localStorage.setItem('dietApp_userData', userDataStr);
         localStorage.setItem('dietApp_macros', macrosStr);
-        
+
         console.log(`[Storage] Successfully saved.`);
     } catch (e) {
         console.error("[Storage] Failed to save data to localStorage:", e);
@@ -1079,10 +1141,10 @@ function loadSavedData() {
     if (savedUser && savedMacros) {
         userData = JSON.parse(savedUser);
         currentMacros = JSON.parse(savedMacros);
-        
+
         const today = new Date().toISOString().split('T')[0];
         if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-        
+
         const lastUpdate = localStorage.getItem('dietApp_lastUpdate');
         if (lastUpdate !== today) {
             if (lastUpdate) {
@@ -1098,7 +1160,7 @@ function loadSavedData() {
             currentMacros.carbs = 0;
             currentMacros.fats = 0;
             currentMacros.foodHistory = [];
-            
+
             localStorage.setItem('dietApp_lastUpdate', today);
             saveAllData();
         }
@@ -1143,20 +1205,28 @@ function initHomeScreenFromSaved() {
 
     const foodList = document.getElementById('food-list');
     foodList.innerHTML = '';
-    
+
     if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
         currentMacros.foodHistory.forEach((food, index) => {
             const div = document.createElement('div');
             div.className = 'new-food-card';
-            
+
+            // Click interaction disabled - food items are now static
+
             const foodIcon = food.thumbnail
                 ? `<div class="new-food-image-container"><img src="${food.thumbnail}" class="new-food-image" alt="Фото еды"></div>`
                 : `<div class="new-food-image-container" style="font-size: 32px;">${getEmojiForFood(food.name)}</div>`;
+
+            // Build description HTML if exists
+            const descriptionHTML = food.description
+                ? `<div class="new-food-description">${food.description}</div>`
+                : '';
 
             div.innerHTML = `
                 ${foodIcon}
                 <div class="new-food-info">
                     <div class="new-food-name">${food.name}</div>
+                    ${descriptionHTML}
                     <div class="new-food-calories"><span class="fire-icon">🔥</span> ${Math.round(food.calories)} ккал</div>
                     <div class="new-food-macros">
                         <span><span class="macro-dot dot-protein"></span> ${Math.round(food.protein)}г</span>
@@ -1165,12 +1235,12 @@ function initHomeScreenFromSaved() {
                     </div>
                 </div>
                 <div class="new-food-right">
-                    <span class="new-food-time">${food.time || (food.timestamp ? new Date(food.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '')}</span>
+                    <span class="new-food-time">${food.time || (food.timestamp ? new Date(food.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}</span>
                     <div class="new-food-actions">
-                        <button class="new-action-btn edit-btn" data-id="${food.id}" onclick="triggerHaptic('medium')">
+                        <button class="new-action-btn edit-btn" data-id="${food.id}" onclick="event.stopPropagation(); triggerHaptic('medium');">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="new-action-btn delete-btn" data-index="${index}" onclick="triggerHaptic('warning')">
+                        <button class="new-action-btn delete-btn" data-index="${index}" onclick="event.stopPropagation(); triggerHaptic('warning');">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
@@ -1181,10 +1251,16 @@ function initHomeScreenFromSaved() {
 
         // Add listeners for edit and delete buttons
         foodList.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(btn.dataset.id);
+            });
         });
         foodList.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', () => deleteFood(parseInt(btn.dataset.index)));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteFood(parseInt(btn.dataset.index));
+            });
         });
     } else {
         foodList.innerHTML = '<div class="empty-state">Пока нет записей. Нажмите +, чтобы добавить.</div>';
@@ -1204,7 +1280,7 @@ function renderWeeklyCalendar() {
 
     const now = new Date();
     const todayISO = now.toISOString().split('T')[0];
-    
+
     // Находим начало недели (понедельник)
     const startOfWeek = new Date(now);
     const day = now.getDay();
@@ -1220,7 +1296,7 @@ function renderWeeklyCalendar() {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
         const dateISO = date.toISOString().split('T')[0];
-        
+
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'narrow' }).toUpperCase();
         const dayNumber = date.getDate();
         const isActive = date.toDateString() === now.toDateString();
@@ -1257,7 +1333,7 @@ tg.expand();
 function nextStep(stepNumber) {
     triggerHaptic('light');
     const targetStepEl = document.getElementById(`step-${stepNumber}`);
-    
+
     if (!targetStepEl) return;
 
     // Reveal container if it was hidden (first navigation)
@@ -1268,7 +1344,7 @@ function nextStep(stepNumber) {
 
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     targetStepEl.classList.add('active');
-    
+
     const globalTabBar = document.getElementById('global-tab-bar');
     if (globalTabBar) {
         if (stepNumber === 12 || stepNumber === 15 || stepNumber === 16) {
@@ -1288,13 +1364,13 @@ function nextStep(stepNumber) {
     } else if (stepNumber === 'height-weight') {
         initOnboardingWeightRuler();
     }
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function prevStep(stepNumber) {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     document.getElementById(`step-${stepNumber}`).classList.add('active');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function selectGender(gender) {
@@ -1353,7 +1429,7 @@ function saveBorn() {
         return;
     }
     userData.birthdate = birthdate;
-    
+
     // Calculate age precisely
     const birthDateObj = new Date(birthdate);
     const today = new Date();
@@ -1362,7 +1438,7 @@ function saveBorn() {
     if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
         age--;
     }
-    
+
     userData.age = age;
     triggerHaptic('success');
     nextStep(6);
@@ -1380,7 +1456,7 @@ function initDateSpinner() {
     if (!dayCol || !monthCol || !yearCol) return;
 
     const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-    
+
     // Populate Days (1-31)
     let daysHtml = '';
     for (let i = 1; i <= 31; i++) {
@@ -1418,7 +1494,7 @@ function initDateSpinner() {
         const scrollTop = col.scrollTop;
         const index = Math.round(scrollTop / itemHeight);
         const items = col.querySelectorAll('.spinner-item');
-        
+
         items.forEach((item, i) => {
             if (i === index) {
                 item.classList.add('active');
@@ -1455,12 +1531,12 @@ function initDateSpinner() {
         const dayIndex = 1 - 1;
         const monthIndex = 1 - 1;
         const yearIndex = 2000 - 1960;
-        
+
         // Use scrollTo for more control and explicit behavior
         dayCol.scrollTo({ top: dayIndex * itemHeight, behavior: 'auto' });
         monthCol.scrollTo({ top: monthIndex * itemHeight, behavior: 'auto' });
         yearCol.scrollTo({ top: yearIndex * itemHeight, behavior: 'auto' });
-        
+
         // Force active states
         handleScroll(dayCol, 'day');
         handleScroll(monthCol, 'month');
@@ -1473,10 +1549,10 @@ function initDateSpinner() {
     } else {
         window.addEventListener('load', () => setTimeout(scrollDateSpinnerToDefault, 200));
     }
-    
+
     // Also trigger on nextStep(5) to ensure it works when the screen is actually shown
     const originalNextStep = window.nextStep;
-    window.nextStep = function(stepNumber) {
+    window.nextStep = function (stepNumber) {
         if (typeof originalNextStep === 'function') {
             originalNextStep(stepNumber);
         }
@@ -1512,7 +1588,7 @@ function startLoadingAnimation() {
     const progressBar = document.getElementById('load-progress');
     const statusEl = document.getElementById('load-status');
     const finalBtn = document.getElementById('final-btn');
-    
+
     const steps = [
         { percent: 20, status: "Анализируем ваши данные...", check: "check-calories" },
         { percent: 40, status: "Рассчитываем метаболический возраст...", check: "check-carbs" },
@@ -1554,7 +1630,7 @@ function startLoadingAnimation() {
             triggerHaptic('success');
             document.getElementById('loading-title').innerText = "План успешно составлен!";
             statusEl.style.display = 'none';
-            
+
             // Cinematic Reveal with 400ms delay
             setTimeout(() => {
                 const btnContainer = document.getElementById('final-btn-container');
@@ -1633,7 +1709,7 @@ async function fetchGeminiTips(userData, calories, carbs, protein, fats) {
 
 function calculateNorms() {
     const { weight, height, age, gender, activity, goal } = userData;
-    
+
     // ШАГ 1: Базовый обмен (BMR) - Формула Миффлина-Сан Жеора
     let bmr;
     if (gender === 'male') {
@@ -1641,11 +1717,11 @@ function calculateNorms() {
     } else {
         bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
-    
+
     // ШАГ 2: Калории поддержки (TDEE)
     // Коэффициенты активности: 1.2, 1.375, 1.55, 1.725, 1.9
     let tdee = bmr * activity;
-    
+
     // ШАГ 3: Целевые Калории (Target Calories)
     let targetCalories;
     if (goal === 'lose') {
@@ -1655,10 +1731,10 @@ function calculateNorms() {
     } else {
         targetCalories = Math.round(tdee); // Поддержание
     }
-    
+
     // ШАГ 4: Расчет БЖУ (Macros) - ГИБРИДНЫЙ МЕТОД
     let protein_g, fats_g, carbs_g;
-    
+
     // А) БЕЛКИ (Protein)
     if (goal === 'lose') {
         protein_g = weight * 2.0;
@@ -1667,14 +1743,14 @@ function calculateNorms() {
     } else {
         protein_g = weight * 1.6;
     }
-    
+
     // Б) ЖИРЫ (Fats)
     if (goal === 'lose') {
         fats_g = weight * 0.8;
     } else {
         fats_g = weight * 1.0;
     }
-    
+
     // В) УГЛЕВОДЫ (Carbs) - По остаточному принципу
     const proteinCalories = protein_g * 4;
     const fatCalories = fats_g * 9;
@@ -1702,7 +1778,7 @@ function calculateNorms() {
 
 function showResults() {
     // userData.height and userData.weight are now already set via onboarding rulers
-    
+
     const norms = calculateNorms();
     const { calories, protein, fats, carbs } = norms;
 
@@ -1712,7 +1788,7 @@ function showResults() {
     document.getElementById('res-protein').innerText = protein + 'г';
     document.getElementById('res-fats').innerText = fats + 'г';
     document.getElementById('target-weight').innerText = userData.weight + ' кг';
-    
+
     const goalMap = {
         'lose': 'Похудение',
         'maintain': 'Поддержание веса',
@@ -1726,7 +1802,7 @@ function showResults() {
     setProgress('ring-carbs', 100);
     setProgress('ring-protein', 100);
     setProgress('ring-fats', 100);
-    
+
     // Переход сразу
     nextStep(11);
 
@@ -1756,7 +1832,7 @@ async function openCamera() {
     const permissionUI = document.getElementById('camera-permission-ui');
     const statusText = document.getElementById('camera-status-text');
     const retryBtn = document.getElementById('retry-camera-btn');
-    
+
     // Reset UI state
     cameraScreen.classList.remove('hidden');
 
@@ -1767,7 +1843,7 @@ async function openCamera() {
     } else {
         permissionUI.classList.add('hidden');
     }
-    
+
     // Explicitly hide analysis card and show controls at start
     const analysisOverlay = document.getElementById('analysis-overlay');
     analysisOverlay.style.display = 'none';
@@ -1776,7 +1852,7 @@ async function openCamera() {
 
     statusText.innerText = "Разрешите доступ к камере, чтобы сканировать еду 📸";
     retryBtn.classList.add('hidden');
-    
+
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -1786,10 +1862,10 @@ async function openCamera() {
             },
             audio: false
         });
-        
+
         video.srcObject = videoStream;
         await video.play();
-        
+
         // ШАГ 2 (Успех): Установи isCameraPermissionGranted = true
         isCameraPermissionGranted = true;
 
@@ -1798,7 +1874,7 @@ async function openCamera() {
         setTimeout(() => {
             permissionUI.classList.add('hidden');
         }, 500);
-        
+
     } catch (err) {
         console.error("Error accessing camera:", err);
         // ШАГ 3 (Ошибка): Установи isCameraPermissionGranted = false
@@ -1814,7 +1890,7 @@ async function openCamera() {
 function closeCamera() {
     const cameraScreen = document.getElementById('camera-screen');
     cameraScreen.classList.add('hidden');
-    
+
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
@@ -1825,12 +1901,12 @@ function takePhoto() {
     const video = document.getElementById('video-preview');
     const canvas = document.getElementById('camera-canvas');
     const context = canvas.getContext('2d');
-    
+
     // Resize for AI: max 1000px width/height while maintaining aspect ratio
     let targetWidth = video.videoWidth;
     let targetHeight = video.videoHeight;
     const maxDim = 1000;
-    
+
     if (targetWidth > maxDim || targetHeight > maxDim) {
         if (targetWidth > targetHeight) {
             targetHeight = (maxDim / targetWidth) * targetHeight;
@@ -1843,10 +1919,10 @@ function takePhoto() {
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
-    
+
     // Draw the current frame from the video onto the canvas with resizing
     context.drawImage(video, 0, 0, targetWidth, targetHeight);
-    
+
     // Convert to JPEG with quality 0.8 to reduce size
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
@@ -1861,15 +1937,15 @@ function takePhoto() {
     smallCanvas.width = 256;
     smallCanvas.height = 256;
     const smallCtx = smallCanvas.getContext('2d');
-    
+
     // Draw with square crop from center
     smallCtx.drawImage(video, startX, startY, shortSide, shortSide, 0, 0, 256, 256);
     thumbnailDataUrl = smallCanvas.toDataURL('image/jpeg', 0.7);
-    
+
     // Set to analysis image (hidden legacy tag)
     const analyzedImg = document.getElementById('analyzed-img');
     if (analyzedImg) analyzedImg.src = imageData;
-    
+
     // Freeze video feed visually by stopping tracks but keeping screen
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
@@ -1880,7 +1956,7 @@ function takePhoto() {
     const analysisOverlay = document.getElementById('analysis-overlay');
     analysisOverlay.style.display = 'flex';
     analysisOverlay.classList.remove('hidden');
-    
+
     // Start AI analysis
     showLoader(cameraMode);
     startAnalysis(imageData, thumbnailDataUrl);
@@ -1889,17 +1965,17 @@ function takePhoto() {
 async function startAnalysis(imageData, thumbnailDataUrl) {
     let progress = 0;
     const circ = 2 * Math.PI * 52; // New radius r=52
-    
+
     const interval = setInterval(() => {
         progress += Math.floor(Math.random() * 5) + 3;
         if (progress > 100) progress = 100;
-        
+
         // Update new UI elements
         const percentVal = document.getElementById('analysis-percent-val');
         if (percentVal) percentVal.innerText = progress;
-        
+
         setHomeProgress('analysis-progress-circle', progress, circ);
-        
+
         if (progress === 100) {
             clearInterval(interval);
             // Add slight delay at 100% for "expensive" feel
@@ -1958,7 +2034,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
         3. Общее описание (короткий текст до 150 символов), в поле "description".
         Always return JSON: {"product_name": "Название", "calories": 100, "protein": 10, "carbs": 10, "fats": 10, "description": "Описание"}`;
     }
-    
+
     try {
         const response = await fetchWithRetry(API_URL, {
             method: 'POST',
@@ -1969,14 +2045,14 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
                 prompt: prompt
             })
         });
- 
+
         const result = await response.json();
- 
+
         if (result.error) {
             console.error("Proxy API error:", result.error);
             throw new Error(result.error);
         }
-        
+
         imageAnalysisCache[hash] = result;
         if (cameraMode === 'cook') {
             showRecipeModal(result);
@@ -1995,16 +2071,16 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
             addFoodToHome(foodResult, thumbnailDataUrl);
         }
         hideLoader();
- 
+
     } catch (err) {
         console.error("Critical AI Error:", err);
-        
+
         // Замени alert на вызов нового окна
         const errorModal = document.getElementById('error-modal');
         if (errorModal) {
             errorModal.classList.remove('hidden');
         }
-        
+
         // We still need to leave analysis screen if it was active
         const analysisOverlay = document.getElementById('analysis-overlay');
         if (analysisOverlay) {
@@ -2019,7 +2095,7 @@ async function finishAnalysis(imageData, thumbnailDataUrl) {
 function addFoodToHome(food, thumbnail) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     const foodEntry = {
         id: food.id || Date.now().toString(),
         name: food.name,
@@ -2033,7 +2109,7 @@ function addFoodToHome(food, thumbnail) {
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
     currentMacros.foodHistory.unshift(foodEntry);
-    
+
     recalculateMacros();
     saveAllData();
     updateStreak();
@@ -2087,6 +2163,21 @@ function openEditModal(id) {
     document.getElementById('manual-protein').value = food.protein || '';
     document.getElementById('manual-fat').value = food.fats || '';
     document.getElementById('manual-carbs').value = food.carbs || '';
+
+    // Populate time field - convert from HH:MM format if exists
+    if (food.time) {
+        document.getElementById('manual-time').value = food.time;
+    } else {
+        // Default to current time if no time is set
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('manual-time').value = `${hours}:${minutes}`;
+    }
+
+    // Populate description field
+    document.getElementById('manual-description').value = food.description || '';
+
     document.getElementById('manual-add-modal').classList.remove('hidden');
 }
 
@@ -2145,7 +2236,7 @@ function goToHome() {
 
     document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
     document.getElementById('home-calories-total').innerText = `Ккал осталось`;
-    
+
     document.getElementById('home-protein-eaten').innerText = currentMacros.totalProtein;
     document.getElementById('home-carbs-eaten').innerText = currentMacros.totalCarbs;
     document.getElementById('home-fats-eaten').innerText = currentMacros.totalFats;
@@ -2213,7 +2304,7 @@ function setHomeProgress(id, percent, circumference) {
 function updateCalendarDates() {
     const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
-    
+
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
     monday.setDate(now.getDate() + diff);
@@ -2222,11 +2313,11 @@ function updateCalendarDates() {
     dayElements.forEach((el, index) => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + index);
-        
+
         const dayNum = date.getDate();
         const dayNumEl = el.querySelector('.day-number') || el.querySelector('text');
         if (dayNumEl) dayNumEl.textContent = dayNum;
-        
+
         if (date.toDateString() === now.toDateString()) {
             el.classList.add('active');
         } else {
@@ -2238,9 +2329,9 @@ function updateCalendarDates() {
 function updateProgressPage() {
     triggerHaptic('light');
     const today = new Date().toISOString().split('T')[0];
-    
+
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-    
+
     currentMacros.dailyHistory[today] = {
         calories: currentMacros.calories,
         protein: currentMacros.protein,
@@ -2265,7 +2356,7 @@ function renderProgressChart() {
 
     const daysShortRu = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const now = new Date();
-    
+
     // Get Monday of current week
     const monday = new Date(now);
     const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
@@ -2281,15 +2372,15 @@ function renderProgressChart() {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
-        
+
         labels.push(daysShortRu[date.getDay()]);
-        
+
         const data = currentMacros.dailyHistory[dateStr] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
-        
+
         const pCals = data.protein * 4;
         const cCals = data.carbs * 4;
         const fCals = data.fats * 9;
-        
+
         proteinData.push(pCals);
         carbsData.push(cCals);
         fatsData.push(fCals);
@@ -2307,7 +2398,7 @@ function renderProgressChart() {
         const total = proteinData[i] + carbsData[i] + fatsData[i];
         if (total > maxWeekVal) maxWeekVal = total;
     }
-    
+
     let suggestedMax = 600;
     if (maxWeekVal * 1.1 > 600) {
         suggestedMax = Math.ceil((maxWeekVal * 1.1) / 600) * 600;
@@ -2322,11 +2413,11 @@ function renderProgressChart() {
         caloriesChart.data.datasets[1].data = carbsData;
         caloriesChart.data.datasets[2].label = 'Белки';
         caloriesChart.data.datasets[2].data = proteinData;
-        
+
         // Update scales dynamically
         caloriesChart.options.scales.y.suggestedMax = suggestedMax;
         caloriesChart.options.scales.y.ticks.stepSize = stepSize;
-        
+
         caloriesChart.update();
     } else {
         caloriesChart = new Chart(ctx, {
@@ -2405,7 +2496,7 @@ function renderProgressChart() {
                         padding: 10,
                         displayColors: true,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return ` ${context.dataset.label}: ${Math.round(context.raw)} ккал`;
                             }
                         }
@@ -2470,19 +2561,19 @@ function renderProgressChart() {
 
 function updateBMI() {
     if (!userData.weight || !userData.height) return;
-    
+
     const heightInMeters = userData.height / 100;
     const bmi = (userData.weight / (heightInMeters * heightInMeters)).toFixed(1);
-    
+
     const bmiEl = document.getElementById('bmi-number');
     const statusTextEl = document.getElementById('bmi-status-text');
     const pointerEl = document.getElementById('bmi-pointer');
-    
+
     bmiEl.innerText = bmi;
-    
+
     let status = "Норма";
     let statusClass = "healthy";
-    let pointerPos = 50; 
+    let pointerPos = 50;
 
     if (bmi < 18.5) {
         status = "Дефицит";
@@ -2517,13 +2608,13 @@ function logNewWeight() {
 function updateWeightWidgets() {
     const currentWeightEl = document.getElementById('stats-current-weight');
     const streakCountEl = document.getElementById('stats-streak-count');
-    
+
     if (currentWeightEl) currentWeightEl.innerText = userData.weight || '--';
-    
+
     // Update streak from existing logic
     const streakCount = parseInt(localStorage.getItem('streakCount')) || 0;
     if (streakCountEl) streakCountEl.innerText = streakCount;
-    
+
     updateStreakDots(streakCount);
     renderWeightChart();
 }
@@ -2531,10 +2622,10 @@ function updateWeightWidgets() {
 function updateStreakDots(count) {
     const dotsContainer = document.getElementById('stats-streak-dots');
     if (!dotsContainer) return;
-    
+
     const dayLabels = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В'];
     dotsContainer.innerHTML = '';
-    
+
     // Get current day of week (0 for Sunday, 1 for Monday, etc.)
     const now = new Date();
     let currentDay = now.getDay();
@@ -2545,10 +2636,10 @@ function updateStreakDots(count) {
     for (let i = 0; i < 7; i++) {
         const dayColumn = document.createElement('div');
         dayColumn.className = 'day-column';
-        
+
         const dot = document.createElement('div');
         dot.className = 'streak-dot circle-day';
-        
+
         // Highlight logic:
         // 1. Current day is always highlighted (orange/active)
         // 2. Previous days are highlighted if streak count covers them
@@ -2559,7 +2650,7 @@ function updateStreakDots(count) {
         } else if (i < todayIdx && (todayIdx - i) < count) {
             dot.classList.add('active');
         }
-        
+
         const label = document.createElement('span');
         label.className = 'day-label';
         label.innerText = dayLabels[i];
@@ -2567,7 +2658,7 @@ function updateStreakDots(count) {
             label.style.color = '#ff9500'; // Highlight current day label
             label.style.fontWeight = 'bold';
         }
-        
+
         dayColumn.appendChild(dot);
         dayColumn.appendChild(label);
         dotsContainer.appendChild(dayColumn);
@@ -2583,7 +2674,7 @@ function renderWeightChart() {
     const gridColor = style.getPropertyValue('--border-color').trim() || '#e5e5ea';
     const textColor = style.getPropertyValue('--text-secondary').trim() || '#8e8e93';
     const cardBg = style.getPropertyValue('--bg-card').trim() || '#ffffff';
-    
+
     // Get primary text color for points and lines (Black in Light, White in Dark)
     const primaryColor = style.getPropertyValue('--text-primary').trim() || '#000000';
     const isDark = document.body.getAttribute('data-theme') === 'dark';
@@ -2602,7 +2693,7 @@ function renderWeightChart() {
     const history = currentMacros.weightHistory || [];
     // Get last 7 entries or all if less
     const lastEntries = history.slice(-7);
-    
+
     const labels = lastEntries.map(e => {
         const d = new Date(e.date);
         const day = d.getDate();
@@ -2719,14 +2810,11 @@ function editSetting(type) {
     const saveBtn = document.getElementById('save-edit-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
 
-    const goalMap = { 'lose': '📉 Похудение', 'maintain': '⚖️ Норма', 'gain': '💪 Набор массы' };
-    const activityMap = {
-        1.2: '🧘 Сидячий (0-2)',
-        1.375: '🚶 Лёгкий (2-3)',
-        1.55: '🏃 Умеренный (3-5)',
-        1.725: '🚴 Высокая (6+)',
-        1.9: '🏋️ Экстремальная'
-    };
+    const goalMap = [
+        { val: 'lose', title: 'Похудение', emoji: '📉' },
+        { val: 'maintain', title: 'Норма', emoji: '⚖️' },
+        { val: 'gain', title: 'Набор массы', emoji: '💪' }
+    ];
 
     let content = '';
     let currentTitle = '';
@@ -2751,27 +2839,33 @@ function editSetting(type) {
                 { val: 1.55, title: '3-5 тренировок', sub: 'Умеренная активность, спорт несколько раз в неделю', emoji: '🏃' },
                 { val: 1.725, title: '6+ тренировок', sub: 'Активный образ жизни, тяжелые тренировки', emoji: '🏋️' }
             ];
-            content = `<div class="options-vertical">`;
+            content = `<div class="options-vertical-settings">`;
             activities.forEach(item => {
                 const isSelected = userData.activity == item.val ? 'selected' : '';
                 content += `
-                    <div class="card ${isSelected}" data-value="${item.val}">
-                        <div class="icon">${item.emoji}</div>
-                        <div class="text">
-                            <h3>${item.title}</h3>
-                            <p>${item.sub}</p>
+                    <button class="settings-option-btn ${isSelected}" data-value="${item.val}">
+                        <div class="settings-option-icon">${item.emoji}</div>
+                        <div class="settings-option-text">
+                            <span class="settings-option-title">${item.title}</span>
+                            <span class="settings-option-desc">${item.sub}</span>
                         </div>
-                    </div>`;
+                    </button>`;
             });
             content += `</div><input type="hidden" id="edit-value-input" value="${userData.activity}">`;
             break;
         case 'goal':
             currentTitle = 'Цель';
-            content = `<div class="choice-grid">`;
-            for (const [val, label] of Object.entries(goalMap)) {
-                const isActive = userData.goal == val ? 'active' : '';
-                content += `<button class="choice-card ${isActive}" data-value="${val}">${label}</button>`;
-            }
+            content = `<div class="options-vertical-settings">`;
+            goalMap.forEach(item => {
+                const isSelected = userData.goal == item.val ? 'selected' : '';
+                content += `
+                    <button class="settings-option-btn ${isSelected}" data-value="${item.val}">
+                        <div class="settings-option-icon">${item.emoji}</div>
+                        <div class="settings-option-text">
+                            <span class="settings-option-title">${item.title}</span>
+                        </div>
+                    </button>`;
+            });
             content += `</div><input type="hidden" id="edit-value-input" value="${userData.goal}">`;
             break;
     }
@@ -2782,16 +2876,14 @@ function editSetting(type) {
 
     // Add click listeners for choice cards
     if (type === 'activity' || type === 'goal') {
-        const selector = type === 'activity' ? '.card' : '.choice-card';
-        const activeClass = type === 'activity' ? 'selected' : 'active';
-        const cards = container.querySelectorAll(selector);
+        const cards = container.querySelectorAll('.settings-option-btn');
         cards.forEach(card => {
             card.onclick = () => {
-                cards.forEach(c => c.classList.remove(activeClass));
-                card.classList.add(activeClass);
+                cards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
                 const newVal = card.getAttribute('data-value');
                 document.getElementById('edit-value-input').value = newVal;
-                triggerHaptic('light');
+                triggerHaptic('medium');
             };
         });
     }
@@ -2830,12 +2922,12 @@ function loadSettingsData() {
     const tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
-        
+
         const nameEl = document.getElementById('settings-name');
         if (nameEl) {
             nameEl.innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
         }
-        
+
         const avatarEl = document.getElementById('settings-avatar');
         if (avatarEl) {
             if (user.photo_url) {
@@ -2850,20 +2942,20 @@ function loadSettingsData() {
         if (nameEl) nameEl.innerText = 'Гость';
     }
 
-    const activityMap = { 
-        1.2: 'Сидячий', 
-        1.375: 'Лёгкий', 
-        1.55: 'Умеренный', 
-        1.725: 'Высокая', 
-        1.9: 'Экстремальная' 
+    const activityMap = {
+        1.2: 'Сидячий',
+        1.375: 'Лёгкий',
+        1.55: 'Умеренный',
+        1.725: 'Высокая',
+        1.9: 'Экстремальная'
     };
-    
-    const goalMap = { 
-        'lose': 'Похудение', 
-        'maintain': 'Норма', 
-        'gain': 'Масса' 
+
+    const goalMap = {
+        'lose': 'Похудение',
+        'maintain': 'Норма',
+        'gain': 'Масса'
     };
-    
+
     const setText = (id, text) => {
         const el = document.getElementById(id);
         if (el) el.innerText = text;
@@ -2878,12 +2970,12 @@ function loadSettingsData() {
 function resetAppData() {
     const modal = document.getElementById('reset-confirm-modal');
     if (!modal) return;
-    
+
     modal.classList.remove('hidden');
-    
+
     const confirmBtn = document.getElementById('confirm-reset-btn');
     const cancelBtn = document.getElementById('cancel-reset-btn');
-    
+
     if (confirmBtn) {
         confirmBtn.onclick = () => {
             triggerHaptic('warning');
@@ -2891,7 +2983,7 @@ function resetAppData() {
             location.reload();
         };
     }
-    
+
     if (cancelBtn) {
         cancelBtn.onclick = () => {
             triggerHaptic('light');
@@ -2913,7 +3005,7 @@ function setProgress(id, percent) {
     if (circle) {
         const radius = 40;
         const circumference = 2 * Math.PI * radius;
-        
+
         // Ограничиваем визуальное заполнение максимум на 100%
         const visualPercent = Math.min(percent, 100);
         const offset = circumference - (visualPercent / 100 * circumference);
@@ -2955,20 +3047,20 @@ function initRecipeModal() {
 
 function showRecipeModal(recipeData) {
     currentRecipeData = recipeData;
-    
+
     document.getElementById('recipe-title').innerText = recipeData.recipeName || "Рецепт";
     document.getElementById('recipe-cal').innerText = recipeData.calories || 0;
     document.getElementById('recipe-p').innerText = recipeData.protein || 0;
     document.getElementById('recipe-f').innerText = recipeData.fat || 0;
     document.getElementById('recipe-c').innerText = recipeData.carbs || 0;
-    
+
     // Formatting instructions
     const instructionsContainer = document.getElementById('recipe-instructions');
     if (instructionsContainer) {
         instructionsContainer.innerHTML = '';
         const instructionsText = recipeData.instructions || "";
         const steps = instructionsText.split('\n').filter(step => step.trim() !== '');
-        
+
         steps.forEach((stepText) => {
             const stepDiv = document.createElement('div');
             stepDiv.className = 'recipe-step-item';
@@ -2976,7 +3068,7 @@ function showRecipeModal(recipeData) {
             instructionsContainer.appendChild(stepDiv);
         });
     }
-    
+
     const modal = document.getElementById('recipe-modal');
     if (modal) modal.classList.remove('hidden');
 }
@@ -3014,7 +3106,7 @@ function showCheckResult(result) {
     scoreNum.innerText = "0";
     scoreFill.style.width = "0%";
     if (nameDisplay) nameDisplay.innerText = result.product_name || "";
-    
+
     const score = result.score || 0;
 
     // Set color based on score
@@ -3047,7 +3139,7 @@ function showCheckResult(result) {
     `;
 
     modal.classList.remove('hidden');
-    
+
     // Start animation after modal is visible
     setTimeout(() => {
         animateScore(score);
@@ -3066,12 +3158,12 @@ function animateScore(targetScore) {
     function update(timestamp) {
         const elapsed = timestamp - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Easing function: easeOutCubic
         const easeProgress = 1 - Math.pow(1 - progress, 3);
-        
+
         currentScore = Math.floor(easeProgress * targetScore);
-        
+
         scoreNum.innerText = currentScore;
         scoreFill.style.width = (easeProgress * targetScore) + "%";
 
@@ -3085,3 +3177,10 @@ function animateScore(targetScore) {
 
     requestAnimationFrame(update);
 }
+
+/**
+ * Food Detail Modal Logic V2
+ */
+let currentEditingItem = null;
+
+// --- FOOD DETAIL MODAL (DISABLED) ---
