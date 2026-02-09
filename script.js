@@ -124,6 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initBMIModal();
     initErrorModal();
     initManualAddModal();
+    initTimePicker();
     initAddMenu();
     initRecipeModal();
     initCheckModal();
