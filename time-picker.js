@@ -9,12 +9,14 @@ function initTimePicker() {
 
     let selectedHour = new Date().getHours();
     let selectedMinute = new Date().getMinutes();
+    let lastVibratedHour = null;
+    let lastVibratedMinute = null;
 
     // Generate hours (00-23)
     function generateHours() {
         hoursColumn.innerHTML = '';
-        // Add padding items
-        for (let i = 0; i < 2; i++) {
+        // Add padding items (3 items = enough space to center first element)
+        for (let i = 0; i < 3; i++) {
             const padding = document.createElement('div');
             padding.className = 'time-picker-item';
             padding.style.visibility = 'hidden';
@@ -29,8 +31,8 @@ function initTimePicker() {
             hoursColumn.appendChild(item);
         }
 
-        // Add padding items
-        for (let i = 0; i < 2; i++) {
+        // Add padding items (3 items = enough space to center last element)
+        for (let i = 0; i < 3; i++) {
             const padding = document.createElement('div');
             padding.className = 'time-picker-item';
             padding.style.visibility = 'hidden';
@@ -41,8 +43,8 @@ function initTimePicker() {
     // Generate minutes (00-59)
     function generateMinutes() {
         minutesColumn.innerHTML = '';
-        // Add padding items
-        for (let i = 0; i < 2; i++) {
+        // Add padding items (3 items = enough space to center first element)
+        for (let i = 0; i < 3; i++) {
             const padding = document.createElement('div');
             padding.className = 'time-picker-item';
             padding.style.visibility = 'hidden';
@@ -57,8 +59,8 @@ function initTimePicker() {
             minutesColumn.appendChild(item);
         }
 
-        // Add padding items
-        for (let i = 0; i < 2; i++) {
+        // Add padding items (3 items = enough space to center last element)
+        for (let i = 0; i < 3; i++) {
             const padding = document.createElement('div');
             padding.className = 'time-picker-item';
             padding.style.visibility = 'hidden';
@@ -119,9 +121,27 @@ function initTimePicker() {
         if (closestItem) {
             const value = parseInt(closestItem.dataset.value);
             if (isHour) {
-                selectedHour = value;
+                if (selectedHour !== value) {
+                    selectedHour = value;
+                    // Vibrate only when value changes
+                    if (lastVibratedHour !== value) {
+                        if (navigator.vibrate) {
+                            navigator.vibrate(10);
+                        }
+                        lastVibratedHour = value;
+                    }
+                }
             } else {
-                selectedMinute = value;
+                if (selectedMinute !== value) {
+                    selectedMinute = value;
+                    // Vibrate only when value changes
+                    if (lastVibratedMinute !== value) {
+                        if (navigator.vibrate) {
+                            navigator.vibrate(10);
+                        }
+                        lastVibratedMinute = value;
+                    }
+                }
             }
             updateActiveItems();
         }
