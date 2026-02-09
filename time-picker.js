@@ -9,8 +9,6 @@ function initTimePicker() {
 
     let selectedHour = new Date().getHours();
     let selectedMinute = new Date().getMinutes();
-    let lastVibratedHour = null;
-    let lastVibratedMinute = null;
 
     // Generate hours (00-23)
     function generateHours() {
@@ -121,27 +119,9 @@ function initTimePicker() {
         if (closestItem) {
             const value = parseInt(closestItem.dataset.value);
             if (isHour) {
-                if (selectedHour !== value) {
-                    selectedHour = value;
-                    // Vibrate only when value changes
-                    if (lastVibratedHour !== value) {
-                        if (navigator.vibrate) {
-                            navigator.vibrate(10);
-                        }
-                        lastVibratedHour = value;
-                    }
-                }
+                selectedHour = value;
             } else {
-                if (selectedMinute !== value) {
-                    selectedMinute = value;
-                    // Vibrate only when value changes
-                    if (lastVibratedMinute !== value) {
-                        if (navigator.vibrate) {
-                            navigator.vibrate(10);
-                        }
-                        lastVibratedMinute = value;
-                    }
-                }
+                selectedMinute = value;
             }
             updateActiveItems();
         }
@@ -173,9 +153,24 @@ function initTimePicker() {
         }, 100);
     });
 
-    // Handle scroll events
+    // Ratchet-style haptic feedback variables
+    let lastHourIndex = -1;
+    let lastMinuteIndex = -1;
+    const ITEM_HEIGHT = 50; // Height of each time-picker-item from CSS
+
+    // Handle scroll events with ratchet haptic feedback
     let hourScrollTimeout;
     hoursColumn.addEventListener('scroll', () => {
+        // Calculate current centered item index
+        const scrollTop = hoursColumn.scrollTop;
+        const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
+
+        // Vibrate only when index changes (ratchet effect)
+        if (currentIndex !== lastHourIndex && navigator.vibrate) {
+            navigator.vibrate(10); // Short 10ms vibration
+            lastHourIndex = currentIndex;
+        }
+
         clearTimeout(hourScrollTimeout);
         hourScrollTimeout = setTimeout(() => {
             handleScroll(hoursColumn, true);
@@ -185,6 +180,16 @@ function initTimePicker() {
 
     let minuteScrollTimeout;
     minutesColumn.addEventListener('scroll', () => {
+        // Calculate current centered item index
+        const scrollTop = minutesColumn.scrollTop;
+        const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
+
+        // Vibrate only when index changes (ratchet effect)
+        if (currentIndex !== lastMinuteIndex && navigator.vibrate) {
+            navigator.vibrate(10); // Short 10ms vibration
+            lastMinuteIndex = currentIndex;
+        }
+
         clearTimeout(minuteScrollTimeout);
         minuteScrollTimeout = setTimeout(() => {
             handleScroll(minutesColumn, false);
