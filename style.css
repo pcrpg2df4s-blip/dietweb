@@ -1053,6 +1053,18 @@ body:not([data-theme="dark"]) .card.selected {
     fill: var(--text-primary);
 }
 
+/* Selected day styling - simple text highlight only */
+.day-card.selected .day-name {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Disabled future dates - blocked but visually normal */
+.day-card.disabled {
+    pointer-events: none;
+    cursor: default !important;
+}
+
 .day-card .ring-track {
     fill: transparent;
 }

@@ -106,6 +106,9 @@ let celebratedStatus = {
     carbs: false
 };
 
+// Track currently selected date in calendar (YYYY-MM-DD format)
+let currentSelectedDate = new Date().toISOString().split('T')[0];
+
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Global error:", message, source, lineno);
@@ -1207,8 +1210,21 @@ function initHomeScreenFromSaved() {
     const foodList = document.getElementById('food-list');
     foodList.innerHTML = '';
 
-    if (currentMacros.foodHistory && currentMacros.foodHistory.length > 0) {
-        currentMacros.foodHistory.forEach((food, index) => {
+    // Filter food by selected date
+    const filteredFood = (currentMacros.foodHistory || []).filter(food => {
+        // If food has no date, assume it's from today (backward compatibility)
+        const foodDate = food.date || new Date().toISOString().split('T')[0];
+        return foodDate === currentSelectedDate;
+    });
+
+    // Update header based on selected date
+    updateFoodListHeader();
+
+    if (filteredFood.length > 0) {
+        filteredFood.forEach((food, index) => {
+            // Find the original index in the full foodHistory array
+            const originalIndex = currentMacros.foodHistory.findIndex(f => f.id === food.id);
+
             const div = document.createElement('div');
             div.className = 'new-food-card';
 
@@ -1241,7 +1257,7 @@ function initHomeScreenFromSaved() {
                         <button class="new-action-btn edit-btn" data-id="${food.id}" onclick="event.stopPropagation(); triggerHaptic('medium');">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="new-action-btn delete-btn" data-index="${index}" onclick="event.stopPropagation(); triggerHaptic('warning');">
+                        <button class="new-action-btn delete-btn" data-index="${originalIndex}" onclick="event.stopPropagation(); triggerHaptic('warning');">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
@@ -1269,6 +1285,36 @@ function initHomeScreenFromSaved() {
 
     updateCalendarDates();
     updateHomeUI();
+}
+
+function updateFoodListHeader() {
+    const headerEl = document.querySelector('.recent-uploads h3');
+    if (!headerEl) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayISO = yesterday.toISOString().split('T')[0];
+
+    if (currentSelectedDate === today) {
+        headerEl.textContent = 'Недавно добавлено';
+    } else if (currentSelectedDate === yesterdayISO) {
+        headerEl.textContent = 'Добавлено вчера';
+    } else {
+        // Get day of week with proper Russian declension
+        const selectedDate = new Date(currentSelectedDate + 'T00:00:00');
+        const dayOfWeek = selectedDate.getDay();
+        const daysRu = [
+            'в воскресенье',
+            'в понедельник',
+            'во вторник',
+            'в среду',
+            'в четверг',
+            'в пятницу',
+            'в субботу'
+        ];
+        headerEl.textContent = `Добавлено ${daysRu[dayOfWeek]}`;
+    }
 }
 
 function updateHomeUI() {
@@ -1300,7 +1346,9 @@ function renderWeeklyCalendar() {
 
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'narrow' }).toUpperCase();
         const dayNumber = date.getDate();
-        const isActive = date.toDateString() === now.toDateString();
+        const isToday = date.toDateString() === now.toDateString();
+        const isSelected = dateISO === currentSelectedDate;
+        const isFuture = date > now; // Check if date is in the future
 
         // Получаем данные из истории
         const historyData = currentMacros.dailyHistory[dateISO] || { calories: 0 };
@@ -1309,7 +1357,14 @@ function renderWeeklyCalendar() {
         const offset = circumference - (percent / 100 * circumference);
 
         const dayCard = document.createElement('div');
-        dayCard.className = `day-card ${isActive ? 'active' : ''}`;
+        dayCard.className = `day-card ${isSelected ? 'selected' : ''} ${isFuture ? 'disabled' : ''}`;
+        dayCard.dataset.date = dateISO;
+
+        // Only make clickable if not in the future
+        if (!isFuture) {
+            dayCard.style.cursor = 'pointer';
+        }
+
         dayCard.innerHTML = `
             <span class="day-name">${dayName}</span>
             <div class="day-ring-wrapper">
@@ -1324,6 +1379,17 @@ function renderWeeklyCalendar() {
                 </svg>
             </div>
         `;
+
+        // Add click handler only for non-future dates
+        if (!isFuture) {
+            dayCard.addEventListener('click', () => {
+                triggerHaptic('light');
+                currentSelectedDate = dateISO;
+                renderWeeklyCalendar(); // Re-render to update selected state
+                initHomeScreenFromSaved(); // Refresh food list
+            });
+        }
+
         container.appendChild(dayCard);
     }
 }
@@ -2105,7 +2171,8 @@ function addFoodToHome(food, thumbnail) {
         carbs: food.carbs,
         fats: food.fats,
         time: time,
-        thumbnail: thumbnail
+        thumbnail: thumbnail,
+        date: currentSelectedDate // Save with currently selected date
     };
 
     if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
