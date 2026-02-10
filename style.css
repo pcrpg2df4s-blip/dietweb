@@ -4494,3 +4494,246 @@ body:not([data-theme="dark"]) .choice-card.active {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* ========================================
+   SUBSCRIPTION MODAL
+   ======================================== */
+
+.subscription-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-background);
+    z-index: 10000;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.subscription-content {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.subscription-header {
+    position: relative;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subscription-close {
+    position: absolute;
+    left: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subscription-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Body */
+.subscription-body {
+    flex: 1;
+    padding: 24px 20px 40px;
+}
+
+/* Hero Section */
+.subscription-hero {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.subscription-icon {
+    margin: 0 auto 20px;
+    width: 80px;
+    height: 80px;
+}
+
+.subscription-heading {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+    padding: 0 20px;
+}
+
+/* Plan Cards */
+.plan-card {
+    background-color: var(--bg-card);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.plan-card.plan-premium {
+    border: 2px solid #000000;
+}
+
+[data-theme="dark"] .plan-card.plan-premium {
+    border: 2px solid #FFFFFF;
+}
+
+.plan-badge-popular {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background-color: #000000;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .plan-badge-popular {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.plan-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background-color: rgba(0, 122, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.plan-icon-premium {
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(247, 147, 30, 0.15) 100%);
+}
+
+.plan-icon-pro {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+}
+
+.plan-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.plan-price {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.plan-period {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Features */
+.plan-features {
+    margin-bottom: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.feature-item:last-child {
+    margin-bottom: 0;
+}
+
+.feature-check {
+    flex-shrink: 0;
+}
+
+/* Plan Buttons */
+.plan-button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-button-current {
+    background-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+.plan-button-premium {
+    background-color: #000000;
+    color: #FFFFFF;
+}
+
+[data-theme="dark"] .plan-button-premium {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.plan-button-pro {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    color: #FFFFFF;
+}
+
+.plan-button:active {
+    transform: scale(0.98);
+}
+
+/* Footer */
+.subscription-footer {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.subscription-disclaimer {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.subscription-disclaimer a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+}

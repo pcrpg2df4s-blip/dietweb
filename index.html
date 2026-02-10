@@ -803,13 +803,23 @@
 
                 <div class="settings-group-label">Приложение</div>
                 <div class="settings-list-container">
-                    <div class="settings-row no-border">
+                    <div class="settings-row">
                         <span class="row-label">Темная тема</span>
                         <div class="row-value-group">
                             <label class="ios-switch">
                                 <input type="checkbox" id="theme-toggle">
                                 <span class="slider"></span>
                             </label>
+                        </div>
+                    </div>
+                    <div class="settings-row no-border" onclick="openSubscriptionModal()">
+                        <span class="row-label">Подписка</span>
+                        <div class="row-value-group">
+                            <span style="color: var(--text-primary); font-weight: 700;">Бесплатно</span>
+                            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
                         </div>
                     </div>
                 </div>
@@ -1216,6 +1226,161 @@
 
                 <button class="main-btn" style="margin-top: 20px; background: white; color: black;">Save
                     Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div id="subscription-modal" class="subscription-modal hidden">
+        <div class="subscription-content">
+            <!-- Header -->
+            <div class="subscription-header">
+                <button class="subscription-close" onclick="closeSubscriptionModal()">✕</button>
+                <h3 class="subscription-title">Подписка</h3>
+            </div>
+
+            <!-- Main Content -->
+            <div class="subscription-body">
+                <!-- Hero Section -->
+                <div class="subscription-hero">
+                    <div class="subscription-icon">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="crystalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M40 5 L60 25 L55 50 L40 75 L25 50 L20 25 Z" fill="url(#crystalGradient)" />
+                            <path d="M40 5 L60 25 L40 35 Z" fill="url(#crystalGradient)" opacity="0.6" />
+                            <path d="M20 25 L40 35 L25 50 Z" fill="url(#crystalGradient)" opacity="0.4" />
+                            <path d="M60 25 L55 50 L40 35 Z" fill="url(#crystalGradient)" opacity="0.5" />
+                        </svg>
+                    </div>
+                    <h1 class="subscription-heading">Попробуйте Calorie Premium бесплатно</h1>
+                </div>
+
+                <!-- Free Plan Card -->
+                <div class="plan-card plan-free">
+                    <div class="plan-header">
+                        <div class="plan-icon-wrapper">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#007AFF" />
+                                <path d="M2 17L12 22L22 17" stroke="#007AFF" stroke-width="2" />
+                                <path d="M2 12L12 17L22 12" stroke="#007AFF" stroke-width="2" />
+                            </svg>
+                        </div>
+                        <div class="plan-badge">LITE</div>
+                    </div>
+                    <div class="plan-price">Free</div>
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <svg class="feature-check" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#34C759" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Daily calorie logging</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg class="feature-check" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#34C759" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Basic food database</span>
+                        </div>
+                    </div>
+                    <button class="plan-button plan-button-current">Current Plan</button>
+                </div>
+
+                <!-- Premium Plan Card -->
+                <div class="plan-card plan-premium">
+                    <div class="plan-badge-popular">MOST POPULAR</div>
+                    <div class="plan-header">
+                        <div class="plan-icon-wrapper plan-icon-premium">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <defs>
+                                    <linearGradient id="fireGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#F7931E;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M12 2C12 2 8 6 8 10C8 13 10 15 12 15C14 15 16 13 16 10C16 6 12 2 12 2Z"
+                                    fill="url(#fireGradient)" />
+                                <path
+                                    d="M12 15C12 15 10 17 10 19C10 21 11 22 12 22C13 22 14 21 14 19C14 17 12 15 12 15Z"
+                                    fill="url(#fireGradient)" opacity="0.7" />
+                            </svg>
+                        </div>
+                        <div class="plan-badge">PREMIUM</div>
+                    </div>
+                    <div class="plan-price">$9.99<span class="plan-period">/mo</span></div>
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <svg class="feature-check feature-check-orange" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#FF9500" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Full Macro breakdown</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg class="feature-check feature-check-orange" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#FF9500" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Custom nutrition goals</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg class="feature-check feature-check-orange" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#FF9500" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Barcode scanner</span>
+                        </div>
+                    </div>
+                    <button class="plan-button plan-button-premium">Choose Premium</button>
+                </div>
+
+                <!-- Pro Plan Card -->
+                <div class="plan-card plan-pro">
+                    <div class="plan-header">
+                        <div class="plan-icon-wrapper plan-icon-pro">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <defs>
+                                    <linearGradient id="boltGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="url(#boltGradient)" />
+                            </svg>
+                        </div>
+                        <div class="plan-badge">PRO</div>
+                    </div>
+                    <div class="plan-price">$14.99<span class="plan-period">/mo</span></div>
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <svg class="feature-check feature-check-purple" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#8B5CF6" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>AI Meal Recognition</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg class="feature-check feature-check-purple" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="10" fill="#8B5CF6" />
+                                <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" />
+                            </svg>
+                            <span>Advanced health reports</span>
+                        </div>
+                    </div>
+                    <button class="plan-button plan-button-pro">Choose Pro</button>
+                </div>
+
+                <!-- Footer -->
+                <div class="subscription-footer">
+                    <p class="subscription-disclaimer">Recurring billing. Cancel anytime. By continuing, you agree to
+                        our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+                </div>
             </div>
         </div>
     </div>

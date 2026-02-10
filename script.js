@@ -3260,3 +3260,22 @@ function animateScore(targetScore) {
 let currentEditingItem = null;
 
 // --- FOOD DETAIL MODAL (DISABLED) ---
+
+/**
+ * Subscription Modal Functions
+ */
+function openSubscriptionModal() {
+    triggerHaptic('light');
+    const modal = document.getElementById('subscription-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeSubscriptionModal() {
+    triggerHaptic('light');
+    const modal = document.getElementById('subscription-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
