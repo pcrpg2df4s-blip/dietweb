@@ -1217,6 +1217,14 @@ function initHomeScreenFromSaved() {
         return foodDate === currentSelectedDate;
     });
 
+    // Sort by time in descending order (latest meals first)
+    filteredFood.sort((a, b) => {
+        const timeA = a.time || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00');
+        const timeB = b.time || (b.timestamp ? new Date(b.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00');
+        // Descending order: b - a (later times appear first)
+        return timeB.localeCompare(timeA);
+    });
+
     // Update header based on selected date
     updateFoodListHeader();
 
