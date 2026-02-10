@@ -158,6 +158,18 @@ function initTimePicker() {
     let lastMinuteIndex = -1;
     const ITEM_HEIGHT = 50; // Height of each time-picker-item from CSS
 
+    // Haptic feedback function with Telegram SDK support
+    function triggerHaptic() {
+        // 1. Priority: Native Telegram SDK (works perfectly on iOS/Android)
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.selectionChanged();
+        }
+        // 2. Fallback: Standard browser (for debugging on PC/Android Chrome)
+        else if (navigator.vibrate) {
+            navigator.vibrate(10); // Light pulse
+        }
+    }
+
     // Handle scroll events with ratchet haptic feedback
     let hourScrollTimeout;
     hoursColumn.addEventListener('scroll', () => {
@@ -166,8 +178,8 @@ function initTimePicker() {
         const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
 
         // Vibrate only when index changes (ratchet effect)
-        if (currentIndex !== lastHourIndex && navigator.vibrate) {
-            navigator.vibrate(10); // Short 10ms vibration
+        if (currentIndex !== lastHourIndex) {
+            triggerHaptic();
             lastHourIndex = currentIndex;
         }
 
@@ -185,8 +197,8 @@ function initTimePicker() {
         const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
 
         // Vibrate only when index changes (ratchet effect)
-        if (currentIndex !== lastMinuteIndex && navigator.vibrate) {
-            navigator.vibrate(10); // Short 10ms vibration
+        if (currentIndex !== lastMinuteIndex) {
+            triggerHaptic();
             lastMinuteIndex = currentIndex;
         }
 
