@@ -3268,7 +3268,12 @@ function openSubscriptionModal() {
     triggerHaptic('light');
     const modal = document.getElementById('subscription-modal');
     if (modal) {
+        // Remove hidden class and add modal-open class for slide-up animation
         modal.classList.remove('hidden');
+        // Use requestAnimationFrame to ensure the transition triggers
+        requestAnimationFrame(() => {
+            modal.classList.add('modal-open');
+        });
     }
 }
 
@@ -3276,6 +3281,11 @@ function closeSubscriptionModal() {
     triggerHaptic('light');
     const modal = document.getElementById('subscription-modal');
     if (modal) {
-        modal.classList.add('hidden');
+        // Remove modal-open class for slide-down animation
+        modal.classList.remove('modal-open');
+        // Wait for animation to complete before adding hidden class
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300); // Match the CSS transition duration
     }
 }
