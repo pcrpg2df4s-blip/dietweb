@@ -4,6 +4,9 @@ import os
 import base64
 import json
 import random
+import hmac
+import hashlib
+from urllib.parse import parse_qs
 from aiohttp import web
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -12,6 +15,7 @@ from aiogram.filters import Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from db_manager import init_database, save_food_data, get_food_data, get_all_food_data
 
 # 1. Загружаем переменные из .env
 load_dotenv()
@@ -183,20 +187,188 @@ async def handle_analyze(request):
 async def handle_options(request):
     return web.Response(headers={
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, X-Telegram-Init-Data",
         "Access-Control-Max-Age": "3600",
     })
+
+def validate_init_data(init_data_string):
+    """
+    Validate Telegram WebApp initData and extract user_id.
+    Returns user_id if valid, raises ValueError if invalid.
+    """
+    try:
+        # Parse the init data
+        parsed = parse_qs(init_data_string)
+        
+        # Extract hash and other data
+        received_hash = parsed.get('hash', [''])[0]
+        if not received_hash:
+            raise ValueError("No hash in initData")
+        
+        # Create data check string (all params except hash, sorted alphabetically)
+        data_check_arr = []
+        for key in sorted(parsed.keys()):
+            if key != 'hash':
+                value = parsed[key][0]
+                data_check_arr.append(f"{key}={value}")
+        data_check_string = '\n'.join(data_check_arr)
+        
+        # Create secret key
+        secret_key = hmac.new(
+            "WebAppData".encode(),
+            BOT_TOKEN.encode(),
+            hashlib.sha256
+        ).digest()
+        
+        # Calculate hash
+        calculated_hash = hmac.new(
+            secret_key,
+            data_check_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Verify hash
+        if calculated_hash != received_hash:
+            raise ValueError("Invalid hash")
+        
+        # Extract user data
+        user_json = parsed.get('user', [''])[0]
+        if user_json:
+            user_data = json.loads(user_json)
+            return user_data.get('id')
+        
+        raise ValueError("No user data in initData")
+    except Exception as e:
+        logging.error(f"initData validation failed: {e}")
+        raise ValueError(f"Invalid initData: {e}")
+
+async def handle_sync_save(request):
+    """
+    POST /api/sync/save
+    Save food data to database.
+    Headers: X-Telegram-Init-Data
+    Body: {"date": "YYYY-MM-DD", "foodData": {...}}
+    """
+    try:
+        # Validate initData
+        init_data = request.headers.get('X-Telegram-Init-Data', '')
+        if not init_data:
+            return web.json_response(
+                {"error": "Missing initData"},
+                status=401,
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        
+        user_id = validate_init_data(init_data)
+        
+        # Parse request body
+        data = await request.json()
+        date = data.get('date')
+        food_data = data.get('foodData')
+        
+        if not date or not food_data:
+            return web.json_response(
+                {"error": "Missing date or foodData"},
+                status=400,
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        
+        # Save to database
+        food_json = json.dumps(food_data)
+        success = await save_food_data(user_id, date, food_json)
+        
+        if success:
+            return web.json_response(
+                {"success": True, "message": "Data saved"},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        else:
+            return web.json_response(
+                {"error": "Failed to save data"},
+                status=500,
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    
+    except ValueError as e:
+        return web.json_response(
+            {"error": str(e)},
+            status=401,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        logging.error(f"Error in /api/sync/save: {e}")
+        return web.json_response(
+            {"error": str(e)},
+            status=500,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+async def handle_sync_load(request):
+    """
+    GET /api/sync/load?date=YYYY-MM-DD
+    Load food data from database.
+    If date is not provided, return all data.
+    Headers: X-Telegram-Init-Data
+    """
+    try:
+        # Validate initData
+        init_data = request.headers.get('X-Telegram-Init-Data', '')
+        if not init_data:
+            return web.json_response(
+                {"error": "Missing initData"},
+                status=401,
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        
+        user_id = validate_init_data(init_data)
+        
+        # Get date parameter
+        date = request.query.get('date')
+        
+        if date:
+            # Load specific date
+            food_data = await get_food_data(user_id, date)
+            return web.json_response(
+                {"date": date, "foodData": food_data},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        else:
+            # Load all data
+            all_data = await get_all_food_data(user_id)
+            return web.json_response(
+                {"allData": all_data},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    
+    except ValueError as e:
+        return web.json_response(
+            {"error": str(e)},
+            status=401,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        logging.error(f"Error in /api/sync/load: {e}")
+        return web.json_response(
+            {"error": str(e)},
+            status=500,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
 
 async def init_web():
     app = web.Application(client_max_size=20*1024*1024)
     app.router.add_post('/api/analyze', handle_analyze)
     app.router.add_options('/api/analyze', handle_options)
+    app.router.add_post('/api/sync/save', handle_sync_save)
+    app.router.add_get('/api/sync/load', handle_sync_load)
+    app.router.add_options('/api/sync/save', handle_options)
+    app.router.add_options('/api/sync/load', handle_options)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', 8080)
     await site.start()
     print("🚀 Web server started on port 8080")
+    print("📊 Sync endpoints: /api/sync/save, /api/sync/load")
 
 def schedule_reminders():
     """Настраивает расписание для умных напоминаний"""
@@ -236,6 +408,9 @@ def schedule_reminders():
 
 async def main():
     logging.basicConfig(level=logging.INFO)
+    
+    # Initialize database
+    await init_database()
     
     # Настраиваем расписание напоминаний
     scheduler = schedule_reminders()

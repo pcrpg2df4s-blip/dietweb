@@ -3,6 +3,91 @@ const CONFIG_LOCAL = {
 };
 
 const API_URL = "https://warriors-delegation-heard-compliance.trycloudflare.com/api/analyze";
+const SYNC_API_URL = "http://144.31.152.167:8080/api/sync";
+
+/**
+ * Get Telegram initData for authentication
+ * @returns {string} initData string or empty if not available
+ */
+function getTelegramInitData() {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        return window.Telegram.WebApp.initData;
+    }
+    console.warn('[Sync] Telegram initData not available');
+    return '';
+}
+
+/**
+ * Sync food data to server
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {object} foodData - Food data object containing dailyHistory entry
+ */
+async function syncToServer(date, foodData) {
+    try {
+        const initData = getTelegramInitData();
+        if (!initData) {
+            console.log('[Sync] Skipping sync - no initData available');
+            return;
+        }
+
+        const response = await fetch(`${SYNC_API_URL}/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': initData
+            },
+            body: JSON.stringify({
+                date: date,
+                foodData: foodData
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`[Sync] ✅ Data saved to server for ${date}`);
+        } else {
+            const error = await response.json();
+            console.error(`[Sync] ❌ Failed to save: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('[Sync] ❌ Network error during save:', error);
+        // Fail silently - localStorage is the fallback
+    }
+}
+
+/**
+ * Load all food data from server
+ * @returns {object} Object with dates as keys and food data as values
+ */
+async function loadFromServer() {
+    try {
+        const initData = getTelegramInitData();
+        if (!initData) {
+            console.log('[Sync] Skipping load - no initData available');
+            return {};
+        }
+
+        const response = await fetch(`${SYNC_API_URL}/load`, {
+            method: 'GET',
+            headers: {
+                'X-Telegram-Init-Data': initData
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('[Sync] ✅ Data loaded from server');
+            return result.allData || {};
+        } else {
+            const error = await response.json();
+            console.error(`[Sync] ❌ Failed to load: ${error.error}`);
+            return {};
+        }
+    } catch (error) {
+        console.error('[Sync] ❌ Network error during load:', error);
+        return {};
+    }
+}
 
 /**
  * Triggers haptic feedback using Telegram WebApp API or browser fallback.
