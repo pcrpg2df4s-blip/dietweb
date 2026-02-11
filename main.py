@@ -3,12 +3,15 @@ import logging
 import os
 import base64
 import json
+import random
 from aiohttp import web
 import google.generativeai as genai
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # 1. Загружаем переменные из .env
 load_dotenv()
@@ -41,13 +44,90 @@ if GOOGLE_API_KEY:
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+# --- УМНЫЕ НАПОМИНАНИЯ ---
+USERS_FILE = "users.json"
+
+# Массивы сообщений для разных приемов пищи
+BREAKFAST_MESSAGES = [
+    "Доброе утро! ☀️ Не забудь позавтракать, это как сотый бенз на весь день!",
+    "Дружище, ты уже поел? Завтрак сам себя в дневник не запишет 🍳",
+    "Время подкрепиться! Начинаем день чётко 💪"
+]
+
+LUNCH_MESSAGES = [
+    "Как насчет обеда, дружок? 🍲 Не пропускай, твоей машине нужны силы.",
+    "Пора сделать паузу и похавать. Что у нас сегодня в холодосе?",
+    "Напоминаю: голодный зверь работает хуже. Пора сожрать че то!"
+]
+
+DINNER_MESSAGES = [
+    "Дело к вечеру! Не забудь записать ужин в дневник 📝",
+    "Псс... Уже ужинал? Давай подведем итоги дня по калориям.",
+    "Время восстановиться после тяжелого дня. Приятного аппетита! 🥗"
+]
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
+    # Сохраняем user_id для напоминаний
+    save_user_id(message.from_user.id)
+    
     kb = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text="🔥 Открыть Web Diet", web_app=WebAppInfo(url=WEB_APP_URL))]],
         resize_keyboard=True
     )
     await message.answer("Привет! Нажми кнопку, чтобы открыть приложение 👇", reply_markup=kb)
+
+# --- Функции для работы с пользователями ---
+
+def load_users():
+    """Загружает список user_id из файла"""
+    if not os.path.exists(USERS_FILE):
+        return []
+    try:
+        with open(USERS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_user_id(user_id):
+    """Сохраняет user_id в файл (без дубликатов)"""
+    users = load_users()
+    if user_id not in users:
+        users.append(user_id)
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f)
+        print(f"✅ Новый пользователь сохранен: {user_id}")
+
+async def send_meal_reminder(meal_type):
+    """Отправляет напоминание о приеме пищи всем пользователям"""
+    users = load_users()
+    
+    # Выбираем случайное сообщение в зависимости от типа приема пищи
+    if meal_type == "breakfast":
+        message = random.choice(BREAKFAST_MESSAGES)
+    elif meal_type == "lunch":
+        message = random.choice(LUNCH_MESSAGES)
+    elif meal_type == "dinner":
+        message = random.choice(DINNER_MESSAGES)
+    else:
+        return
+    
+    # Создаем inline-кнопку для быстрого перехода к записи еды
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="📝 Записать прием пищи",
+            web_app=WebAppInfo(url=WEB_APP_URL)
+        )]
+    ])
+    
+    print(f"📢 Отправка {meal_type} напоминаний для {len(users)} пользователей...")
+    
+    # Отправляем сообщение каждому пользователю
+    for user_id in users:
+        try:
+            await bot.send_message(user_id, message, reply_markup=keyboard)
+        except Exception as e:
+            print(f"❌ Ошибка отправки пользователю {user_id}: {e}")
 
 # --- Web Server (aiohttp) ---
 
@@ -118,14 +198,57 @@ async def init_web():
     await site.start()
     print("🚀 Web server started on port 8080")
 
+def schedule_reminders():
+    """Настраивает расписание для умных напоминаний"""
+    scheduler = AsyncIOScheduler()
+    
+    # Завтрак: 09:00 - 10:00 (выбираем середину - 09:30)
+    scheduler.add_job(
+        send_meal_reminder,
+        CronTrigger(hour=9, minute=30),
+        args=["breakfast"],
+        id="breakfast_reminder"
+    )
+    
+    # Обед: 14:00 - 15:00 (выбираем середину - 14:30)
+    scheduler.add_job(
+        send_meal_reminder,
+        CronTrigger(hour=14, minute=30),
+        args=["lunch"],
+        id="lunch_reminder"
+    )
+    
+    # Ужин: 19:00 - 20:00 (выбираем середину - 19:30)
+    scheduler.add_job(
+        send_meal_reminder,
+        CronTrigger(hour=19, minute=30),
+        args=["dinner"],
+        id="dinner_reminder"
+    )
+    
+    scheduler.start()
+    print("⏰ Умные напоминания настроены!")
+    print("   🍳 Завтрак: 09:30")
+    print("   🍲 Обед: 14:30")
+    print("   🥗 Ужин: 19:30")
+    
+    return scheduler
+
 async def main():
     logging.basicConfig(level=logging.INFO)
     
-    # Запускаем и бота, и веб-сервер
-    await asyncio.gather(
-        dp.start_polling(bot),
-        init_web()
-    )
+    # Настраиваем расписание напоминаний
+    scheduler = schedule_reminders()
+    
+    try:
+        # Запускаем и бота, и веб-сервер
+        await asyncio.gather(
+            dp.start_polling(bot),
+            init_web()
+        )
+    finally:
+        # Останавливаем scheduler при завершении
+        scheduler.shutdown()
 
 if __name__ == "__main__":
     try:
