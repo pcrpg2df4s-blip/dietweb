@@ -77,7 +77,7 @@ async def cmd_start(message: types.Message):
     save_user_id(message.from_user.id)
     
     builder = ReplyKeyboardBuilder()
-    builder.button(text="🔥 Открыть Web Diet", web_app=WebAppInfo(url=WEB_APP_URL))
+    builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
     
     await message.answer(
         "Привет! Нажми кнопку, чтобы открыть приложение 👇",
