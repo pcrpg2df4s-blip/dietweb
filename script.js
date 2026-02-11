@@ -1250,15 +1250,20 @@ function saveAllData() {
         console.log(`[Storage] Successfully saved locally.`);
 
         // TRIGGER SERVER SYNC
-        const today = getTodayString();
-        // We sync the daily data for today. 
-        // For full sync, we could sync all history, but let's start with today.
-        syncToServer(today, {
+        const syncDate = currentSelectedDate;
+        const stats = currentMacros.dailyHistory[syncDate] || {
             calories: currentMacros.calories,
             protein: currentMacros.protein,
             carbs: currentMacros.carbs,
-            fats: currentMacros.fats,
-            foodHistory: currentMacros.foodHistory.filter(f => (f.date || getTodayString()) === today)
+            fats: currentMacros.fats
+        };
+
+        syncToServer(syncDate, {
+            calories: stats.calories,
+            protein: stats.protein,
+            carbs: stats.carbs,
+            fats: stats.fats,
+            foodHistory: (currentMacros.foodHistory || []).filter(f => (f.date || getTodayString()) === syncDate)
         });
 
     } catch (e) {
@@ -1371,42 +1376,38 @@ function mergeSyncData(serverData) {
     const today = getTodayString();
 
     for (const [date, data] of Object.entries(serverData)) {
-        if (date === today) {
-            // Merge today's data
-            // Simple logic: if server has higher calories, or we simply use server as source of truth
-            if (data.calories !== currentMacros.calories || data.foodHistory?.length !== currentMacros.foodHistory?.length) {
-                console.log(`[Sync] Merging today's data from server: ${data.calories} kcal`);
-                currentMacros.calories = data.calories || 0;
-                currentMacros.protein = data.protein || 0;
-                currentMacros.carbs = data.carbs || 0;
-                currentMacros.fats = data.fats || 0;
+        // 1. Merge stats into dailyHistory
+        const serverStats = {
+            calories: data.calories || 0,
+            protein: data.protein || 0,
+            carbs: data.carbs || 0,
+            fats: data.fats || 0
+        };
 
-                // Merge history intelligently to avoid overwrites
-                if (data.foodHistory && Array.isArray(data.foodHistory)) {
-                    const localIds = new Set((currentMacros.foodHistory || []).map(f => f.id));
-                    const newItems = data.foodHistory.filter(f => !localIds.has(f.id));
-                    if (newItems.length > 0) {
-                        currentMacros.foodHistory = [...(currentMacros.foodHistory || []), ...newItems];
-                    }
-                }
-                hasChanges = true;
+        const localStats = currentMacros.dailyHistory[date];
+        if (!localStats || JSON.stringify(localStats) !== JSON.stringify(serverStats)) {
+            console.log(`[Sync] Merging stats for ${date}`);
+            currentMacros.dailyHistory[date] = serverStats;
+
+            // If it's today, also update the main currentMacros counters
+            if (date === today) {
+                currentMacros.calories = serverStats.calories;
+                currentMacros.protein = serverStats.protein;
+                currentMacros.carbs = serverStats.carbs;
+                currentMacros.fats = serverStats.fats;
             }
-        } else {
-            // Merge history
-            if (!currentMacros.dailyHistory[date] ||
-                JSON.stringify(currentMacros.dailyHistory[date]) !== JSON.stringify({
-                    calories: data.calories,
-                    protein: data.protein,
-                    carbs: data.carbs,
-                    fats: data.fats
-                })) {
-                console.log(`[Sync] Merging history for ${date}`);
-                currentMacros.dailyHistory[date] = {
-                    calories: data.calories || 0,
-                    protein: data.protein || 0,
-                    carbs: data.carbs || 0,
-                    fats: data.fats || 0
-                };
+            hasChanges = true;
+        }
+
+        // 2. Merge detailed food items into foodHistory (for all dates)
+        if (data.foodHistory && Array.isArray(data.foodHistory)) {
+            if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
+            const localIds = new Set(currentMacros.foodHistory.map(f => f.id));
+            const newItems = data.foodHistory.filter(f => !localIds.has(f.id));
+
+            if (newItems.length > 0) {
+                console.log(`[Sync] Adding ${newItems.length} items from server for ${date}`);
+                currentMacros.foodHistory = [...currentMacros.foodHistory, ...newItems];
                 hasChanges = true;
             }
         }
