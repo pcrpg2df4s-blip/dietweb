@@ -3,7 +3,7 @@ const CONFIG_LOCAL = {
 };
 
 const API_URL = "https://warriors-delegation-heard-compliance.trycloudflare.com/api/analyze";
-const SYNC_API_URL = "http://144.31.152.167:8080/api/sync";
+const SYNC_API_URL = "https://warriors-delegation-heard-compliance.trycloudflare.com/api/sync";
 
 /**
  * Get Telegram initData for authentication
@@ -1247,7 +1247,20 @@ function saveAllData() {
         localStorage.setItem('dietApp_userData', userDataStr);
         localStorage.setItem('dietApp_macros', macrosStr);
 
-        console.log(`[Storage] Successfully saved.`);
+        console.log(`[Storage] Successfully saved locally.`);
+
+        // TRIGGER SERVER SYNC
+        const today = getTodayString();
+        // We sync the daily data for today. 
+        // For full sync, we could sync all history, but let's start with today.
+        syncToServer(today, {
+            calories: currentMacros.calories,
+            protein: currentMacros.protein,
+            carbs: currentMacros.carbs,
+            fats: currentMacros.fats,
+            foodHistory: currentMacros.foodHistory.filter(f => (f.date || getTodayString()) === today)
+        });
+
     } catch (e) {
         console.error("[Storage] Failed to save data to localStorage:", e);
         if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.message.includes("quota")) {
@@ -1319,6 +1332,89 @@ function loadSavedData() {
         }
         // Ensure the first step is active
         nextStep(1);
+    }
+
+    // START SERVER SYNC IN BACKGROUND
+    performServerSync();
+}
+
+/**
+ * Background task to fetch data from server and merge it
+ */
+async function performServerSync() {
+    console.log('[Sync] Starting background sync...');
+    const serverData = await loadFromServer();
+    if (Object.keys(serverData).length > 0) {
+        mergeSyncData(serverData);
+    } else {
+        // If server is empty but we have local data, upload it
+        const today = getTodayString();
+        if (currentMacros.calories > 0 || currentMacros.foodHistory.length > 0) {
+            console.log('[Sync] Server empty, performing initial upload...');
+            syncToServer(today, {
+                calories: currentMacros.calories,
+                protein: currentMacros.protein,
+                carbs: currentMacros.carbs,
+                fats: currentMacros.fats,
+                foodHistory: currentMacros.foodHistory
+            });
+        }
+    }
+}
+
+/**
+ * Merges server data with local cache
+ * @param {object} serverData - Dictionary of date -> data
+ */
+function mergeSyncData(serverData) {
+    let hasChanges = false;
+    const today = getTodayString();
+
+    for (const [date, data] of Object.entries(serverData)) {
+        if (date === today) {
+            // Merge today's data
+            // Simple logic: if server has higher calories, or we simply use server as source of truth
+            if (data.calories !== currentMacros.calories || data.foodHistory?.length !== currentMacros.foodHistory?.length) {
+                console.log(`[Sync] Merging today's data from server: ${data.calories} kcal`);
+                currentMacros.calories = data.calories || 0;
+                currentMacros.protein = data.protein || 0;
+                currentMacros.carbs = data.carbs || 0;
+                currentMacros.fats = data.fats || 0;
+                currentMacros.foodHistory = data.foodHistory || [];
+                hasChanges = true;
+            }
+        } else {
+            // Merge history
+            if (!currentMacros.dailyHistory[date] ||
+                JSON.stringify(currentMacros.dailyHistory[date]) !== JSON.stringify({
+                    calories: data.calories,
+                    protein: data.protein,
+                    carbs: data.carbs,
+                    fats: data.fats
+                })) {
+                console.log(`[Sync] Merging history for ${date}`);
+                currentMacros.dailyHistory[date] = {
+                    calories: data.calories || 0,
+                    protein: data.protein || 0,
+                    carbs: data.carbs || 0,
+                    fats: data.fats || 0
+                };
+                hasChanges = true;
+            }
+        }
+    }
+
+    if (hasChanges) {
+        console.log('[Sync] Data updated from server. Refreshing UI...');
+        localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
+        initHomeScreenFromSaved();
+        updateAllUINorms();
+        updateWeightWidgets();
+        updateBMI();
+        if (typeof renderWeightChart === 'function') renderWeightChart();
+        triggerHaptic('success');
+    } else {
+        console.log('[Sync] Local data is already up to date.');
     }
 }
 
