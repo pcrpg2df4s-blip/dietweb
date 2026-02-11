@@ -1307,7 +1307,7 @@ function loadSavedData() {
             currentMacros.protein = 0;
             currentMacros.carbs = 0;
             currentMacros.fats = 0;
-            currentMacros.foodHistory = [];
+            // currentMacros.foodHistory = []; // HISTORY PRESERVED!
 
             localStorage.setItem('dietApp_lastUpdate', today);
             saveAllData();
@@ -1380,7 +1380,15 @@ function mergeSyncData(serverData) {
                 currentMacros.protein = data.protein || 0;
                 currentMacros.carbs = data.carbs || 0;
                 currentMacros.fats = data.fats || 0;
-                currentMacros.foodHistory = data.foodHistory || [];
+
+                // Merge history intelligently to avoid overwrites
+                if (data.foodHistory && Array.isArray(data.foodHistory)) {
+                    const localIds = new Set((currentMacros.foodHistory || []).map(f => f.id));
+                    const newItems = data.foodHistory.filter(f => !localIds.has(f.id));
+                    if (newItems.length > 0) {
+                        currentMacros.foodHistory = [...(currentMacros.foodHistory || []), ...newItems];
+                    }
+                }
                 hasChanges = true;
             }
         } else {
