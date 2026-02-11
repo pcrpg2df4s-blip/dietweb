@@ -24,7 +24,7 @@ load_dotenv()
 # 2. Получаем настройки
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-BASE_WEB_APP_URL = os.getenv("WEB_APP_URL", "https://pcrpg2df4s-blip.github.io/dietweb/")
+BASE_WEB_APP_URL = "https://pcrpg2df4s-blip.github.io/dietweb/"
 
 # --- БЛОК ПРОВЕРКИ ---
 print("-" * 50)
