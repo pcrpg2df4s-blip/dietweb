@@ -75,7 +75,7 @@ async def cmd_start(message: types.Message):
         keyboard=[[KeyboardButton(text="🔥 Открыть Web Diet", web_app=WebAppInfo(url=WEB_APP_URL))]],
         resize_keyboard=True
     )
-    await message.answer("Привет! Нажми кнопку, чтобы открыть приложение 👇", reply_markup=kb)
+    await message.answer("Привет! Нажми кнопку, что бы открыть приложение 👇", reply_markup=kb)
 
 # --- Функции для работы с пользователями ---
 
