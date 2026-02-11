@@ -106,8 +106,30 @@ let celebratedStatus = {
     carbs: false
 };
 
+/**
+ * Normalizes any Date object to YYYY-MM-DD format using LOCAL time.
+ * This prevents UTC/local timezone mismatches in date keys.
+ * @param {Date} date - Date object to format
+ * @returns {string} Date in YYYY-MM-DD format (local time)
+ */
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Helper function to get today's date string in YYYY-MM-DD format.
+ * ALWAYS use this instead of caching the date to avoid Midnight Bug.
+ * @returns {string} Today's date in YYYY-MM-DD format
+ */
+function getTodayString() {
+    return formatDateKey(new Date());
+}
+
 // Track currently selected date in calendar (YYYY-MM-DD format)
-let currentSelectedDate = new Date().toISOString().split('T')[0];
+let currentSelectedDate = getTodayString();
 
 // Глобальный перехватчик ошибок для диагностики
 window.onerror = function (message, source, lineno, colno, error) {
@@ -141,7 +163,28 @@ window.addEventListener('DOMContentLoaded', () => {
     initGalleryButton();
     initDateSpinner();
     initSplashScreenCleanup();
+    initMidnightRefresh();
 });
+
+/**
+ * Midnight Bug Fix: Detect when date changes while app is in background.
+ * If user opens app at 23:59 and keeps it open past 00:00, we need to refresh.
+ */
+function initMidnightRefresh() {
+    let lastKnownDate = getTodayString();
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            const currentDate = getTodayString();
+            if (currentDate !== lastKnownDate) {
+                console.log('Date changed from', lastKnownDate, 'to', currentDate, '- reloading app');
+                // Date changed while app was in background - reload to reset state
+                location.reload();
+            }
+            lastKnownDate = currentDate;
+        }
+    });
+}
 
 function initSplashScreenCleanup() {
     const splash = document.getElementById('splash-screen');
@@ -401,7 +444,7 @@ function initWeightModal() {
 
                 // Add to history (One Date = One Record)
                 if (!currentMacros.weightHistory) currentMacros.weightHistory = [];
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getTodayString();
                 const existingEntryIndex = currentMacros.weightHistory.findIndex(entry =>
                     entry.date && entry.date.split('T')[0] === todayStr
                 );
@@ -547,7 +590,7 @@ function openHeightRuler() {
 function calculateStreak() {
     if (!currentMacros.dailyHistory) return 0;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayString();
     const history = currentMacros.dailyHistory;
 
     // Check if today has entries
@@ -564,7 +607,7 @@ function calculateStreak() {
     currentDate.setDate(currentDate.getDate() - 1);
 
     while (true) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = formatDateKey(currentDate); // Use formatDateKey for consistency
         if (history[dateStr] && history[dateStr].calories > 0) {
             streak++;
             currentDate.setDate(currentDate.getDate() - 1);
@@ -921,6 +964,7 @@ function initManualAddModal() {
                         const oldItem = currentMacros.foodHistory[foodIndex];
                         foodItem.thumbnail = oldItem.thumbnail;
                         foodItem.timestamp = oldItem.timestamp;
+                        foodItem.date = oldItem.date; // Preserve original date
                         currentMacros.foodHistory[foodIndex] = foodItem;
                     }
                 } else {
@@ -982,6 +1026,7 @@ function initManualAddModal() {
                             const oldItem = currentMacros.foodHistory[foodIndex];
                             foodItem.thumbnail = oldItem.thumbnail;
                             foodItem.timestamp = oldItem.timestamp;
+                            foodItem.date = oldItem.date; // Preserve original date
                             currentMacros.foodHistory[foodIndex] = foodItem;
                         }
                     } else {
@@ -1039,6 +1084,7 @@ function initManualAddModal() {
                             const oldItem = currentMacros.foodHistory[foodIndex];
                             foodItem.thumbnail = oldItem.thumbnail;
                             foodItem.timestamp = oldItem.timestamp;
+                            foodItem.date = oldItem.date; // Preserve original date
                             currentMacros.foodHistory[foodIndex] = foodItem;
                         }
                     } else {
@@ -1146,7 +1192,7 @@ function loadSavedData() {
         userData = JSON.parse(savedUser);
         currentMacros = JSON.parse(savedMacros);
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayString();
         if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
 
         const lastUpdate = localStorage.getItem('dietApp_lastUpdate');
@@ -1192,20 +1238,40 @@ function loadSavedData() {
 }
 
 function initHomeScreenFromSaved() {
-    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - currentMacros.calories));
-    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - currentMacros.protein));
-    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - currentMacros.carbs));
-    const fatsLeft = Math.round(Math.max(0, currentMacros.totalFats - currentMacros.fats));
+    // Calculate stats for the currently selected date
+    let selectedDateCalories = 0;
+    let selectedDateProtein = 0;
+    let selectedDateCarbs = 0;
+    let selectedDateFats = 0;
+
+    // Filter and sum food for the selected date
+    if (currentMacros.foodHistory) {
+        currentMacros.foodHistory.forEach(food => {
+            const foodDate = food.date || getTodayString();
+            if (foodDate === currentSelectedDate) {
+                selectedDateCalories += food.calories;
+                selectedDateProtein += food.protein;
+                selectedDateCarbs += food.carbs;
+                selectedDateFats += food.fats;
+            }
+        });
+    }
+
+    // Calculate remaining values
+    const caloriesLeft = Math.round(Math.max(0, currentMacros.totalCalories - selectedDateCalories));
+    const proteinLeft = Math.round(Math.max(0, currentMacros.totalProtein - selectedDateProtein));
+    const carbsLeft = Math.round(Math.max(0, currentMacros.totalCarbs - selectedDateCarbs));
+    const fatsLeft = Math.round(Math.max(0, currentMacros.totalFats - selectedDateFats));
 
     document.getElementById('home-calories-left').innerText = caloriesLeft;
     document.getElementById('home-protein-eaten').innerText = proteinLeft;
     document.getElementById('home-carbs-eaten').innerText = carbsLeft;
     document.getElementById('home-fats-eaten').innerText = fatsLeft;
 
-    setHomeProgress('home-ring-calories', (currentMacros.calories / currentMacros.totalCalories) * 100, 282.7);
-    setHomeProgress('home-ring-protein', (currentMacros.protein / currentMacros.totalProtein) * 100, 100);
-    setHomeProgress('home-ring-carbs', (currentMacros.carbs / currentMacros.totalCarbs) * 100, 100);
-    setHomeProgress('home-ring-fats', (currentMacros.fats / currentMacros.totalFats) * 100, 100);
+    setHomeProgress('home-ring-calories', (selectedDateCalories / currentMacros.totalCalories) * 100, 282.7);
+    setHomeProgress('home-ring-protein', (selectedDateProtein / currentMacros.totalProtein) * 100, 100);
+    setHomeProgress('home-ring-carbs', (selectedDateCarbs / currentMacros.totalCarbs) * 100, 100);
+    setHomeProgress('home-ring-fats', (selectedDateFats / currentMacros.totalFats) * 100, 100);
 
     const foodList = document.getElementById('food-list');
     foodList.innerHTML = '';
@@ -1213,7 +1279,8 @@ function initHomeScreenFromSaved() {
     // Filter food by selected date
     const filteredFood = (currentMacros.foodHistory || []).filter(food => {
         // If food has no date, assume it's from today (backward compatibility)
-        const foodDate = food.date || new Date().toISOString().split('T')[0];
+        // ALWAYS get fresh date to avoid Midnight Bug
+        const foodDate = food.date || getTodayString();
         return foodDate === currentSelectedDate;
     });
 
@@ -1299,10 +1366,11 @@ function updateFoodListHeader() {
     const headerEl = document.querySelector('.recent-uploads h3');
     if (!headerEl) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    // ALWAYS get fresh date to avoid Midnight Bug
+    const today = getTodayString();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayISO = yesterday.toISOString().split('T')[0];
+    const yesterdayISO = formatDateKey(yesterday); // Use formatDateKey for consistency
 
     if (currentSelectedDate === today) {
         headerEl.textContent = 'Недавно добавлено';
@@ -1333,8 +1401,9 @@ function renderWeeklyCalendar() {
     const container = document.getElementById('week-calendar');
     if (!container) return;
 
+    // ALWAYS get fresh date to avoid Midnight Bug
     const now = new Date();
-    const todayISO = now.toISOString().split('T')[0];
+    const todayISO = getTodayString();
 
     // Находим начало недели (понедельник)
     const startOfWeek = new Date(now);
@@ -1350,7 +1419,7 @@ function renderWeeklyCalendar() {
     for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
-        const dateISO = date.toISOString().split('T')[0];
+        const dateISO = formatDateKey(date); // Use formatDateKey for consistency
 
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'narrow' }).toUpperCase();
         const dayNumber = date.getDate();
@@ -2193,30 +2262,47 @@ function addFoodToHome(food, thumbnail) {
     nextStep(12);
 }
 
-function recalculateMacros() {
-    currentMacros.protein = 0;
-    currentMacros.carbs = 0;
-    currentMacros.fats = 0;
-    currentMacros.calories = 0;
+function recalculateMacros(dateKey = null) {
+    // If no dateKey provided, use currently selected date
+    const targetDate = dateKey || currentSelectedDate;
+
+    let protein = 0;
+    let carbs = 0;
+    let fats = 0;
+    let calories = 0;
 
     if (currentMacros.foodHistory) {
+        // Filter food entries by the target date
         currentMacros.foodHistory.forEach(food => {
-            currentMacros.protein += food.protein;
-            currentMacros.carbs += food.carbs;
-            currentMacros.fats += food.fats;
-            currentMacros.calories += food.calories;
+            const foodDate = food.date || getTodayString();
+            if (foodDate === targetDate) {
+                protein += food.protein;
+                carbs += food.carbs;
+                fats += food.fats;
+                calories += food.calories;
+            }
         });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // Save to dailyHistory for the target date
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
-    currentMacros.dailyHistory[today] = {
-        calories: currentMacros.calories,
-        protein: currentMacros.protein,
-        carbs: currentMacros.carbs,
-        fats: currentMacros.fats,
+    currentMacros.dailyHistory[targetDate] = {
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fats: fats,
         goal: currentMacros.totalCalories
     };
+
+    // If we're calculating for today, also update the global currentMacros
+    // (for backward compatibility with other parts of the code)
+    const today = getTodayString();
+    if (targetDate === today) {
+        currentMacros.calories = calories;
+        currentMacros.protein = protein;
+        currentMacros.carbs = carbs;
+        currentMacros.fats = fats;
+    }
 }
 
 function deleteFood(index) {
@@ -2307,7 +2393,7 @@ function goToHome() {
     currentMacros.foodHistory = [];
 
     // Save registration date to track daily resets
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayString();
     localStorage.setItem('dietApp_lastUpdate', today);
 
     document.getElementById('home-calories-left').innerText = currentMacros.totalCalories;
@@ -2404,7 +2490,7 @@ function updateCalendarDates() {
 
 function updateProgressPage() {
     triggerHaptic('light');
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayString();
 
     if (!currentMacros.dailyHistory) currentMacros.dailyHistory = {};
 
@@ -2447,7 +2533,7 @@ function renderProgressChart() {
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDateKey(date); // Use formatDateKey for consistency
 
         labels.push(daysShortRu[date.getDay()]);
 
@@ -2462,7 +2548,7 @@ function renderProgressChart() {
         fatsData.push(fCals);
 
         // If it's today, update the large display
-        if (dateStr === now.toISOString().split('T')[0]) {
+        if (dateStr === formatDateKey(now)) { // Use formatDateKey for consistency
             const todayCals = data.calories || (pCals + cCals + fCals);
             document.getElementById('progress-total-calories').innerText = Math.round(todayCals);
         }
