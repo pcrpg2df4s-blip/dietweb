@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from db_manager import init_database, save_food_data, get_food_data, get_all_food_data
@@ -75,11 +76,13 @@ async def cmd_start(message: types.Message):
     # Сохраняем user_id для напоминаний
     save_user_id(message.from_user.id)
     
-    kb = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="🔥 Открыть Web Diet", web_app=WebAppInfo(url=WEB_APP_URL))]],
-        resize_keyboard=True
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🔥 Открыть Web Diet", web_app=WebAppInfo(url=WEB_APP_URL))
+    
+    await message.answer(
+        "Привет! Нажми кнопку, чтобы открыть приложение 👇",
+        reply_markup=builder.as_markup(resize_keyboard=True)
     )
-    await message.answer("Привет! Нажми кнопку, чтобы открыть приложение 👇", reply_markup=kb)
 
 # --- Функции для работы с пользователями ---
 
