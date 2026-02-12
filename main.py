@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from db_manager import init_database, save_food_data, get_food_data, get_all_food_data
@@ -76,10 +76,18 @@ async def cmd_start(message: types.Message):
     # Сохраняем user_id и проверяем, новый ли это пользователь
     is_new_user = save_user_id(message.from_user.id)
     
-    builder = ReplyKeyboardBuilder()
-    builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
+    # Билдер для старых пользователей (Reply кнопки)
+    reply_builder = ReplyKeyboardBuilder()
+    reply_builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
     
     if is_new_user:
+        # Билдер для новых пользователей (Inline кнопки)
+        inline_builder = InlineKeyboardBuilder()
+        inline_builder.button(text="💥 Ссылка на канал", url="https://t.me/bananalyzer")
+        inline_builder.button(text="📚 Как пользоваться", url="https://t.me/bananalyzer")
+        inline_builder.button(text="🌟 Открыть приложение", web_app=WebAppInfo(url=WEB_APP_URL))
+        inline_builder.adjust(2, 1)
+
         # Длинное приветствие для новых пользователей
         await message.answer(
             "Добро пожаловать в Bananalyzer AI — бот для качественного питания и заботы о своем организме №1 в Telegram!\n\n"
@@ -89,13 +97,13 @@ async def cmd_start(message: types.Message):
             "• Следи за своей статистикой питания и получай напоминания\n"
             "• Удобный и приятный интерфейс\n\n"
             "Начни путь к новой версии себя уже сейчас!",
-            reply_markup=builder.as_markup(resize_keyboard=True)
+            reply_markup=inline_builder.as_markup()
         )
     else:
         # Короткое приветствие для старых пользователей
         await message.answer(
             "Привет! Нажми кнопку, чтобы открыть приложение 👇",
-            reply_markup=builder.as_markup(resize_keyboard=True)
+            reply_markup=reply_builder.as_markup(resize_keyboard=True)
         )
 
 # --- Функции для работы с пользователями ---
