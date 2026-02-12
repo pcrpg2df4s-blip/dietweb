@@ -31,7 +31,8 @@ ADMIN_IDS = [728101046]
 print("-" * 50)
 if GOOGLE_API_KEY:
     print(f"✅ Google API Key найден! (Начинается на: {GOOGLE_API_KEY[:5]}...)")
-    WEB_APP_URL = f"{BASE_WEB_APP_URL}?api_key={GOOGLE_API_KEY}"
+    # WEB_APP_URL = f"{BASE_WEB_APP_URL}?api_key={GOOGLE_API_KEY}" # Убрали api_key из URL
+    WEB_APP_URL = BASE_WEB_APP_URL
 else:
     print("❌ ОШИБКА: Ключ не найден!")
     WEB_APP_URL = BASE_WEB_APP_URL
@@ -113,7 +114,7 @@ async def cmd_start(message: types.Message):
     
     # Билдер для старых пользователей (Reply кнопки)
     reply_builder = ReplyKeyboardBuilder()
-    reply_builder.button(text="🔥 Мой Дневник", web_app=WebAppInfo(url=WEB_APP_URL))
+    reply_builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
     reply_builder.adjust(1)
     
     # Отправляем Reply-клавиатуру (меню)
