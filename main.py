@@ -83,9 +83,9 @@ async def cmd_start(message: types.Message):
     if is_new_user:
         # Билдер для новых пользователей (Inline кнопки)
         inline_builder = InlineKeyboardBuilder()
-        inline_builder.button(text="💥 Ссылка на канал", url="https://t.me/bananalyzer")
-        inline_builder.button(text="📚 Как пользоваться", url="https://t.me/bananalyzer")
-        inline_builder.button(text="🌟 Открыть приложение", web_app=WebAppInfo(url=WEB_APP_URL))
+        inline_builder.button(text="Ссылка на канал", url="https://t.me/bananalyzer")
+        inline_builder.button(text="Как пользоваться", url="https://t.me/bananalyzer")
+        inline_builder.button(text="Открыть приложение", web_app=WebAppInfo(url=WEB_APP_URL))
         inline_builder.adjust(2, 1)
 
         # Длинное приветствие для новых пользователей
