@@ -3293,15 +3293,26 @@ function loadSettingsData() {
         const nameEl = document.getElementById('settings-name');
         if (nameEl) {
             let debugInfo = 'Гость';
-            // Detailed debug info for troubleshooting
-            if (!tg) debugInfo += ' (NoTG)';
-            else if (!tg.initDataUnsafe) debugInfo += ' (NoUnsafe)';
-            else if (!tg.initDataUnsafe.user) debugInfo += ' (NoUser)';
 
-            // Check if initData string is present but unsafe parsing failed/empty
-            if (tg && !tg.initData) debugInfo += ' (NoInitData)';
+            // Detailed debug info
+            const hash = window.location.hash;
+            const href = window.location.href;
+
+            debugInfo += `\nHashLen: ${hash.length}`;
+            debugInfo += `\nTG: ${!!tg}`;
+            if (tg) {
+                debugInfo += `\nInitData: ${!!tg.initData} (${tg.initData ? tg.initData.length : 0})`;
+                debugInfo += `\nUnsafe: ${!!tg.initDataUnsafe}`;
+                if (tg.initDataUnsafe) {
+                    debugInfo += `\nUser: ${!!tg.initDataUnsafe.user}`;
+                }
+            }
+            // Show part of URL to check for redirects/mismatches
+            debugInfo += `\nURL: ${href.substring(0, 40)}...`;
 
             nameEl.innerText = debugInfo;
+            nameEl.style.fontSize = "10px"; // Make it small enough to fit
+            nameEl.style.lineHeight = "1.2";
         }
     }
 
