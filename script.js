@@ -1368,40 +1368,51 @@ async function performServerSync() {
 }
 
 /**
+ * Recalculate dailyHistory statistics based on foodHistory logs.
+ * This ensures that local and server data are correctly merged.
+ */
+function recalculateHistoryFromLogs() {
+    // 1. Initialize empty stats for all dates present in foodHistory
+    const tempHistory = {};
+
+    // 2. Iterate foodHistory and sum up
+    if (currentMacros.foodHistory) {
+        currentMacros.foodHistory.forEach(food => {
+            const date = food.date || getTodayString();
+            if (!tempHistory[date]) {
+                tempHistory[date] = { calories: 0, protein: 0, carbs: 0, fats: 0 };
+            }
+            tempHistory[date].calories += food.calories || 0;
+            tempHistory[date].protein += food.protein || 0;
+            tempHistory[date].carbs += food.carbs || 0;
+            tempHistory[date].fats += food.fats || 0;
+        });
+    }
+
+    // 3. Update currentMacros.dailyHistory
+    currentMacros.dailyHistory = tempHistory;
+
+    // 4. Update today's main counters
+    const today = getTodayString();
+    const todayStats = tempHistory[today] || { calories: 0, protein: 0, carbs: 0, fats: 0 };
+    currentMacros.calories = todayStats.calories;
+    currentMacros.protein = todayStats.protein;
+    currentMacros.carbs = todayStats.carbs;
+    currentMacros.fats = todayStats.fats;
+}
+
+/**
  * Merges server data with local cache
  * @param {object} serverData - Dictionary of date -> data
  */
 function mergeSyncData(serverData) {
     let hasChanges = false;
-    const today = getTodayString();
 
+    // 1. Merge detailed food items into foodHistory
     for (const [date, data] of Object.entries(serverData)) {
-        // 1. Merge stats into dailyHistory
-        const serverStats = {
-            calories: data.calories || 0,
-            protein: data.protein || 0,
-            carbs: data.carbs || 0,
-            fats: data.fats || 0
-        };
-
-        const localStats = currentMacros.dailyHistory[date];
-        if (!localStats || JSON.stringify(localStats) !== JSON.stringify(serverStats)) {
-            console.log(`[Sync] Merging stats for ${date}`);
-            currentMacros.dailyHistory[date] = serverStats;
-
-            // If it's today, also update the main currentMacros counters
-            if (date === today) {
-                currentMacros.calories = serverStats.calories;
-                currentMacros.protein = serverStats.protein;
-                currentMacros.carbs = serverStats.carbs;
-                currentMacros.fats = serverStats.fats;
-            }
-            hasChanges = true;
-        }
-
-        // 2. Merge detailed food items into foodHistory (for all dates)
         if (data.foodHistory && Array.isArray(data.foodHistory)) {
             if (!currentMacros.foodHistory) currentMacros.foodHistory = [];
+
             const localIds = new Set(currentMacros.foodHistory.map(f => f.id));
             const newItems = data.foodHistory.filter(f => !localIds.has(f.id));
 
@@ -1414,8 +1425,14 @@ function mergeSyncData(serverData) {
     }
 
     if (hasChanges) {
+        console.log('[Sync] Recalculating stats from merged history...');
+        recalculateHistoryFromLogs();
+
         console.log('[Sync] Data updated from server. Refreshing UI...');
         localStorage.setItem('dietApp_macros', JSON.stringify(currentMacros));
+        // We also save to server to ensure it has the merged state
+        saveAllData();
+
         initHomeScreenFromSaved();
         updateAllUINorms();
         updateWeightWidgets();
@@ -3555,9 +3572,8 @@ function animateScore(targetScore) {
 /**
  * Food Detail Modal Logic V2
  */
-let currentEditingItem = null;
-
 // --- FOOD DETAIL MODAL (DISABLED) ---
+// (Logic moved to manual add modal)
 
 /**
  * Subscription Modal Functions
