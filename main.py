@@ -112,14 +112,6 @@ async def cmd_start(message: types.Message):
     
     # Билдер для старых пользователей (Reply кнопки)
     
-    # Билдер для старых пользователей (Reply кнопки)
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
-    reply_builder.adjust(1)
-    
-    # Отправляем Reply-клавиатуру (меню)
-    await message.answer("⇩ Главное меню", reply_markup=reply_builder.as_markup(resize_keyboard=True))
-    
     # Билдер для всех (Inline кнопки)
     inline_builder = InlineKeyboardBuilder()
     inline_builder.button(text="Ссылка на канал", url="https://t.me/bananalyzer")
