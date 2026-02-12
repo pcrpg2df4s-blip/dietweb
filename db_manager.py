@@ -136,3 +136,16 @@ async def get_all_users():
     except Exception as e:
         logging.error(f"❌ Failed to get all users: {e}")
         return []
+
+async def get_users_count():
+    """
+    Retrieve the count of users in the database.
+    """
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT COUNT(*) FROM users") as cursor:
+                row = await cursor.fetchone()
+                return row[0] if row else 0
+    except Exception as e:
+        logging.error(f"❌ Failed to get users count: {e}")
+        return 0

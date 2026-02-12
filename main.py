@@ -12,11 +12,11 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile, CallbackQuery
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from db_manager import init_database, save_food_data, get_food_data, get_all_food_data, add_user, get_all_users
+from db_manager import init_database, save_food_data, get_food_data, get_all_food_data, add_user, get_all_users, get_users_count
 
 # 1. Загружаем переменные из .env
 load_dotenv()
@@ -25,6 +25,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 BASE_WEB_APP_URL = "https://pcrpg2df4s-blip.github.io/dietweb/"
+ADMIN_IDS = [728101046]
 
 # --- БЛОК ПРОВЕРКИ ---
 print("-" * 50)
@@ -170,6 +171,88 @@ async def send_meal_reminder(meal_type):
             await bot.send_message(user_id, message, reply_markup=keyboard)
         except Exception as e:
             print(f"❌ Ошибка отправки пользователю {user_id}: {e}")
+
+# --- АДМИН-ПАНЕЛЬ ---
+
+@dp.message(Command("admin"))
+async def cmd_admin(message: types.Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    keyboard = InlineKeyboardBuilder()
+    keyboard.button(text="📊 Статистика", callback_data="admin_stats")
+    keyboard.button(text="💾 Скачать БД", callback_data="admin_export")
+    keyboard.button(text="📢 Рассылка", callback_data="admin_broadcast_info")
+    keyboard.adjust(1)
+    
+    await message.answer(
+        "Админ-панель приветствует тебя, Создатель!",
+        reply_markup=keyboard.as_markup()
+    )
+
+@dp.callback_query(lambda c: c.data in ["admin_stats", "admin_export", "admin_broadcast_info"])
+async def process_admin_callback(callback: CallbackQuery):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("Доступ запрещен", show_alert=True)
+        return
+
+    if callback.data == "admin_stats":
+        count = await get_users_count()
+        keyboard = InlineKeyboardBuilder()
+        keyboard.button(text="📊 Статистика", callback_data="admin_stats")
+        keyboard.button(text="💾 Скачать БД", callback_data="admin_export")
+        keyboard.button(text="📢 Рассылка", callback_data="admin_broadcast_info")
+        keyboard.adjust(1)
+        
+        await callback.message.edit_text(
+            f"Всего пользователей: {count}",
+            reply_markup=keyboard.as_markup()
+        )
+        await callback.answer()
+
+    elif callback.data == "admin_export":
+        await callback.answer("Отправляю...")
+        try:
+            file = FSInputFile("diet.db")
+            await callback.message.answer_document(file, caption="Backup")
+        except Exception as e:
+            await callback.message.answer(f"Ошибка при отправке файла: {e}")
+    
+    elif callback.data == "admin_broadcast_info":
+        await callback.message.answer("Чтобы сделать рассылку, введи команду:\n`/broadcast Текст сообщения`", parse_mode="Markdown")
+        await callback.answer()
+
+@dp.message(Command("broadcast"))
+async def cmd_broadcast(message: types.Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        await message.answer("Ошибка: введите текст рассылки.\nПример: `/broadcast Привет всем!`")
+        return
+
+    text = parts[1]
+    users = await get_all_users()
+    
+    success_count = 0
+    fail_count = 0
+    
+    status_msg = await message.answer(f"Начинаю рассылку для {len(users)} пользователей...")
+
+    for user_id in users:
+        try:
+            await bot.send_message(user_id, text)
+            success_count += 1
+            await asyncio.sleep(0.05) 
+        except Exception:
+            fail_count += 1
+            continue
+
+    await bot.send_message(
+        message.from_user.id,
+        f"Рассылка завершена.\nУспешно: {success_count}\nНе доставлено: {fail_count}"
+    )
 
 # --- Web Server (aiohttp) ---
 
