@@ -18,6 +18,12 @@ async def init_database():
                     PRIMARY KEY (user_id, date)
                 )
             """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id INTEGER PRIMARY KEY,
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             await db.commit()
             logging.info("✅ Database initialized successfully")
     except Exception as e:
@@ -100,3 +106,33 @@ async def get_all_food_data(user_id: int):
     except Exception as e:
         logging.error(f"❌ Failed to get all food data: {e}")
         return {}
+
+async def add_user(user_id: int):
+    """
+    Add a new user to the database if they don't exist.
+    """
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            await db.execute(
+                "INSERT OR IGNORE INTO users (user_id) VALUES (?)",
+                (user_id,)
+            )
+            await db.commit()
+            logging.info(f"✅ User {user_id} handled (added or already exists)")
+            return True
+    except Exception as e:
+        logging.error(f"❌ Failed to add user: {e}")
+        return False
+
+async def get_all_users():
+    """
+    Retrieve all user IDs from the database.
+    """
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT user_id FROM users") as cursor:
+                rows = await cursor.fetchall()
+                return [row[0] for row in rows]
+    except Exception as e:
+        logging.error(f"❌ Failed to get all users: {e}")
+        return []
