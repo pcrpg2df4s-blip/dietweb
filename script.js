@@ -3291,7 +3291,18 @@ function loadSettingsData() {
         }
     } else {
         const nameEl = document.getElementById('settings-name');
-        if (nameEl) nameEl.innerText = 'Гость';
+        if (nameEl) {
+            let debugInfo = 'Гость';
+            // Detailed debug info for troubleshooting
+            if (!tg) debugInfo += ' (NoTG)';
+            else if (!tg.initDataUnsafe) debugInfo += ' (NoUnsafe)';
+            else if (!tg.initDataUnsafe.user) debugInfo += ' (NoUser)';
+
+            // Check if initData string is present but unsafe parsing failed/empty
+            if (tg && !tg.initData) debugInfo += ' (NoInitData)';
+
+            nameEl.innerText = debugInfo;
+        }
     }
 
     const activityMap = {

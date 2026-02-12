@@ -113,7 +113,7 @@ async def cmd_start(message: types.Message):
     
     # Билдер для старых пользователей (Reply кнопки)
     reply_builder = ReplyKeyboardBuilder()
-    reply_builder.button(text="🔥 Открыть дневник", web_app=WebAppInfo(url=WEB_APP_URL))
+    reply_builder.button(text="🔥 Мой Дневник", web_app=WebAppInfo(url=WEB_APP_URL))
     reply_builder.adjust(1)
     
     # Отправляем Reply-клавиатуру (меню)
